@@ -1,15 +1,25 @@
-const CACHE_NAME = "dlm-cache-v1";
-const CORE_ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+// Bump this version string every time you want to force old caches to clear.
+// (You don't actually need to bump it manually — this file already auto-updates.)
+const CACHE_VERSION = "v2";
+const CACHE_NAME = "daily-task-" + CACHE_VERSION;
+
+// Only static, rarely-changing assets go in the cache. The HTML itself is
+// always fetched fresh from the network first (see fetch handler below).
+const STATIC_ASSETS = [
+  "manifest.json",
+  "icon-192.png",
+  "icon-512.png",
+  "icon-192-maskable.png",
+  "icon-512-maskable.png",
+];
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(
-        CORE_ASSETS.map((url) => cache.add(url).catch(() => {}))
-      );
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).catch(() => {})
   );
+  // Activate the new service worker as soon as it finishes installing,
+  // instead of waiting for all tabs to close.
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -18,48 +28,43 @@ self.addEventListener("activate", (event) => {
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
     )
   );
+  // Take control of any already-open tabs immediately.
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  const url = new URL(req.url);
+  const isHTML = req.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/");
+
+  if (isHTML) {
+    // Network-first: always try to get the latest index.html when online.
+    // Falls back to whatever's cached only if there's no internet.
+    event.respondWith(
+      fetch(req)
         .then((res) => {
-          if (res && res.status === 200 && res.type === "basic") {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Static assets: cache-first for speed, but refresh the cache in the background.
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      const fetchPromise = fetch(req)
+        .then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
           return res;
         })
         .catch(() => cached);
-    })
-  );
-});
-
-// পেজ থেকে পাঠানো মেসেজ শুনে নোটিফিকেশন দেখানো (mobile-এ সরাসরি new Notification() কাজ করে না,
-// এই showNotification() পদ্ধতিটাই ব্যবহার করতে হয়)
-self.addEventListener("message", (event) => {
-  const data = event.data || {};
-  if (data.type === "SHOW_NOTIFICATION") {
-    self.registration.showNotification(data.title || "রিমাইন্ডার", {
-      body: data.body || "",
-      icon: "./icon-192.png",
-      badge: "./icon-192.png",
-      tag: data.tag || undefined,
-      renotify: !!data.tag,
-    });
-  }
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  event.waitUntil(
-    self.clients.matchAll({ type: "window" }).then((clientsArr) => {
-      if (clientsArr.length > 0) return clientsArr[0].focus();
-      return self.clients.openWindow("./");
+      return cached || fetchPromise;
     })
   );
 });
