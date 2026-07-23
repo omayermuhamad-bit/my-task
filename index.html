@@ -273,6 +273,60 @@
   .dtt-root.dark .water-btn { background:#1B241C; border-color:#3A4634; color:#E0B868; }
   .dtt-root.dark .steps-input { background:#1B241C; border-color:#3A4634; color:#E7E0CC; }
   .dtt-root.dark .set-btn { background:#1B241C; border-color:#3A4634; }
+
+  /* ---------------- Diary Reading Mode ---------------- */
+  .diary-reader-overlay { position:fixed; inset:0; z-index:3000; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background: radial-gradient(ellipse 900px 500px at 50% -10%, #FFFBEF 0%, #F3E9CB 55%, #E9DBB4 100%);
+    animation: diaryReaderIn .28s ease; }
+  @keyframes diaryReaderIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .diary-reader-topbar { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:16px 18px 8px; }
+  .diary-reader-close { width:36px; height:36px; border-radius:50%; border:1.5px solid #DFCFA0; background:#FFFDF6; color:#6B5A3A; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 10px -4px rgba(30,25,10,0.25); flex-shrink:0; }
+  .diary-reader-close:hover { background:#F1E9D6; }
+  .diary-reader-counter { font-family:'IBM Plex Mono',monospace; font-size:11px; color:#9A8C6C; letter-spacing:.12em; text-transform:uppercase; }
+  .diary-reader-page { max-width:600px; margin:0 auto; padding:6px 22px 130px; position:relative; }
+  .diary-reader-datehead { text-align:center; margin:18px 0 26px; }
+  .diary-reader-day { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#C08A3E; margin-bottom:6px; font-weight:600; }
+  .diary-reader-date { font-family:'Fraunces',serif; font-weight:700; font-size:27px; color:#123A34; line-height:1.25; }
+  .diary-reader-mood { font-size:26px; margin-top:10px; }
+  .diary-reader-sheet { position:relative; background:
+      repeating-linear-gradient(#0000 0, #0000 36px, rgba(140,125,95,0.16) 37px),
+      linear-gradient(#FFFEF9,#FFFDF6);
+    background-position:0 8px; border-radius:6px; padding:30px 26px 36px 46px;
+    box-shadow: 0 24px 46px -26px rgba(30,25,10,0.4), 0 1px 0 rgba(255,255,255,0.6) inset;
+    border:1px solid #E9DCB8; }
+  .diary-reader-sheet::before { content:""; position:absolute; top:0; bottom:0; left:34px; width:1px; background:rgba(180,70,60,0.22); }
+  .diary-reader-text { font-family:'Fraunces',serif; font-size:18px; line-height:37px; color:#3A3223; white-space:pre-wrap; word-break:break-word; }
+  .diary-reader-text::first-letter { font-size:46px; font-weight:700; color:#123A34; float:left; line-height:0.85; padding:6px 8px 0 0; }
+  .diary-reader-section { margin-bottom:20px; }
+  .diary-reader-section:last-child { margin-bottom:0; }
+  .diary-reader-section-label { font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:#B5651D; margin-bottom:6px; font-weight:700; }
+  .diary-reader-section-text { font-family:'Fraunces',serif; font-size:17px; line-height:31px; color:#3A3223; white-space:pre-wrap; }
+  .diary-reader-gratitude { display:flex; gap:8px; flex-wrap:wrap; margin-top:20px; padding-top:16px; border-top:1px dashed #D8C9A3; }
+  .diary-reader-gratitude-chip { font-family:'IBM Plex Mono',monospace; font-size:11px; background:#F1E9D6; color:#6B5A3A; padding:5px 11px; border-radius:999px; }
+  .diary-reader-empty { text-align:center; color:#9A8C6C; font-family:'Fraunces',serif; font-size:15px; padding:70px 20px; }
+  .diary-reader-nav { position:fixed; bottom:20px; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:16px; z-index:2; pointer-events:none; }
+  .diary-reader-nav-btn { pointer-events:auto; width:46px; height:46px; border-radius:50%; border:none; background:#123A34; color:#FBF6EA; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 20px -8px rgba(18,58,52,0.55); }
+  .diary-reader-nav-btn:disabled { opacity:0.28; cursor:default; box-shadow:none; }
+  .diary-reader-nav-btn:hover:not(:disabled) { background:#0D2C27; }
+  .diary-reader-hint { pointer-events:auto; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#9A8C6C; background:#FFFDF6; border:1px solid #E9DCB8; border-radius:999px; padding:10px 16px; display:flex; align-items:center; }
+  .dtt-root.dark .diary-reader-overlay { background: radial-gradient(ellipse 900px 500px at 50% -10%, #202B23 0%, #171F19 55%, #10160F 100%); }
+  .dtt-root.dark .diary-reader-close { background:#1F2A22; border-color:#3A4634; color:#E0B868; }
+  .dtt-root.dark .diary-reader-close:hover { background:#25302A; }
+  .dtt-root.dark .diary-reader-counter { color:#8FA294; }
+  .dtt-root.dark .diary-reader-day { color:#E0B868; }
+  .dtt-root.dark .diary-reader-date { color:#E7E0CC; }
+  .dtt-root.dark .diary-reader-sheet { background:
+      repeating-linear-gradient(#0000 0, #0000 36px, rgba(180,175,142,0.08) 37px),
+      linear-gradient(#1E2921,#1B241C); border-color:#31402F; box-shadow:0 24px 46px -26px rgba(0,0,0,0.65); }
+  .dtt-root.dark .diary-reader-sheet::before { background: rgba(220,120,110,0.2); }
+  .dtt-root.dark .diary-reader-text, .dtt-root.dark .diary-reader-section-text { color:#E7E0CC; }
+  .dtt-root.dark .diary-reader-text::first-letter { color:#E0B868; }
+  .dtt-root.dark .diary-reader-section-label { color:#E0B868; }
+  .dtt-root.dark .diary-reader-gratitude { border-top-color:#31402F; }
+  .dtt-root.dark .diary-reader-gratitude-chip { background:#25302A; color:#E7E0CC; }
+  .dtt-root.dark .diary-reader-empty { color:#6E8073; }
+  .dtt-root.dark .diary-reader-hint { background:#1F2A22; border-color:#3A4634; color:#8FA294; }
+  @media print { .diary-reader-overlay { display:none !important; } }
 </style>
 </head>
 <body>
@@ -1546,7 +1600,7 @@ function TrendModal({ date, onClose }) {
   );
 }
 
-function DiarySearchModal({ onClose, onSelectDate }) {
+function DiarySearchModal({ onClose, onSelectDate, onEditDate }) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
@@ -1577,6 +1631,7 @@ function DiarySearchModal({ onClose, onSelectDate }) {
   return (
     <Modal onClose={onClose} width={420}>
       <div className="modal-header"><Icon name="search" size={18} color="#4C6B8A" /><span>ডায়েরি সার্চ</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+      <div className="empty-note" style={{ marginTop: -6, marginBottom: 10 }}>ফলাফলে ট্যাপ করলে রিডিং মোডে খুলবে, ✏️ আইকনে এডিট করা যাবে</div>
       <div className="field-row" style={{ marginBottom: 10 }}>
         <input className="modal-input" style={{ flex: 1 }} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && runSearch()} placeholder="যেমন: পরীক্ষা, ভ্রমণ, কষ্ট..." />
         <button className="btn-primary" onClick={runSearch}><Icon name="search" size={15} /></button>
@@ -1586,10 +1641,13 @@ function DiarySearchModal({ onClose, onSelectDate }) {
       {!loading && results && results.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 340, overflowY: "auto" }}>
           {results.map(r => (
-            <button key={r.date} className="subblock" style={{ textAlign: "right", cursor: "pointer", border: "none", width: "100%" }} onClick={() => onSelectDate(r.date)}>
-              <div style={{ fontWeight: 700, fontSize: 12.5, color: "#4C6B8A", marginBottom: 3 }}>{prettyDate(r.date)}</div>
-              <div style={{ fontSize: 12, color: "#6B5A3A", lineHeight: 1.5 }}>{r.snippet}</div>
-            </button>
+            <div key={r.date} className="subblock" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button style={{ flex: 1, textAlign: "right", cursor: "pointer", border: "none", background: "none", padding: 0, color: "inherit" }} onClick={() => onSelectDate(r.date)} title="রিডিং মোডে খুলুন">
+                <div style={{ fontWeight: 700, fontSize: 12.5, color: "#4C6B8A", marginBottom: 3 }}>{prettyDate(r.date)}</div>
+                <div style={{ fontSize: 12, color: "#6B5A3A", lineHeight: 1.5 }}>{r.snippet}</div>
+              </button>
+              {onEditDate && <button className="icon-btn ghost" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0 }} onClick={() => onEditDate(r.date)} title="এডিট করুন"><Icon name="edit" size={13} /></button>}
+            </div>
           ))}
         </div>
       )}
@@ -1597,7 +1655,7 @@ function DiarySearchModal({ onClose, onSelectDate }) {
   );
 }
 
-function DiaryBrowserModal({ onClose, onSelectDate }) {
+function DiaryBrowserModal({ onClose, onSelectDate, onEditDate }) {
   const GREG_MONTHS_BN = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState([]);
@@ -1635,15 +1693,19 @@ function DiaryBrowserModal({ onClose, onSelectDate }) {
   const daysInMonth = month ? entries.filter(e => e.date.startsWith(month)).sort((a, b) => b.date.localeCompare(a.date)) : [];
   const tabBtn = (active) => ({ flex: 1, justifyContent: "center", fontSize: 12.5, padding: "8px 0", ...(active ? { background: "#4C6B8A", color: "#FBF6EA" } : {}) });
   const EntryRow = ({ e }) => (
-    <button key={e.date} className="subblock" style={{ textAlign: "right", cursor: "pointer", border: "none", width: "100%" }} onClick={() => onSelectDate(e.date)}>
-      <div style={{ fontWeight: 700, fontSize: 12.5, color: "#4C6B8A", marginBottom: 3 }}>{prettyDate(e.date)}</div>
-      <div style={{ fontSize: 12, color: "#6B5A3A", lineHeight: 1.5 }}>{e.notes.length > 90 ? e.notes.slice(0, 90) + "..." : e.notes}</div>
-    </button>
+    <div key={e.date} className="subblock" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <button style={{ flex: 1, textAlign: "right", cursor: "pointer", border: "none", background: "none", padding: 0, color: "inherit" }} onClick={() => onSelectDate(e.date)} title="রিডিং মোডে খুলুন">
+        <div style={{ fontWeight: 700, fontSize: 12.5, color: "#4C6B8A", marginBottom: 3 }}>{prettyDate(e.date)}</div>
+        <div style={{ fontSize: 12, color: "#6B5A3A", lineHeight: 1.5 }}>{e.notes.length > 90 ? e.notes.slice(0, 90) + "..." : e.notes}</div>
+      </button>
+      {onEditDate && <button className="icon-btn ghost" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0 }} onClick={() => onEditDate(e.date)} title="এডিট করুন"><Icon name="edit" size={13} /></button>}
+    </div>
   );
 
   return (
     <Modal onClose={onClose} width={440}>
       <div className="modal-header"><Icon name="auto_stories" size={18} color="#4C6B8A" /><span>ডায়েরি ব্রাউজ করুন</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+      <div className="empty-note" style={{ marginTop: -6, marginBottom: 10 }}>এন্ট্রিতে ট্যাপ করলে রিডিং মোডে খুলবে, ✏️ আইকনে এডিট করা যাবে</div>
       <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
         <button className="btn-ghost" style={tabBtn(mode === "calendar")} onClick={() => { setMode("calendar"); setYear(null); setMonth(null); }}>বছর / মাস</button>
         <button className="btn-ghost" style={tabBtn(mode === "list")} onClick={() => setMode("list")}>লিস্ট আকারে</button>
@@ -1696,6 +1758,128 @@ function DiaryBrowserModal({ onClose, onSelectDate }) {
         </>
       )}
     </Modal>
+  );
+}
+
+function composeDiaryDisplay(diary) {
+  if (!diary) return null;
+  if (diary.notes && diary.notes.trim()) return { type: "notes", text: diary.notes };
+  const sections = [];
+  if (diary.accomplished) sections.push({ label: "আজ কী অর্জন করেছি", text: diary.accomplished });
+  if (diary.events) sections.push({ label: "গুরুত্বপূর্ণ ঘটনা", text: diary.events });
+  if (diary.thoughts) sections.push({ label: "ব্যক্তিগত ভাবনা", text: diary.thoughts });
+  if (diary.reflection) sections.push({ label: "দিনের প্রতিফলন", text: diary.reflection });
+  if (sections.length === 0) return null;
+  return { type: "sections", sections };
+}
+
+function DiaryReaderModal({ initialDate, onClose }) {
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState([]);
+  const [index, setIndex] = useState(0);
+  const touchStartX = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const list = await storage.list("day:");
+      const keys = list.keys.sort();
+      const found = [];
+      for (const k of keys) {
+        const ds = k.slice(4);
+        const rec = await getDayRaw(ds);
+        if (!rec || !rec.diary) continue;
+        const composed = composeDiaryDisplay(rec.diary);
+        const gratitude = Array.isArray(rec.diary.gratitude) ? rec.diary.gratitude.filter(Boolean) : [];
+        if (!composed && gratitude.length === 0) continue;
+        found.push({ date: ds, mood: rec.mood, composed, gratitude });
+      }
+      if (cancelled) return;
+      setEntries(found);
+      let idx = found.findIndex(e => e.date === initialDate);
+      if (idx === -1) {
+        const nextIdx = found.findIndex(e => e.date > initialDate);
+        idx = nextIdx === -1 ? found.length - 1 : Math.max(0, nextIdx - 1);
+      }
+      setIndex(Math.max(0, idx));
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [initialDate]);
+
+  const goPrev = useCallback(() => setIndex(i => Math.max(0, i - 1)), []);
+  const goNext = useCallback(() => setIndex(i => Math.min(entries.length - 1, i + 1)), [entries.length]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") goNext();
+      else if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goPrev, goNext, onClose]);
+
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 55) { if (dx > 0) goPrev(); else goNext(); }
+    touchStartX.current = null;
+  };
+
+  const current = entries[index];
+  const moodOpt = current && current.mood ? MOOD_OPTIONS.find(m => m.key === current.mood) : null;
+
+  return (
+    <div className="diary-reader-overlay" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="diary-reader-topbar">
+        <button className="diary-reader-close" onClick={onClose} title="বন্ধ করুন"><Icon name="close" size={19} /></button>
+        <div className="diary-reader-counter">{loading ? "লোড হচ্ছে..." : (entries.length ? (index + 1) + " / " + entries.length + " এন্ট্রি" : "")}</div>
+        <div style={{ width: 36 }} />
+      </div>
+
+      {!loading && !current && (
+        <div className="diary-reader-empty">এখনো কোনো ডায়েরি এন্ট্রি লেখা হয়নি<br />লেখা শুরু করলে এখানে বইয়ের পাতার মতো দেখা যাবে</div>
+      )}
+
+      {current && (
+        <div className="diary-reader-page">
+          <div className="diary-reader-datehead">
+            <div className="diary-reader-day">{new Date(current.date + "T00:00:00").toLocaleDateString("bn-BD", { weekday: "long" })}</div>
+            <div className="diary-reader-date">{new Date(current.date + "T00:00:00").toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" })}</div>
+            {moodOpt && <div className="diary-reader-mood" title={moodOpt.label}>{moodOpt.emoji}</div>}
+          </div>
+          <div className="diary-reader-sheet">
+            {current.composed && current.composed.type === "notes" && (
+              <div className="diary-reader-text">{current.composed.text}</div>
+            )}
+            {current.composed && current.composed.type === "sections" && current.composed.sections.map((s, i) => (
+              <div className="diary-reader-section" key={i}>
+                <div className="diary-reader-section-label">{s.label}</div>
+                <div className="diary-reader-section-text">{s.text}</div>
+              </div>
+            ))}
+            {!current.composed && current.gratitude.length > 0 && (
+              <div style={{ textAlign: "center", color: "#9A8C6C", fontFamily: "'Fraunces',serif", fontSize: 14, padding: "6px 0 4px" }}>শুধু কৃতজ্ঞতার নোট লেখা হয়েছে এই দিনে</div>
+            )}
+            {current.gratitude.length > 0 && (
+              <div className="diary-reader-gratitude">
+                {current.gratitude.map((g, i) => <span className="diary-reader-gratitude-chip" key={i}>🙏 {g}</span>)}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!loading && entries.length > 1 && (
+        <div className="diary-reader-nav">
+          <button className="diary-reader-nav-btn" onClick={goPrev} disabled={index <= 0} title="আগের এন্ট্রি"><Icon name="chevron_right" size={22} /></button>
+          <div className="diary-reader-hint">সোয়াইপ করেও পাতা ওল্টাতে পারবেন</div>
+          <button className="diary-reader-nav-btn" onClick={goNext} disabled={index >= entries.length - 1} title="পরের এন্ট্রি"><Icon name="chevron_left" size={22} /></button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -2993,6 +3177,9 @@ function DailyLifeManagement() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showDiarySearch, setShowDiarySearch] = useState(false);
   const [showDiaryBrowser, setShowDiaryBrowser] = useState(false);
+  const [showDiaryReader, setShowDiaryReader] = useState(false);
+  const [diaryReaderStartDate, setDiaryReaderStartDate] = useState(null);
+  const openDiaryReader = (d) => { setDiaryReaderStartDate(d); setShowDiaryReader(true); };
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showPomodoro, setShowPomodoro] = useState(false);
   const [openContact, setOpenContact] = useState(null);
@@ -4196,13 +4383,20 @@ function DailyLifeManagement() {
         </Card>
 
         <Card id="diary" hidden={hiddenCards.includes("diary")} iconName="edit_note" title="নোটস / ডায়েরি" subtitle="দৈনিক জার্নাল" accent="#4C6B8A" badge={diaryBadge} streak={taskStreaks.diary} expanded={expanded === "diary"} onToggle={toggle}>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 4 }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "#123A34", color: "#FBF6EA", border: "none", borderRadius: 999, padding: "6px 13px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => openDiaryReader(date)}
+              title="আজকের এন্ট্রি রিডিং মোডে খুলুন"
+            >
+              <Icon name="auto_stories" size={14} /> রিডিং মোড
+            </button>
             <button
               style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", background: "#F1E9D6", color: "#6B5A3A", border: "none", cursor: "pointer", flexShrink: 0 }}
               onClick={() => setShowDiaryBrowser(true)}
               title="পুরোনো ডায়েরি ব্রাউজ করুন"
             >
-              <Icon name="settings" size={15} />
+              <Icon name="menu_book" size={15} />
             </button>
             <button
               style={{ display: "flex", alignItems: "center", gap: 6, background: diaryBlurred ? "#4C6B8A" : "#F1E9D6", color: diaryBlurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
@@ -4527,8 +4721,9 @@ function DailyLifeManagement() {
       {showUrgeSurf && <UrgeSurfModal onClose={() => setShowUrgeSurf(false)} />}
       {showAchievements && <AchievementsModal taskStreaks={taskStreaks} onClose={() => setShowAchievements(false)} />}
 
-      {showDiarySearch && <DiarySearchModal onClose={() => setShowDiarySearch(false)} onSelectDate={(d) => { setDate(d); setExpanded("diary"); setShowDiarySearch(false); }} />}
-      {showDiaryBrowser && <DiaryBrowserModal onClose={() => setShowDiaryBrowser(false)} onSelectDate={(d) => { setDate(d); setExpanded("diary"); setShowDiaryBrowser(false); }} />}
+      {showDiarySearch && <DiarySearchModal onClose={() => setShowDiarySearch(false)} onSelectDate={(d) => { openDiaryReader(d); setShowDiarySearch(false); }} onEditDate={(d) => { setDate(d); setExpanded("diary"); setShowDiarySearch(false); }} />}
+      {showDiaryBrowser && <DiaryBrowserModal onClose={() => setShowDiaryBrowser(false)} onSelectDate={(d) => { openDiaryReader(d); setShowDiaryBrowser(false); }} onEditDate={(d) => { setDate(d); setExpanded("diary"); setShowDiaryBrowser(false); }} />}
+      {showDiaryReader && <DiaryReaderModal initialDate={diaryReaderStartDate || date} onClose={() => setShowDiaryReader(false)} />}
 
       {showWeeklyReview && <WeeklyReviewModal date={date} onClose={() => setShowWeeklyReview(false)} />}
       {showPomodoro && <PomodoroModal onClose={() => setShowPomodoro(false)} onComplete={completePomodoro} />}
