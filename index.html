@@ -1428,7 +1428,7 @@ function PointsGraphBanner({ date }) {
       const days = [];
       let d = date;
       for (let i = 0; i < range; i++) { days.unshift(d); d = shiftDate(d, -1); }
-      const recs = await Promise.all(days.map(ds => getDayRaw(ds)));
+      const recs = await Promise.all(days.map(async ds => mergeDay(await getDayRaw(ds))));
       if (cancelled) return;
       const pts = days.map((ds, i) => ({
         date: ds,
@@ -1475,6 +1475,14 @@ function PointsGraphBanner({ date }) {
         </>
       )}
     </div>
+  );
+}
+function PointsGraphModal({ date, onClose }) {
+  return (
+    <Modal onClose={onClose} width={420}>
+      <div className="modal-header"><Icon name="bar_chart" size={18} color="#123A34" /><span>পয়েন্ট গ্রাফ</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+      <PointsGraphBanner date={date} />
+    </Modal>
   );
 }
 function TrendModal({ date, onClose }) {
@@ -2268,6 +2276,42 @@ function QuickExpenseModal({ onClose, onAdd }) {
   );
 }
 
+function TodoModal({ todos, onAdd, onToggle, onDelete, onClose }) {
+  const [text, setText] = useState("");
+  const submit = () => { if (text.trim()) { onAdd(text); setText(""); } };
+  const pending = todos.filter(t => !t.done);
+  const done = todos.filter(t => t.done);
+  return (
+    <Modal onClose={onClose} width={420}>
+      <div className="modal-header"><Icon name="checklist" size={18} color="#4A6FA5" /><span>টু ডু লিস্ট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+      <div className="add-row" style={{ marginBottom: 12 }}>
+        <input placeholder="নতুন কাজ লিখুন" value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
+        <button className="icon-btn" onClick={submit}><Icon name="add" size={18} /></button>
+      </div>
+      {todos.length === 0 && <div className="empty-note">এখনো কোনো কাজ যোগ করা হয়নি — উপরে লিখে যোগ করুন</div>}
+      {pending.map(t => (
+        <div className="nafl-item" key={t.id}>
+          <div className="amoli-check" onClick={() => onToggle(t.id)}></div>
+          <span className="n-name">{t.text}</span>
+          <button className="icon-btn ghost" onClick={() => onDelete(t.id)}><Icon name="delete" size={15} /></button>
+        </div>
+      ))}
+      {done.length > 0 && (
+        <>
+          <div className="section-label" style={{ color: "#6B7A4F" }}>সম্পন্ন ✓</div>
+          {done.map(t => (
+            <div className="nafl-item" key={t.id}>
+              <div className="amoli-check" style={{ background: "#4A6FA5", borderColor: "#4A6FA5" }} onClick={() => onToggle(t.id)}><Icon name="check" size={16} color="#FBF6EA" /></div>
+              <span className="n-name" style={{ textDecoration: "line-through", color: "#8A7F68" }}>{t.text}</span>
+              <button className="icon-btn ghost" onClick={() => onDelete(t.id)}><Icon name="delete" size={15} /></button>
+            </div>
+          ))}
+        </>
+      )}
+    </Modal>
+  );
+}
+
 /* ---------------- reusable report content (used both on-screen and for printing) ---------------- */
 function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPeople }) {
   const statusLabel = Object.fromEntries(PRAYER_STATUS.map(s => [s.key, s.label]));
@@ -2785,6 +2829,9 @@ function DailyLifeManagement() {
   const [contactStreaks, setContactStreaks] = useState({});
   const [taskStreaks, setTaskStreaks] = useState({});
   const [habitItemStreaks, setHabitItemStreaks] = useState({});
+  const [todos, setTodos] = useState([]);
+  const [showTodo, setShowTodo] = useState(false);
+  const [showPointsGraph, setShowPointsGraph] = useState(false);
   const [monthData, setMonthData] = useState(emptyMonth());
   const [monthExpense, setMonthExpense] = useState({ totals: {}, grand: 0 });
   const [monthLoading, setMonthLoading] = useState(false);
@@ -2806,6 +2853,8 @@ function DailyLifeManagement() {
       catch (e) { setDebts([]); }
       try { const r = await storage.get("bills"); setBills(r ? JSON.parse(r.value) : []); }
       catch (e) { setBills([]); }
+      try { const r = await storage.get("todos"); setTodos(r ? JSON.parse(r.value) : []); }
+      catch (e) { setTodos([]); }
     })();
     // eslint-disable-next-line
   }, []);
@@ -2830,6 +2879,17 @@ function DailyLifeManagement() {
     saveBills([...bills, { id: Date.now() + "_" + Math.random().toString(36).slice(2, 6), name: name.trim(), amount: parseFloat(amount) || 0, dayOfMonth: Math.max(1, Math.min(31, parseInt(dayOfMonth) || 1)) }]);
   };
   const deleteBill = (id) => { if (!window.confirm("এই বিলটি মুছে ফেলতে চান?")) return; saveBills(bills.filter(b => b.id !== id)); };
+
+  const saveTodos = async (list) => {
+    setTodos(list);
+    try { await storage.set("todos", JSON.stringify(list)); } catch (e) { console.error(e); }
+  };
+  const addTodo = (text) => {
+    if (!text.trim()) return;
+    saveTodos([...todos, { id: Date.now() + "_" + Math.random().toString(36).slice(2, 6), text: text.trim(), done: false }]);
+  };
+  const toggleTodo = (id) => saveTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  const deleteTodo = (id) => saveTodos(todos.filter(t => t.id !== id));
 
   useEffect(() => { (async () => { const loaded = await getDayRaw(date); setDay(mergeDay(loaded)); setOpenContact(null); setContactStreaks({}); })(); }, [date]);
 
@@ -2866,11 +2926,14 @@ function DailyLifeManagement() {
       for (const name of customNames) {
         results["custom:" + name] = await computeHabitItemStreak(date, (rec) => rec.habit.custom.some(c => c.name === name && c.done));
       }
+      if (noTextPeople.length > 0) {
+        results.noTextAll = await computeHabitItemStreak(date, (rec) => noTextPeople.every(p => (rec.habit.noTextStatus || {})[p.name] === "yes"));
+      }
       setHabitItemStreaks(results);
     }, 900);
     return () => clearTimeout(habitItemStreakTimer.current);
     // eslint-disable-next-line
-  }, [date, day.habit.custom.map(h => h.name).join("|"), ...HABIT_LIST.map(h => day.habit[h.key])]);
+  }, [date, day.habit.custom.map(h => h.name).join("|"), ...HABIT_LIST.map(h => day.habit[h.key]), noTextPeople.map(p => p.name).join("|"), JSON.stringify(day.habit.noTextStatus)]);
 
   const refreshMonthExpense = useCallback(async (forDate) => {
     setMonthLoading(true);
@@ -3312,6 +3375,9 @@ function DailyLifeManagement() {
         </div>
         <div className="icon-toolbar">
           <button onClick={() => setShowCalendar(true)} title="ক্যালেন্ডার"><Icon name="calendar_month" size={13} /></button>
+          <button onClick={() => setShowTodo(true)} title="টু ডু"><Icon name="checklist" size={13} /></button>
+          <button onClick={() => setShowPointsGraph(true)} title="পয়েন্ট গ্রাফ"><Icon name="bar_chart" size={13} /></button>
+          <button onClick={exportBackup} title="ব্যাকআপ ডাউনলোড"><Icon name="download" size={13} /></button>
           <button onClick={() => setShowAchievements(true)} title="অ্যাচিভমেন্ট"><Icon name="emoji_events" size={13} /></button>
           <button onClick={() => setShowDiarySearch(true)} title="ডায়েরি সার্চ"><Icon name="search" size={13} /></button>
           <button onClick={() => setShowWeeklyReview(true)} title="সাপ্তাহিক রিভিউ"><Icon name="rate_review" size={13} /></button>
@@ -3325,8 +3391,6 @@ function DailyLifeManagement() {
             <div style={{ fontSize: 10.5, color: "#8A7F68", marginTop: 3 }}>— {hadithOfDay(date).ref}</div>
           </div>
         </div>
-
-        <PointsGraphBanner date={date} />
 
         <button className="pdf-btn" onClick={() => setShowReport(true)}>
           <Icon name="description" size={17} /> এই দিনের রিপোর্ট দেখুন / PDF করুন
@@ -3743,7 +3807,12 @@ function DailyLifeManagement() {
 
           <div className="section-label">চলমান অভ্যাস</div>
           <div className="subblock" style={{ marginBottom: 14 }}>
-            <div className="subblock-title">নো টেক্সট ফার্স্ট (ব্যক্তি অনুযায়ী)</div>
+            <div className="subblock-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              নো টেক্সট ফার্স্ট (ব্যক্তি অনুযায়ী)
+              {noTextPeople.length > 0 && !!habitItemStreaks.noTextAll && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#B5651D" }}>🔥 {habitItemStreaks.noTextAll} দিন ধরে সবাই মিলে চলছে</span>
+              )}
+            </div>
             {noTextPeople.length === 0 && <div className="empty-note">এখনো কেউ যোগ করা হয়নি</div>}
             {noTextPeople.map(p => {
               const status = (day.habit.noTextStatus || {})[p.name] || null;
@@ -4209,6 +4278,8 @@ function DailyLifeManagement() {
       {showCalendar && <CalendarModal selectedDate={date} onSelect={(d) => setDate(d)} onClose={() => setShowCalendar(false)} />}
       {showSettings && <SettingsModal darkMode={darkMode} onToggleDark={toggleDarkMode} reminderSettings={reminderSettings} onReminderChange={setReminderSettings} appPin={appPin} onSetPin={setAppPin} prayerCoords={prayerCoords} onSetPrayerCoords={setPrayerCoords} bills={bills} onAddBill={addBill} onDeleteBill={deleteBill} cardOrder={cardOrder} hiddenCards={hiddenCards} onMoveCard={moveCardOrder} onToggleCardHidden={toggleCardHidden} onShowAllCards={resetHiddenCards} customTasks={customTasks} onAddCustomTask={addCustomTask} onDeleteCustomTask={deleteCustomTask} onAddCustomItem={addCustomTaskItem} onDeleteCustomItem={deleteCustomTaskItem} onClose={() => setShowSettings(false)} />}
       {showQuickExpense && <QuickExpenseModal onClose={() => setShowQuickExpense(false)} onAdd={quickAddExpense} />}
+      {showTodo && <TodoModal todos={todos} onAdd={addTodo} onToggle={toggleTodo} onDelete={deleteTodo} onClose={() => setShowTodo(false)} />}
+      {showPointsGraph && <PointsGraphModal date={date} onClose={() => setShowPointsGraph(false)} />}
       {showQazaTracker && <QazaTrackerModal qazaCounts={qazaCounts} onChange={adjustQaza} onClose={() => setShowQazaTracker(false)} />}
       {showMeditationTimer && <MeditationTimerModal onClose={() => setShowMeditationTimer(false)} onComplete={completeMeditation} />}
       {showUrgeSurf && <UrgeSurfModal onClose={() => setShowUrgeSurf(false)} />}
