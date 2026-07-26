@@ -161,6 +161,10 @@
   .modal-box { background:#FBF6EA; border-radius:20px; padding:20px 22px 22px; width:100%; max-height:88vh; overflow:auto; }
   .modal-header { display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-weight:600; font-size:15px; color:#2B2A22; margin-bottom:14px; }
   .modal-close { margin-left:auto; background:none; border:none; cursor:pointer; color:#8A7F68; }
+  .modal-backdrop.full { padding:0; }
+  .modal-box-page { height:100vh; max-height:100vh; width:100vw; max-width:100vw !important; display:flex; flex-direction:column; padding:0; overflow:hidden; border-radius:0; }
+  .modal-box-page > .modal-header { position:sticky; top:0; z-index:5; background:#FBF6EA; margin-bottom:0; padding:18px 22px; border-bottom:1.5px solid #E7DDC7; flex-shrink:0; }
+  .modal-body-scroll { flex:1; min-height:0; overflow-y:auto; padding:16px 22px 24px; -webkit-overflow-scrolling:touch; }
   .modal-q { font-weight:600; font-size:14px; margin-bottom:8px; }
   .modal-input { width:100%; border:1.5px solid #E1D6B8; background:#FFFDF7; border-radius:10px; padding:9px 11px; font-family:'Inter'; font-size:14px; margin-bottom:4px; outline:none; }
 
@@ -262,6 +266,7 @@
   .dtt-root.dark .stat-label { color:#8FA294; }
   .dtt-root.dark .modal-box { background:#1F2A22; }
   .dtt-root.dark .modal-header { color:#E7E0CC; }
+  .dtt-root.dark .modal-box-page > .modal-header { background:#1F2A22; border-bottom-color:#33422F; }
   .dtt-root.dark .btn-ghost { border-color:#3A4634; color:#E7E0CC; }
   .dtt-root.dark .cal-day { background:#1B241C; color:#E7E0CC; }
   .dtt-root.dark .cal-day:hover { background:#25302A; }
@@ -988,10 +993,10 @@ function UntickControl({ count, onInc, onDec, rate = 0.6 }) {
     </div>
   );
 }
-function Modal({ onClose, children, width = 480 }) {
+function Modal({ onClose, children, width = 480, fullPage = false }) {
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-box" style={{ maxWidth: width }} onClick={e => e.stopPropagation()}>{children}</div>
+    <div className={"modal-backdrop" + (fullPage ? " full" : "")} onClick={onClose}>
+      <div className={"modal-box" + (fullPage ? " modal-box-page" : "")} style={fullPage ? undefined : { maxWidth: width }} onClick={e => e.stopPropagation()}>{children}</div>
     </div>
   );
 }
@@ -2775,15 +2780,81 @@ function NoteModal({ onClose }) {
   const [salt, setSalt] = useState("");
   const [pin, setPin] = useState(""); // held in memory only for this open session, never persisted in plaintext
   const [unlocked, setUnlocked] = useState(false);
-  const [notes, setNotes] = useState([]);
+  const [data, setData] = useState({ gmail: [], fb: [], contacts: [], importantNote: "" });
   const [showPinSetup, setShowPinSetup] = useState(false); // "activate" | "change" | false
-  const [view, setView] = useState("list"); // "list" | "edit"
-  const [activeId, setActiveId] = useState(null);
-  const [titleDraft, setTitleDraft] = useState("");
-  const [contentDraft, setContentDraft] = useState("");
-  const [blurred, setBlurred] = useState(true);
   const [pinMsg, setPinMsg] = useState("");
   const [loadError, setLoadError] = useState("");
+
+  const [screen, setScreen] = useState("categories"); // "categories" | "list" | "edit" | "note"
+  const [activeCategory, setActiveCategory] = useState(null); // "gmail" | "fb" | "contacts" | "importantNote"
+  const [activeId, setActiveId] = useState(null);
+  const [blurred, setBlurred] = useState(true);
+  const [visiblePass, setVisiblePass] = useState({});
+  const [copiedField, setCopiedField] = useState(null);
+  const [copiedRow, setCopiedRow] = useState(null);
+  const [copiedNote, setCopiedNote] = useState(false);
+
+  // gmail/fb entry draft
+  const [nameDraft, setNameDraft] = useState("");
+  const [passDraft, setPassDraft] = useState("");
+  // contact entry draft
+  const [contactNameDraft, setContactNameDraft] = useState("");
+  const [numbersDraft, setNumbersDraft] = useState([]);
+  // important note draft
+  const [noteDraft, setNoteDraft] = useState("");
+
+  const CATEGORIES = [
+    { key: "gmail", label: "Gmail অ্যাকাউন্ট", icon: "mail" },
+    { key: "fb", label: "Facebook অ্যাকাউন্ট", icon: "thumb_up" },
+    { key: "contacts", label: "কন্টাক্ট নাম্বার", icon: "contact_phone" },
+    { key: "importantNote", label: "গুরুত্বপূর্ণ নোট", icon: "sticky_note_2" },
+  ];
+
+  const genId = () => Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+  const defaultData = () => ({ gmail: [], fb: [], contacts: [], importantNote: "" });
+
+  // best-effort migration from the previous single-list note format
+  const migrateOldFormat = (oldList) => {
+    const d = defaultData();
+    if (!Array.isArray(oldList)) return d;
+    const noteLines = [];
+    oldList.forEach(n => {
+      if (n.kind === "contact") {
+        (n.entries || []).forEach(e => {
+          if ((e.name || "").trim() || (e.number || "").trim()) {
+            d.contacts.push({ id: genId(), name: e.name || "", numbers: (e.number || "").trim() ? [{ id: genId(), value: e.number }] : [] });
+          }
+          if ((e.note || "").trim()) noteLines.push((e.name || "কন্টাক্ট") + ": " + e.note);
+        });
+      } else {
+        (n.entries || []).forEach(e => {
+          const hay = ((e.label || "") + " " + (n.title || "")).toLowerCase();
+          const target = (hay.includes("fb") || hay.includes("facebook")) ? d.fb : d.gmail;
+          if ((e.label || "").trim() || (e.user || "").trim() || (e.pass || "").trim()) {
+            target.push({ id: genId(), name: e.user || e.label || "", pass: e.pass || "" });
+          }
+        });
+      }
+      if ((n.content || "").trim()) noteLines.push((n.title || "নোট") + ": " + n.content);
+    });
+    d.importantNote = noteLines.join("\n\n");
+    return d;
+  };
+
+  const copyText = async (text, onDone) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text || "");
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text || ""; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+      }
+      onDone && onDone();
+    } catch (e) {}
+  };
+
+  const copyField = (entryId, field, value) => copyText(value, () => { setCopiedField(entryId + ":" + field); setTimeout(() => setCopiedField(f => f === entryId + ":" + field ? null : f), 1200); });
 
   useEffect(() => {
     (async () => {
@@ -2794,33 +2865,37 @@ function NoteModal({ onClose }) {
           return;
         }
       } catch (e) { /* no salt saved -> not encrypted yet */ }
-      // not encrypted: load plaintext notes, migrating the old single-note format if needed
-      let list = [];
+      let d = defaultData();
       try {
         const r = await storage.get("privacyNotes");
-        list = r ? JSON.parse(r.value) : [];
-      } catch (e) {
-        try {
-          const old = await storage.get("importantNote");
-          if (old && old.value) {
-            list = [{ id: Date.now() + "_mig", title: "গুরুত্বপূর্ণ নোট", content: old.value, updatedAt: Date.now() }];
-            storage.set("privacyNotes", JSON.stringify(list)).catch(() => {});
+        if (r && r.value) {
+          const parsed = JSON.parse(r.value);
+          if (Array.isArray(parsed)) {
+            d = migrateOldFormat(parsed);
+            storage.set("privacyNotes", JSON.stringify(d)).catch(() => {});
+          } else if (parsed && typeof parsed === "object") {
+            d = { ...defaultData(), ...parsed };
           }
-        } catch (e2) {}
-      }
-      setNotes(list); setEncrypted(false); setUnlocked(true); setLoading(false);
+        } else {
+          try {
+            const old = await storage.get("importantNote");
+            if (old && old.value) { d.importantNote = old.value; storage.set("privacyNotes", JSON.stringify(d)).catch(() => {}); }
+          } catch (e2) {}
+        }
+      } catch (e) {}
+      setData(d); setEncrypted(false); setUnlocked(true); setLoading(false);
     })();
     // eslint-disable-next-line
   }, []);
 
-  const persistNotes = async (list, activePin, activeSalt, isEncrypted) => {
-    setNotes(list);
+  const persistData = async (nextData, activePin, activeSalt, isEncrypted) => {
+    setData(nextData);
     try {
       if (isEncrypted) {
-        const payload = await pnEncrypt(list, activePin, activeSalt);
+        const payload = await pnEncrypt(nextData, activePin, activeSalt);
         await storage.set("privacyNotes", JSON.stringify(payload));
       } else {
-        await storage.set("privacyNotes", JSON.stringify(list));
+        await storage.set("privacyNotes", JSON.stringify(nextData));
       }
     } catch (e) { console.error(e); }
   };
@@ -2829,8 +2904,9 @@ function NoteModal({ onClose }) {
     try {
       const raw = await storage.get("privacyNotes");
       const payload = raw ? JSON.parse(raw.value) : { iv: "", data: "" };
-      const decrypted = payload && payload.data ? await pnDecrypt(payload, candidatePin, salt) : [];
-      setNotes(decrypted); setPin(candidatePin); setUnlocked(true);
+      const decrypted = payload && payload.data ? await pnDecrypt(payload, candidatePin, salt) : defaultData();
+      const finalData = (decrypted && typeof decrypted === "object" && !Array.isArray(decrypted)) ? { ...defaultData(), ...decrypted } : migrateOldFormat(decrypted);
+      setData(finalData); setPin(candidatePin); setUnlocked(true);
       return true;
     } catch (e) {
       return false;
@@ -2840,7 +2916,7 @@ function NoteModal({ onClose }) {
   const activatePin = async (newPin) => {
     const newSalt = pnRandomSalt();
     try {
-      const payload = await pnEncrypt(notes, newPin, newSalt);
+      const payload = await pnEncrypt(data, newPin, newSalt);
       await storage.set("privacyNotesSalt", newSalt);
       await storage.set("privacyNotes", JSON.stringify(payload));
       setSalt(newSalt); setPin(newPin); setEncrypted(true);
@@ -2852,71 +2928,135 @@ function NoteModal({ onClose }) {
 
   const removePin = async () => {
     if (!window.confirm("এনক্রিপশন বন্ধ করলে নোট আবার সাধারণভাবে (এনক্রিপ্ট ছাড়া) সেভ হবে। এগিয়ে যেতে চান?")) return;
-    try { await storage.set("privacyNotes", JSON.stringify(notes)); } catch (e) {}
+    try { await storage.set("privacyNotes", JSON.stringify(data)); } catch (e) {}
     try { window.localStorage.removeItem(STORAGE_PREFIX + "privacyNotesSalt"); } catch (e) {}
     setEncrypted(false); setPin(""); setSalt("");
   };
 
-  const openNew = () => { setActiveId(null); setTitleDraft(""); setContentDraft(""); setBlurred(false); setView("edit"); };
-  const openExisting = (n) => { setActiveId(n.id); setTitleDraft(n.title); setContentDraft(n.content); setBlurred(true); setView("edit"); };
+  const openCategory = (key) => {
+    setActiveCategory(key);
+    if (key === "importantNote") {
+      setNoteDraft(data.importantNote || "");
+      setBlurred(!!(data.importantNote || "").trim());
+      setScreen("note");
+    } else {
+      setScreen("list");
+    }
+  };
+  const backToCategories = () => { setScreen("categories"); setActiveCategory(null); };
 
-  const saveActive = () => {
-    if (!titleDraft.trim() && !contentDraft.trim()) { setView("list"); return; }
-    const now = Date.now();
-    const nextList = activeId
-      ? notes.map(n => n.id === activeId ? { ...n, title: titleDraft.trim() || "শিরোনামহীন নোট", content: contentDraft, updatedAt: now } : n)
-      : [{ id: now + "_" + Math.random().toString(36).slice(2, 6), title: titleDraft.trim() || "শিরোনামহীন নোট", content: contentDraft, updatedAt: now }, ...notes];
-    persistNotes(nextList, pin, salt, encrypted);
-    setView("list");
+  const openNewEntry = () => {
+    setActiveId(null);
+    if (activeCategory === "contacts") {
+      setContactNameDraft(""); setNumbersDraft([{ id: genId(), value: "" }]);
+    } else {
+      setNameDraft(""); setPassDraft("");
+    }
+    setVisiblePass({});
+    setBlurred(false);
+    setScreen("edit");
+  };
+  const openExistingEntry = (entry) => {
+    setActiveId(entry.id);
+    if (activeCategory === "contacts") {
+      setContactNameDraft(entry.name || ""); setNumbersDraft(entry.numbers && entry.numbers.length ? entry.numbers : [{ id: genId(), value: "" }]);
+    } else {
+      setNameDraft(entry.name || ""); setPassDraft(entry.pass || "");
+    }
+    setVisiblePass({});
+    setBlurred(true);
+    setScreen("edit");
   };
 
-  const deleteNote = (id) => {
-    if (!window.confirm("এই নোটটি মুছে ফেলতে চান?")) return;
-    persistNotes(notes.filter(n => n.id !== id), pin, salt, encrypted);
-    if (activeId === id) setView("list");
+  const addNumberField = () => setNumbersDraft(list => [...list, { id: genId(), value: "" }]);
+  const updateNumberField = (id, value) => setNumbersDraft(list => list.map(n => n.id === id ? { ...n, value } : n));
+  const removeNumberField = (id) => setNumbersDraft(list => list.filter(n => n.id !== id));
+
+  const saveEntry = () => {
+    if (activeCategory === "contacts") {
+      const cleanNumbers = numbersDraft.filter(n => (n.value || "").trim());
+      if (!contactNameDraft.trim() && cleanNumbers.length === 0) { setScreen("list"); return; }
+      const now = Date.now();
+      const entry = { id: activeId || genId(), name: contactNameDraft.trim() || "নামহীন", numbers: cleanNumbers, updatedAt: now };
+      const nextList = activeId ? data.contacts.map(c => c.id === activeId ? entry : c) : [entry, ...data.contacts];
+      persistData({ ...data, contacts: nextList }, pin, salt, encrypted);
+    } else {
+      if (!nameDraft.trim() && !passDraft.trim()) { setScreen("list"); return; }
+      const now = Date.now();
+      const entry = { id: activeId || genId(), name: nameDraft.trim() || "নামহীন", pass: passDraft, updatedAt: now };
+      const nextList = activeId ? data[activeCategory].map(x => x.id === activeId ? entry : x) : [entry, ...data[activeCategory]];
+      persistData({ ...data, [activeCategory]: nextList }, pin, salt, encrypted);
+    }
+    setScreen("list");
+  };
+
+  const deleteEntry = (id) => {
+    if (!window.confirm("এই এন্ট্রিটি মুছে ফেলতে চান?")) return;
+    persistData({ ...data, [activeCategory]: data[activeCategory].filter(x => x.id !== id) }, pin, salt, encrypted);
+    if (activeId === id) setScreen("list");
+  };
+
+  const saveNote = () => {
+    persistData({ ...data, importantNote: noteDraft }, pin, salt, encrypted);
+    setScreen("categories");
   };
 
   if (loading) {
     return (
-      <Modal onClose={onClose} width={380}>
+      <Modal onClose={onClose} width={440} fullPage>
         <div className="modal-header"><Icon name="sticky_note_2" size={18} color="#B5651D" /><span>প্রাইভেসি নোট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
-        <div className="empty-note" style={{ textAlign: "center", padding: "24px 0" }}>লোড হচ্ছে...</div>
+        <div className="modal-body-scroll">
+          <div className="empty-note" style={{ textAlign: "center", padding: "24px 0" }}>লোড হচ্ছে...</div>
+        </div>
       </Modal>
     );
   }
 
   if (encrypted && !unlocked) {
     return (
-      <Modal onClose={onClose} width={380}>
+      <Modal onClose={onClose} width={440} fullPage>
         <div className="modal-header"><Icon name="lock" size={18} color="#B5651D" /><span>প্রাইভেসি নোট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
-        <NotePinPad mode="unlock" onSubmitPin={attemptUnlock} onCancel={onClose} />
+        <div className="modal-body-scroll">
+          <NotePinPad mode="unlock" onSubmitPin={attemptUnlock} onCancel={onClose} />
+        </div>
       </Modal>
     );
   }
 
   if (showPinSetup) {
     return (
-      <Modal onClose={onClose} width={380}>
+      <Modal onClose={onClose} width={440} fullPage>
         <div className="modal-header"><Icon name="lock" size={18} color="#B5651D" /><span>প্রাইভেসি নোট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
-        <NotePinPad mode="set" onSubmitPin={activatePin} onCancel={() => setShowPinSetup(false)} />
+        <div className="modal-body-scroll">
+          <NotePinPad mode="set" onSubmitPin={activatePin} onCancel={() => setShowPinSetup(false)} />
+        </div>
       </Modal>
     );
   }
 
+  const catMeta = CATEGORIES.find(c => c.key === activeCategory);
+  const headerTitle = screen === "categories" ? "প্রাইভেসি নোট"
+    : screen === "list" ? (catMeta ? catMeta.label : "প্রাইভেসি নোট")
+    : screen === "note" ? "গুরুত্বপূর্ণ নোট"
+    : (activeId ? "এডিট করুন" : "নতুন যোগ করুন");
+  const headerBack = screen === "list" ? backToCategories : screen === "edit" ? (() => setScreen("list")) : screen === "note" ? backToCategories : null;
+
   return (
-    <Modal onClose={onClose} width={440}>
+    <Modal onClose={onClose} width={520} fullPage>
       <div className="modal-header">
-        <Icon name="sticky_note_2" size={18} color="#B5651D" />
-        <span>{view === "edit" ? (activeId ? "নোট এডিট করুন" : "নতুন নোট") : "প্রাইভেসি নোট"}</span>
+        {headerBack && <button className="icon-btn ghost" onClick={headerBack} title="ফিরে যান"><Icon name="arrow_back" size={18} /></button>}
+        <Icon name={catMeta ? catMeta.icon : "sticky_note_2"} size={18} color="#B5651D" />
+        <span>{headerTitle}</span>
         <button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button>
       </div>
 
-      {view === "list" && (
+      <div className="modal-body-scroll">
+      {screen === "categories" && (
         <>
           {!pnCryptoAvailable && (
             <div className="empty-note" style={{ padding: "0 0 8px", color: "#A14545" }}>এই ব্রাউজারে এনক্রিপশন সাপোর্ট নেই, তাই নোট এনক্রিপ্ট করা যাবে না।</div>
           )}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
             {encrypted ? (
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6, background: "#123A34", color: "#FBF6EA", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700 }}>
@@ -2935,41 +3075,171 @@ function NoteModal({ onClose }) {
                 </button>
               )
             )}
-            <button className="icon-btn" onClick={openNew} title="নতুন নোট"><Icon name="add" size={18} /></button>
           </div>
           {pinMsg && <div className="goal-ok" style={{ marginBottom: 8 }}>{pinMsg}</div>}
           {loadError && <div className="empty-note" style={{ color: "#A14545" }}>{loadError}</div>}
 
-          {notes.length === 0 ? (
-            <div className="empty-note" style={{ textAlign: "center", padding: "20px 0" }}>এখনো কোনো প্রাইভেসি নোট যোগ করা হয়নি। উপরের + বাটনে চাপুন।</div>
-          ) : (
-            <div style={{ maxHeight: 360, overflowY: "auto" }}>
-              {[...notes].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).map(n => (
-                <div key={n.id} className="nafl-item" style={{ cursor: "pointer", alignItems: "flex-start" }} onClick={() => openExisting(n)}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="n-name" style={{ marginBottom: 2 }}>{n.title || "শিরোনামহীন নোট"}</div>
-                    <div style={{ fontSize: 12, color: "#A69B7F", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {(n.content || "").replace(/\n/g, " ") || "খালি নোট"}
-                    </div>
+          <div>
+            {CATEGORIES.map(c => {
+              const count = c.key === "importantNote" ? null : (data[c.key] || []).length;
+              const subtitle = c.key === "importantNote"
+                ? ((data.importantNote || "").trim() ? (data.importantNote.replace(/\n/g, " ").slice(0, 60)) : "খালি — ট্যাপ করে লিখুন")
+                : (count > 0 ? count + "টি সেভ করা আছে" : "এখনো কিছু যোগ করা হয়নি");
+              return (
+                <div key={c.key} className="nafl-item" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => openCategory(c.key)}>
+                  <div className="task-card-icon" style={{ width: 36, height: 36, background: "#F1E9D6" }}>
+                    <Icon name={c.icon} size={19} color="#B5651D" />
                   </div>
-                  <button className="icon-btn ghost" onClick={(e) => { e.stopPropagation(); deleteNote(n.id); }}><Icon name="delete" size={15} /></button>
+                  <div style={{ flex: 1, minWidth: 0, marginLeft: 4 }}>
+                    <div className="n-name">{c.label}</div>
+                    <div style={{ fontSize: 12, color: "#A69B7F", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</div>
+                  </div>
+                  <Icon name="chevron_left" size={18} color="#C6BB9C" />
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
           <div className="empty-note" style={{ padding: "10px 0 0" }}>
-            এই নোটগুলো প্রধান লিস্টে দেখানো হয় না, শুধু এই আইকন থেকে খোলা যায়।{encrypted ? " নোটগুলো এখন AES-256 দিয়ে এনক্রিপ্ট করে সেভ হয় — সঠিক PIN ছাড়া কেউ পড়তে পারবে না। PIN ভুলে গেলে নোট ফেরত পাওয়া যাবে না, তাই মনে রাখুন।" : ""}
+            এই অপশনগুলো প্রধান লিস্টে দেখানো হয় না, শুধু এই আইকন থেকে খোলা যায়।{encrypted ? " তথ্যগুলো এখন AES-256 দিয়ে এনক্রিপ্ট করে সেভ হয় — সঠিক PIN ছাড়া কেউ পড়তে পারবে না। PIN ভুলে গেলে ফেরত পাওয়া যাবে না, তাই মনে রাখুন।" : ""}
           </div>
         </>
       )}
 
-      {view === "edit" && (
+      {screen === "list" && activeCategory !== "importantNote" && (
         <>
-          <div className="field" style={{ marginBottom: 10 }}>
-            <label>শিরোনাম</label>
-            <input value={titleDraft} onChange={e => setTitleDraft(e.target.value)} placeholder="নোটের শিরোনাম লিখুন" autoFocus />
-          </div>
+          <button className="btn-ghost" style={{ width: "100%", justifyContent: "center", marginBottom: 10 }} onClick={openNewEntry}>
+            <Icon name="add" size={16} /> {activeCategory === "contacts" ? "নতুন কন্টাক্ট যোগ করুন" : "নতুন অ্যাকাউন্ট যোগ করুন"}
+          </button>
+          {(data[activeCategory] || []).length === 0 ? (
+            <div className="empty-note" style={{ textAlign: "center", padding: "20px 0" }}>এখনো কিছু যোগ করা হয়নি। উপরের বাটনে চাপুন।</div>
+          ) : (
+            <div>
+              {[...data[activeCategory]].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).map(item => (
+                <div key={item.id} className="nafl-item" style={{ cursor: "pointer", alignItems: "flex-start" }} onClick={() => openExistingEntry(item)}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="n-name" style={{ marginBottom: 2 }}>{item.name}</div>
+                    <div style={{ fontSize: 12, color: "#A69B7F", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {activeCategory === "contacts"
+                        ? (item.numbers && item.numbers.length ? item.numbers.map(n => n.value).join(", ") : "কোনো নাম্বার নেই")
+                        : (item.pass ? "••••••••" : "কোনো পাসওয়ার্ড নেই")}
+                    </div>
+                  </div>
+                  <button
+                    className="icon-btn ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const text = activeCategory === "contacts" ? (item.numbers || []).map(n => n.value).join(", ") : (item.pass || "");
+                      copyText(text, () => { setCopiedRow(item.id); setTimeout(() => setCopiedRow(id => id === item.id ? null : id), 1200); });
+                    }}
+                    title="কপি করুন"
+                  >
+                    <Icon name={copiedRow === item.id ? "check" : "content_copy"} size={15} />
+                  </button>
+                  <button className="icon-btn ghost" onClick={(e) => { e.stopPropagation(); deleteEntry(item.id); }}><Icon name="delete" size={15} /></button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {screen === "edit" && activeCategory === "contacts" && (
+        <>
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 6, background: blurred ? "#B5651D" : "#F1E9D6", color: blurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => setBlurred(b => !b)}
+            >
+              <Icon name={blurred ? "visibility_off" : "lock_open"} size={14} /> {blurred ? "ব্লার চালু আছে — দেখতে ট্যাপ করুন" : "প্রাইভেসি ব্লার"}
+            </button>
+          </div>
+          <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
+            <div className="field" style={{ marginBottom: 10 }}>
+              <label>কন্টাক্ট নাম</label>
+              <input value={contactNameDraft} onChange={e => setContactNameDraft(e.target.value)} placeholder="নাম লিখুন" autoFocus />
+            </div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#8A7F68", display: "block", marginBottom: 6 }}>ফোন নাম্বারসমূহ</label>
+            {numbersDraft.map((n, idx) => (
+              <div key={n.id} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
+                <input
+                  type="tel"
+                  value={n.value}
+                  onChange={ev => updateNumberField(n.id, ev.target.value)}
+                  placeholder={"নাম্বার #" + (idx + 1)}
+                  style={{ flex: 1, border: "1.5px solid #E1D6B8", background: "#FFFDF7", borderRadius: 8, padding: "6px 8px", fontSize: 13 }}
+                />
+                <button className="icon-btn ghost" onClick={() => copyField(n.id, "num", n.value)} title="কপি করুন">
+                  <Icon name={copiedField === (n.id + ":num") ? "check" : "content_copy"} size={15} />
+                </button>
+                <button className="icon-btn ghost" onClick={() => removeNumberField(n.id)} title="মুছুন"><Icon name="delete" size={15} /></button>
+              </div>
+            ))}
+            <button className="btn-ghost" style={{ width: "100%", justifyContent: "center", marginBottom: 14 }} onClick={addNumberField}>
+              <Icon name="add" size={16} /> আরেকটা নাম্বার যোগ করুন
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen("list")}>বাতিল করুন</button>
+            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveEntry}>সংরক্ষণ করুন</button>
+          </div>
+        </>
+      )}
+
+      {screen === "edit" && (activeCategory === "gmail" || activeCategory === "fb") && (
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 6, background: blurred ? "#B5651D" : "#F1E9D6", color: blurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => setBlurred(b => !b)}
+            >
+              <Icon name={blurred ? "visibility_off" : "lock_open"} size={14} /> {blurred ? "ব্লার চালু আছে — দেখতে ট্যাপ করুন" : "প্রাইভেসি ব্লার"}
+            </button>
+          </div>
+          <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
+            <div className="field" style={{ marginBottom: 10 }}>
+              <label>অ্যাকাউন্ট নাম</label>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input value={nameDraft} onChange={e => setNameDraft(e.target.value)} placeholder="যেমন: mynameG@gmail.com" autoFocus style={{ flex: 1 }} />
+                <button className="icon-btn ghost" onClick={() => copyField("name", "name", nameDraft)} title="কপি করুন">
+                  <Icon name={copiedField === "name:name" ? "check" : "content_copy"} size={15} />
+                </button>
+              </div>
+            </div>
+            <div className="field" style={{ marginBottom: 10 }}>
+              <label>পাসওয়ার্ড</label>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input
+                  type={visiblePass.pass ? "text" : "password"}
+                  value={passDraft}
+                  onChange={e => setPassDraft(e.target.value)}
+                  placeholder="পাসওয়ার্ড লিখুন"
+                  style={{ flex: 1 }}
+                />
+                <button className="icon-btn ghost" onClick={() => setVisiblePass(v => ({ ...v, pass: !v.pass }))} title="দেখান/লুকান">
+                  <Icon name={visiblePass.pass ? "visibility_off" : "visibility"} size={15} />
+                </button>
+                <button className="icon-btn ghost" onClick={() => copyField("pass", "pass", passDraft)} title="কপি করুন">
+                  <Icon name={copiedField === "pass:pass" ? "check" : "content_copy"} size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen("list")}>বাতিল করুন</button>
+            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveEntry}>সংরক্ষণ করুন</button>
+          </div>
+        </>
+      )}
+
+      {screen === "note" && (
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 6, background: copiedNote ? "#123A34" : "#F1E9D6", color: copiedNote ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => copyText(noteDraft, () => { setCopiedNote(true); setTimeout(() => setCopiedNote(false), 1200); })}
+            >
+              <Icon name={copiedNote ? "check" : "content_copy"} size={14} /> {copiedNote ? "কপি হয়েছে" : "কপি করুন"}
+            </button>
             <button
               style={{ display: "flex", alignItems: "center", gap: 6, background: blurred ? "#B5651D" : "#F1E9D6", color: blurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
               onClick={() => setBlurred(b => !b)}
@@ -2980,20 +3250,23 @@ function NoteModal({ onClose }) {
           <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
             <textarea
               className="field-full"
-              style={{ minHeight: 240 }}
-              value={contentDraft}
-              onChange={e => setContentDraft(e.target.value)}
-              placeholder="আপনার প্রাইভেসি নোট এখানে লিখুন..."
+              style={{ minHeight: 260 }}
+              value={noteDraft}
+              onChange={e => setNoteDraft(e.target.value)}
+              placeholder="এখানে গুরুত্বপূর্ণ যেকোনো তথ্য লিখে রাখুন..."
+              autoFocus
             />
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setView("list")}>ফিরে যান</button>
-            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveActive}>সংরক্ষণ করুন</button>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={backToCategories}>ফিরে যান</button>
+            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveNote}>সংরক্ষণ করুন</button>
           </div>
         </>
       )}
+      </div>
     </Modal>
   );
+
 }
 
 /* ---------------- reusable report content (used both on-screen and for printing) ---------------- */
