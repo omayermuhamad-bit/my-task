@@ -376,6 +376,38 @@ const storage = {
   },
 };
 
+/* ---------------- privacy-note encryption helpers (AES-GCM, key derived from PIN via PBKDF2) ---------------- */
+const pnCryptoAvailable = typeof window !== "undefined" && window.crypto && window.crypto.subtle;
+function pnBufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function pnB64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+function pnRandomSalt() { return pnBufToB64(window.crypto.getRandomValues(new Uint8Array(16))); }
+async function pnDeriveKey(pin, saltB64) {
+  const enc = new TextEncoder();
+  const salt = pnB64ToBuf(saltB64);
+  const keyMaterial = await window.crypto.subtle.importKey("raw", enc.encode(pin), "PBKDF2", false, ["deriveKey"]);
+  return window.crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+async function pnEncrypt(obj, pin, saltB64) {
+  const key = await pnDeriveKey(pin, saltB64);
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const data = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj)));
+  return { iv: pnBufToB64(iv), data: pnBufToB64(data) };
+}
+async function pnDecrypt(payload, pin, saltB64) {
+  const key = await pnDeriveKey(pin, saltB64);
+  const iv = pnB64ToBuf(payload.iv);
+  const data = pnB64ToBuf(payload.data);
+  const dec = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+  return JSON.parse(new TextDecoder().decode(dec));
+}
+
 /* ---------------- constants ---------------- */
 const PRAYER_ORDER = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
@@ -641,6 +673,16 @@ function todayStr(d) {
 function prettyDate(dateStr) {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("bn-BD", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
+function fmtTodoTime(ts) {
+  if (!ts) return "";
+  const d = new Date(ts);
+  return d.toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) + ", " + d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" });
+}
+function fmtDueDate(dateStr) {
+  if (!dateStr) return "";
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" });
+}
+const TODO_AUTO_DELETE_DAYS = 7;
 function shiftDate(dateStr, delta) {
   const d = new Date(dateStr + "T00:00:00"); d.setDate(d.getDate() + delta);
   return d.toISOString().slice(0, 10);
@@ -2620,34 +2662,334 @@ function MoodPickerModal({ mood, onSelect, onClose }) {
 
 function TodoModal({ todos, onAdd, onToggle, onDelete, onClose }) {
   const [text, setText] = useState("");
-  const submit = () => { if (text.trim()) { onAdd(text); setText(""); } };
+  const [dueDate, setDueDate] = useState("");
+  const submit = () => { if (text.trim()) { onAdd(text, dueDate); setText(""); setDueDate(""); } };
   const pending = todos.filter(t => !t.done);
   const done = todos.filter(t => t.done);
+  const today = todayStr();
   return (
     <Modal onClose={onClose} width={420}>
       <div className="modal-header"><Icon name="checklist" size={18} color="#4A6FA5" /><span>টু ডু লিস্ট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
-      <div className="add-row" style={{ marginBottom: 12 }}>
+      <div className="add-row" style={{ marginBottom: 6 }}>
         <input placeholder="নতুন কাজ লিখুন" value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
         <button className="icon-btn" onClick={submit}><Icon name="add" size={18} /></button>
       </div>
+      <div className="add-row" style={{ marginBottom: 12 }}>
+        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ flex: 1 }} />
+        {dueDate && <button className="icon-btn ghost" onClick={() => setDueDate("")} title="ডিউ ডেট বাদ দিন"><Icon name="close" size={15} /></button>}
+      </div>
       {todos.length === 0 && <div className="empty-note">এখনো কোনো কাজ যোগ করা হয়নি — উপরে লিখে যোগ করুন</div>}
-      {pending.map(t => (
-        <div className="nafl-item" key={t.id}>
-          <div className="amoli-check" onClick={() => onToggle(t.id)}></div>
-          <span className="n-name">{t.text}</span>
-          <button className="icon-btn ghost" onClick={() => onDelete(t.id)}><Icon name="delete" size={15} /></button>
-        </div>
-      ))}
+      {pending.map(t => {
+        const overdue = t.dueDate && t.dueDate < today;
+        return (
+          <div className="nafl-item" key={t.id} style={{ alignItems: "flex-start" }}>
+            <div className="amoli-check" onClick={() => onToggle(t.id)} style={{ marginTop: 2 }}></div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="n-name">{t.text}</div>
+              <div style={{ fontSize: 10.5, color: "#A69B7F", fontFamily: "'IBM Plex Mono'", marginTop: 2 }}>
+                {t.createdAt && <>যোগ করা হয়েছে: {fmtTodoTime(t.createdAt)}</>}
+                {t.dueDate && <span style={{ color: overdue ? "#A14545" : "#B5651D", fontWeight: 700 }}> · {overdue ? "মেয়াদ শেষ" : "ডিউ"}: {fmtDueDate(t.dueDate)}</span>}
+              </div>
+            </div>
+            <button className="icon-btn ghost" onClick={() => onDelete(t.id)}><Icon name="delete" size={15} /></button>
+          </div>
+        );
+      })}
       {done.length > 0 && (
         <>
           <div className="section-label" style={{ color: "#6B7A4F" }}>সম্পন্ন ✓</div>
           {done.map(t => (
-            <div className="nafl-item" key={t.id}>
-              <div className="amoli-check" style={{ background: "#4A6FA5", borderColor: "#4A6FA5" }} onClick={() => onToggle(t.id)}><Icon name="check" size={16} color="#FBF6EA" /></div>
-              <span className="n-name" style={{ textDecoration: "line-through", color: "#8A7F68" }}>{t.text}</span>
+            <div className="nafl-item" key={t.id} style={{ alignItems: "flex-start" }}>
+              <div className="amoli-check" style={{ background: "#4A6FA5", borderColor: "#4A6FA5", marginTop: 2 }} onClick={() => onToggle(t.id)}><Icon name="check" size={16} color="#FBF6EA" /></div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="n-name" style={{ textDecoration: "line-through", color: "#8A7F68" }}>{t.text}</div>
+                <div style={{ fontSize: 10.5, color: "#A69B7F", fontFamily: "'IBM Plex Mono'", marginTop: 2 }}>
+                  {t.createdAt && <>যোগ: {fmtTodoTime(t.createdAt)}</>}
+                  {t.completedAt && <> · সম্পন্ন: {fmtTodoTime(t.completedAt)}</>}
+                </div>
+              </div>
               <button className="icon-btn ghost" onClick={() => onDelete(t.id)}><Icon name="delete" size={15} /></button>
             </div>
           ))}
+          <div className="empty-note" style={{ padding: "6px 0 0" }}>সম্পন্ন কাজগুলো {TODO_AUTO_DELETE_DAYS} দিন পর নিজে থেকেই মুছে যাবে।</div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
+function NotePinPad({ mode, onSubmitPin, onCancel }) {
+  // mode: "unlock" | "set" — onSubmitPin(pin) returns a Promise<boolean> for "unlock", or is called once for "set" after confirmation
+  const [step, setStep] = useState(mode === "unlock" ? "unlock" : "new");
+  const [draft, setDraft] = useState("");
+  const [first, setFirst] = useState("");
+  const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
+
+  const onChangeDraft = (val) => {
+    if (!/^\d{0,8}$/.test(val) || checking) return;
+    setDraft(val);
+    setError("");
+  };
+
+  const trySubmit = async () => {
+    if (checking) return;
+    if (draft.length < 4 || draft.length > 8) { setError("৪ থেকে ৮ সংখ্যার PIN দিন"); return; }
+    setError("");
+    if (step === "unlock") {
+      setChecking(true);
+      const ok = await onSubmitPin(draft);
+      setChecking(false);
+      if (!ok) { setError("ভুল PIN, আবার চেষ্টা করুন"); setDraft(""); }
+    } else if (step === "new") {
+      setFirst(draft); setDraft(""); setStep("confirm");
+    } else if (step === "confirm") {
+      if (draft === first) { setChecking(true); await onSubmitPin(draft); setChecking(false); }
+      else { setError("PIN মিলেনি, আবার চেষ্টা করুন"); setStep("new"); setDraft(""); setFirst(""); }
+    }
+  };
+
+  return (
+    <div style={{ textAlign: "center", padding: "18px 4px 6px" }}>
+      <Icon name="lock" size={28} color="#B5651D" />
+      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 17, fontWeight: 700, margin: "8px 0 3px" }}>
+        {checking ? "যাচাই করা হচ্ছে..." : step === "unlock" ? "নোট দেখতে PIN দিন" : step === "new" ? "নতুন PIN দিন (৪-৮ সংখ্যা)" : "PIN আবার লিখে নিশ্চিত করুন"}
+      </div>
+      <div style={{ fontSize: 12, color: error ? "#A14545" : "#8A7F68", marginBottom: 14, fontWeight: error ? 600 : 400 }}>
+        {error || (step === "unlock" ? "নোট এনক্রিপ্ট করা আছে, সঠিক PIN ছাড়া খোলা যাবে না" : "এই PIN দিয়ে নোট এনক্রিপ্ট হবে, ভুলে গেলে নোট আর ফেরত পাওয়া যাবে না")}
+      </div>
+      <div className="field" style={{ maxWidth: 180, margin: "0 auto 12px" }}>
+        <input type="password" inputMode="numeric" maxLength={8} autoFocus disabled={checking} value={draft} onChange={e => onChangeDraft(e.target.value)} onKeyDown={e => e.key === "Enter" && trySubmit()} placeholder="৪-৮ সংখ্যা" style={{ textAlign: "center", letterSpacing: "4px", fontSize: 18 }} />
+      </div>
+      <button className="btn-primary" style={{ justifyContent: "center", margin: "0 auto 10px" }} onClick={trySubmit} disabled={checking || draft.length < 4}>নিশ্চিত করুন</button>
+      <div>
+        <button className="btn-ghost" style={{ justifyContent: "center", margin: "0 auto" }} onClick={onCancel} disabled={checking}>বাতিল করুন</button>
+      </div>
+    </div>
+  );
+}
+
+function NoteModal({ onClose }) {
+  const [loading, setLoading] = useState(true);
+  const [encrypted, setEncrypted] = useState(false);
+  const [salt, setSalt] = useState("");
+  const [pin, setPin] = useState(""); // held in memory only for this open session, never persisted in plaintext
+  const [unlocked, setUnlocked] = useState(false);
+  const [notes, setNotes] = useState([]);
+  const [showPinSetup, setShowPinSetup] = useState(false); // "activate" | "change" | false
+  const [view, setView] = useState("list"); // "list" | "edit"
+  const [activeId, setActiveId] = useState(null);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [contentDraft, setContentDraft] = useState("");
+  const [blurred, setBlurred] = useState(true);
+  const [pinMsg, setPinMsg] = useState("");
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const saltRes = await storage.get("privacyNotesSalt");
+        if (saltRes && saltRes.value) {
+          setEncrypted(true); setSalt(saltRes.value); setUnlocked(false); setLoading(false);
+          return;
+        }
+      } catch (e) { /* no salt saved -> not encrypted yet */ }
+      // not encrypted: load plaintext notes, migrating the old single-note format if needed
+      let list = [];
+      try {
+        const r = await storage.get("privacyNotes");
+        list = r ? JSON.parse(r.value) : [];
+      } catch (e) {
+        try {
+          const old = await storage.get("importantNote");
+          if (old && old.value) {
+            list = [{ id: Date.now() + "_mig", title: "গুরুত্বপূর্ণ নোট", content: old.value, updatedAt: Date.now() }];
+            storage.set("privacyNotes", JSON.stringify(list)).catch(() => {});
+          }
+        } catch (e2) {}
+      }
+      setNotes(list); setEncrypted(false); setUnlocked(true); setLoading(false);
+    })();
+    // eslint-disable-next-line
+  }, []);
+
+  const persistNotes = async (list, activePin, activeSalt, isEncrypted) => {
+    setNotes(list);
+    try {
+      if (isEncrypted) {
+        const payload = await pnEncrypt(list, activePin, activeSalt);
+        await storage.set("privacyNotes", JSON.stringify(payload));
+      } else {
+        await storage.set("privacyNotes", JSON.stringify(list));
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const attemptUnlock = async (candidatePin) => {
+    try {
+      const raw = await storage.get("privacyNotes");
+      const payload = raw ? JSON.parse(raw.value) : { iv: "", data: "" };
+      const decrypted = payload && payload.data ? await pnDecrypt(payload, candidatePin, salt) : [];
+      setNotes(decrypted); setPin(candidatePin); setUnlocked(true);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const activatePin = async (newPin) => {
+    const newSalt = pnRandomSalt();
+    try {
+      const payload = await pnEncrypt(notes, newPin, newSalt);
+      await storage.set("privacyNotesSalt", newSalt);
+      await storage.set("privacyNotes", JSON.stringify(payload));
+      setSalt(newSalt); setPin(newPin); setEncrypted(true);
+      setPinMsg(showPinSetup === "change" ? "PIN পরিবর্তন হয়েছে ✓" : "নোট এনক্রিপ্ট হয়েছে ✓");
+      setTimeout(() => setPinMsg(""), 3000);
+    } catch (e) { setLoadError("এনক্রিপশন ব্যর্থ হয়েছে, আবার চেষ্টা করুন"); }
+    setShowPinSetup(false);
+  };
+
+  const removePin = async () => {
+    if (!window.confirm("এনক্রিপশন বন্ধ করলে নোট আবার সাধারণভাবে (এনক্রিপ্ট ছাড়া) সেভ হবে। এগিয়ে যেতে চান?")) return;
+    try { await storage.set("privacyNotes", JSON.stringify(notes)); } catch (e) {}
+    try { window.localStorage.removeItem(STORAGE_PREFIX + "privacyNotesSalt"); } catch (e) {}
+    setEncrypted(false); setPin(""); setSalt("");
+  };
+
+  const openNew = () => { setActiveId(null); setTitleDraft(""); setContentDraft(""); setBlurred(false); setView("edit"); };
+  const openExisting = (n) => { setActiveId(n.id); setTitleDraft(n.title); setContentDraft(n.content); setBlurred(true); setView("edit"); };
+
+  const saveActive = () => {
+    if (!titleDraft.trim() && !contentDraft.trim()) { setView("list"); return; }
+    const now = Date.now();
+    const nextList = activeId
+      ? notes.map(n => n.id === activeId ? { ...n, title: titleDraft.trim() || "শিরোনামহীন নোট", content: contentDraft, updatedAt: now } : n)
+      : [{ id: now + "_" + Math.random().toString(36).slice(2, 6), title: titleDraft.trim() || "শিরোনামহীন নোট", content: contentDraft, updatedAt: now }, ...notes];
+    persistNotes(nextList, pin, salt, encrypted);
+    setView("list");
+  };
+
+  const deleteNote = (id) => {
+    if (!window.confirm("এই নোটটি মুছে ফেলতে চান?")) return;
+    persistNotes(notes.filter(n => n.id !== id), pin, salt, encrypted);
+    if (activeId === id) setView("list");
+  };
+
+  if (loading) {
+    return (
+      <Modal onClose={onClose} width={380}>
+        <div className="modal-header"><Icon name="sticky_note_2" size={18} color="#B5651D" /><span>প্রাইভেসি নোট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+        <div className="empty-note" style={{ textAlign: "center", padding: "24px 0" }}>লোড হচ্ছে...</div>
+      </Modal>
+    );
+  }
+
+  if (encrypted && !unlocked) {
+    return (
+      <Modal onClose={onClose} width={380}>
+        <div className="modal-header"><Icon name="lock" size={18} color="#B5651D" /><span>প্রাইভেসি নোট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+        <NotePinPad mode="unlock" onSubmitPin={attemptUnlock} onCancel={onClose} />
+      </Modal>
+    );
+  }
+
+  if (showPinSetup) {
+    return (
+      <Modal onClose={onClose} width={380}>
+        <div className="modal-header"><Icon name="lock" size={18} color="#B5651D" /><span>প্রাইভেসি নোট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+        <NotePinPad mode="set" onSubmitPin={activatePin} onCancel={() => setShowPinSetup(false)} />
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal onClose={onClose} width={440}>
+      <div className="modal-header">
+        <Icon name="sticky_note_2" size={18} color="#B5651D" />
+        <span>{view === "edit" ? (activeId ? "নোট এডিট করুন" : "নতুন নোট") : "প্রাইভেসি নোট"}</span>
+        <button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button>
+      </div>
+
+      {view === "list" && (
+        <>
+          {!pnCryptoAvailable && (
+            <div className="empty-note" style={{ padding: "0 0 8px", color: "#A14545" }}>এই ব্রাউজারে এনক্রিপশন সাপোর্ট নেই, তাই নোট এনক্রিপ্ট করা যাবে না।</div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+            {encrypted ? (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, background: "#123A34", color: "#FBF6EA", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700 }}>
+                  <Icon name="lock" size={14} /> এনক্রিপ্ট করা আছে
+                </span>
+                <button className="btn-ghost" style={{ padding: "6px 12px", fontSize: 11.5 }} onClick={() => setShowPinSetup("change")}>PIN পরিবর্তন</button>
+                <button className="btn-ghost" style={{ padding: "6px 12px", fontSize: 11.5 }} onClick={removePin}>বন্ধ করুন</button>
+              </div>
+            ) : (
+              pnCryptoAvailable && (
+                <button
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "#F1E9D6", color: "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+                  onClick={() => setShowPinSetup("activate")}
+                >
+                  <Icon name="lock_open" size={14} /> PIN দিয়ে এনক্রিপ্ট করুন
+                </button>
+              )
+            )}
+            <button className="icon-btn" onClick={openNew} title="নতুন নোট"><Icon name="add" size={18} /></button>
+          </div>
+          {pinMsg && <div className="goal-ok" style={{ marginBottom: 8 }}>{pinMsg}</div>}
+          {loadError && <div className="empty-note" style={{ color: "#A14545" }}>{loadError}</div>}
+
+          {notes.length === 0 ? (
+            <div className="empty-note" style={{ textAlign: "center", padding: "20px 0" }}>এখনো কোনো প্রাইভেসি নোট যোগ করা হয়নি। উপরের + বাটনে চাপুন।</div>
+          ) : (
+            <div style={{ maxHeight: 360, overflowY: "auto" }}>
+              {[...notes].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).map(n => (
+                <div key={n.id} className="nafl-item" style={{ cursor: "pointer", alignItems: "flex-start" }} onClick={() => openExisting(n)}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="n-name" style={{ marginBottom: 2 }}>{n.title || "শিরোনামহীন নোট"}</div>
+                    <div style={{ fontSize: 12, color: "#A69B7F", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {(n.content || "").replace(/\n/g, " ") || "খালি নোট"}
+                    </div>
+                  </div>
+                  <button className="icon-btn ghost" onClick={(e) => { e.stopPropagation(); deleteNote(n.id); }}><Icon name="delete" size={15} /></button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="empty-note" style={{ padding: "10px 0 0" }}>
+            এই নোটগুলো প্রধান লিস্টে দেখানো হয় না, শুধু এই আইকন থেকে খোলা যায়।{encrypted ? " নোটগুলো এখন AES-256 দিয়ে এনক্রিপ্ট করে সেভ হয় — সঠিক PIN ছাড়া কেউ পড়তে পারবে না। PIN ভুলে গেলে নোট ফেরত পাওয়া যাবে না, তাই মনে রাখুন।" : ""}
+          </div>
+        </>
+      )}
+
+      {view === "edit" && (
+        <>
+          <div className="field" style={{ marginBottom: 10 }}>
+            <label>শিরোনাম</label>
+            <input value={titleDraft} onChange={e => setTitleDraft(e.target.value)} placeholder="নোটের শিরোনাম লিখুন" autoFocus />
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 6, background: blurred ? "#B5651D" : "#F1E9D6", color: blurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => setBlurred(b => !b)}
+            >
+              <Icon name={blurred ? "visibility_off" : "lock_open"} size={14} /> {blurred ? "ব্লার চালু আছে — দেখতে ট্যাপ করুন" : "প্রাইভেসি ব্লার"}
+            </button>
+          </div>
+          <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
+            <textarea
+              className="field-full"
+              style={{ minHeight: 240 }}
+              value={contentDraft}
+              onChange={e => setContentDraft(e.target.value)}
+              placeholder="আপনার প্রাইভেসি নোট এখানে লিখুন..."
+            />
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setView("list")}>ফিরে যান</button>
+            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveActive}>সংরক্ষণ করুন</button>
+          </div>
         </>
       )}
     </Modal>
@@ -3188,6 +3530,7 @@ function DailyLifeManagement() {
   const [habitItemStreaks, setHabitItemStreaks] = useState({});
   const [todos, setTodos] = useState([]);
   const [showTodo, setShowTodo] = useState(false);
+  const [showNote, setShowNote] = useState(false);
   const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [showPointsGraph, setShowPointsGraph] = useState(false);
   const [monthData, setMonthData] = useState(emptyMonth());
@@ -3211,8 +3554,14 @@ function DailyLifeManagement() {
       catch (e) { setDebts([]); }
       try { const r = await storage.get("bills"); setBills(r ? JSON.parse(r.value) : []); }
       catch (e) { setBills([]); }
-      try { const r = await storage.get("todos"); setTodos(r ? JSON.parse(r.value) : []); }
-      catch (e) { setTodos([]); }
+      try {
+        const r = await storage.get("todos");
+        const list = r ? JSON.parse(r.value) : [];
+        const cutoff = Date.now() - TODO_AUTO_DELETE_DAYS * 86400000;
+        const cleaned = list.filter(t => !(t.done && t.completedAt && t.completedAt < cutoff));
+        setTodos(cleaned);
+        if (cleaned.length !== list.length) storage.set("todos", JSON.stringify(cleaned)).catch(() => {});
+      } catch (e) { setTodos([]); }
     })();
     // eslint-disable-next-line
   }, []);
@@ -3242,11 +3591,11 @@ function DailyLifeManagement() {
     setTodos(list);
     try { await storage.set("todos", JSON.stringify(list)); } catch (e) { console.error(e); }
   };
-  const addTodo = (text) => {
+  const addTodo = (text, dueDate) => {
     if (!text.trim()) return;
-    saveTodos([...todos, { id: Date.now() + "_" + Math.random().toString(36).slice(2, 6), text: text.trim(), done: false }]);
+    saveTodos([...todos, { id: Date.now() + "_" + Math.random().toString(36).slice(2, 6), text: text.trim(), done: false, createdAt: Date.now(), completedAt: null, dueDate: dueDate || null }]);
   };
-  const toggleTodo = (id) => saveTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  const toggleTodo = (id) => saveTodos(todos.map(t => t.id === id ? { ...t, done: !t.done, completedAt: !t.done ? Date.now() : null } : t));
   const deleteTodo = (id) => saveTodos(todos.filter(t => t.id !== id));
 
   useEffect(() => { (async () => { const loaded = await getDayRaw(date); setDay(mergeDay(loaded)); setOpenContact(null); setContactStreaks({}); })(); }, [date]);
@@ -3770,6 +4119,7 @@ function DailyLifeManagement() {
         <div className="icon-toolbar">
           <button onClick={() => setShowCalendar(true)} title="ক্যালেন্ডার"><Icon name="calendar_month" size={13} /></button>
           <button onClick={() => setShowTodo(true)} title="টু ডু"><Icon name="checklist" size={13} /></button>
+          <button onClick={() => setShowNote(true)} title="প্রাইভেসি নোট"><Icon name="sticky_note_2" size={13} /></button>
           <button onClick={() => setShowPointsGraph(true)} title="পয়েন্ট গ্রাফ"><Icon name="bar_chart" size={13} /></button>
           <button onClick={exportBackup} title="ব্যাকআপ ডাউনলোড"><Icon name="download" size={13} /></button>
           <button onClick={() => setShowAchievements(true)} title="অ্যাচিভমেন্ট"><Icon name="emoji_events" size={13} /></button>
@@ -4714,6 +5064,7 @@ function DailyLifeManagement() {
       {showSettings && <SettingsModal darkMode={darkMode} onToggleDark={toggleDarkMode} reminderSettings={reminderSettings} onReminderChange={setReminderSettings} appPin={appPin} onSetPin={setAppPin} prayerCoords={prayerCoords} onSetPrayerCoords={setPrayerCoords} bills={bills} onAddBill={addBill} onDeleteBill={deleteBill} cardOrder={cardOrder} hiddenCards={hiddenCards} onMoveCard={moveCardOrder} onToggleCardHidden={toggleCardHidden} onShowAllCards={resetHiddenCards} customTasks={customTasks} onAddCustomTask={addCustomTask} onDeleteCustomTask={deleteCustomTask} onAddCustomItem={addCustomTaskItem} onDeleteCustomItem={deleteCustomTaskItem} onClose={() => setShowSettings(false)} />}
       {showQuickExpense && <QuickExpenseModal onClose={() => setShowQuickExpense(false)} onAdd={quickAddExpense} />}
       {showTodo && <TodoModal todos={todos} onAdd={addTodo} onToggle={toggleTodo} onDelete={deleteTodo} onClose={() => setShowTodo(false)} />}
+      {showNote && <NoteModal onClose={() => setShowNote(false)} />}
       {showMoodPicker && <MoodPickerModal mood={day.mood} onSelect={setMood} onClose={() => setShowMoodPicker(false)} />}
       {showPointsGraph && <PointsGraphModal date={date} onClose={() => setShowPointsGraph(false)} />}
       {showQazaTracker && <QazaTrackerModal qazaCounts={qazaCounts} onChange={adjustQaza} onClose={() => setShowQazaTracker(false)} />}
