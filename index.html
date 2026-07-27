@@ -2879,13 +2879,14 @@ function NotePinPad({ mode, onSubmitPin, onCancel }) {
 
   const trySubmit = async () => {
     if (checking) return;
-    if (draft.length < 8) { setError("অন্তত ৮ ক্যারেক্টারের পাসফ্রেজ দিন"); return; }
+    if (step !== "unlock" && draft.length < 8) { setError("অন্তত ৮ ক্যারেক্টারের পাসফ্রেজ দিন"); return; }
+    if (step === "unlock" && draft.length < 1) { setError("PIN বা পাসফ্রেজ দিন"); return; }
     setError("");
     if (step === "unlock") {
       setChecking(true);
       const ok = await onSubmitPin(draft);
       setChecking(false);
-      if (!ok) { setError("ভুল পাসফ্রেজ, আবার চেষ্টা করুন"); setDraft(""); }
+      if (!ok) { setError("ভুল, আবার চেষ্টা করুন"); setDraft(""); }
     } else if (step === "new") {
       setFirst(draft); setDraft(""); setStep("confirm");
     } else if (step === "confirm") {
