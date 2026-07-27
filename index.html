@@ -352,6 +352,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/argon2-browser@1.18.0/dist/argon2-bundled.min.js"></script>
 
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, useCallback, useRef } = React;
@@ -393,12 +394,28 @@ const storage = {
   },
 };
 
-/* ---------------- privacy-note encryption helpers (AES-GCM, key derived from PIN via PBKDF2) ---------------- */
+/* ---------------- privacy-note encryption helpers (AES-256-GCM, key derived via Argon2id) ---------------- */
 const pnCryptoAvailable = typeof window !== "undefined" && window.crypto && window.crypto.subtle;
 function pnBufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
 function pnB64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
 function pnRandomSalt() { return pnBufToB64(window.crypto.getRandomValues(new Uint8Array(16))); }
-async function pnDeriveKey(pin, saltB64) {
+// Argon2id: memory-hard KDF (64MB, 3 passes) — far more expensive to brute-force offline (e.g. on GPU clusters)
+// than a plain PBKDF2 hash, which matters a lot given passphrases are short and backups can leave the device.
+async function pnDeriveKeyArgon2(pin, saltB64) {
+  const saltBytes = pnB64ToBuf(saltB64);
+  const result = await window.argon2.hash({
+    pass: pin,
+    salt: saltBytes,
+    time: 3,
+    mem: 65536,
+    hashLen: 32,
+    parallelism: 1,
+    type: window.argon2.ArgonType.Argon2id,
+  });
+  return window.crypto.subtle.importKey("raw", result.hash, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+// Legacy path, kept only so notes encrypted before the Argon2id upgrade can still be opened and re-encrypted.
+async function pnDeriveKeyPBKDF2(pin, saltB64) {
   const enc = new TextEncoder();
   const salt = pnB64ToBuf(saltB64);
   const keyMaterial = await window.crypto.subtle.importKey("raw", enc.encode(pin), "PBKDF2", false, ["deriveKey"]);
@@ -411,14 +428,14 @@ async function pnDeriveKey(pin, saltB64) {
   );
 }
 async function pnEncrypt(obj, pin, saltB64) {
-  const key = await pnDeriveKey(pin, saltB64);
+  const key = await pnDeriveKeyArgon2(pin, saltB64);
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const enc = new TextEncoder();
   const data = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj)));
-  return { iv: pnBufToB64(iv), data: pnBufToB64(data) };
+  return { iv: pnBufToB64(iv), data: pnBufToB64(data), kdf: "argon2id" };
 }
 async function pnDecrypt(payload, pin, saltB64) {
-  const key = await pnDeriveKey(pin, saltB64);
+  const key = payload.kdf === "argon2id" ? await pnDeriveKeyArgon2(pin, saltB64) : await pnDeriveKeyPBKDF2(pin, saltB64);
   const iv = pnB64ToBuf(payload.iv);
   const data = pnB64ToBuf(payload.data);
   const dec = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
@@ -2855,25 +2872,25 @@ function NotePinPad({ mode, onSubmitPin, onCancel }) {
   const [checking, setChecking] = useState(false);
 
   const onChangeDraft = (val) => {
-    if (!/^\d{0,8}$/.test(val) || checking) return;
+    if (val.length > 32 || checking) return;
     setDraft(val);
     setError("");
   };
 
   const trySubmit = async () => {
     if (checking) return;
-    if (draft.length < 4 || draft.length > 8) { setError("৪ থেকে ৮ সংখ্যার PIN দিন"); return; }
+    if (draft.length < 8) { setError("অন্তত ৮ ক্যারেক্টারের পাসফ্রেজ দিন"); return; }
     setError("");
     if (step === "unlock") {
       setChecking(true);
       const ok = await onSubmitPin(draft);
       setChecking(false);
-      if (!ok) { setError("ভুল PIN, আবার চেষ্টা করুন"); setDraft(""); }
+      if (!ok) { setError("ভুল পাসফ্রেজ, আবার চেষ্টা করুন"); setDraft(""); }
     } else if (step === "new") {
       setFirst(draft); setDraft(""); setStep("confirm");
     } else if (step === "confirm") {
       if (draft === first) { setChecking(true); await onSubmitPin(draft); setChecking(false); }
-      else { setError("PIN মিলেনি, আবার চেষ্টা করুন"); setStep("new"); setDraft(""); setFirst(""); }
+      else { setError("পাসফ্রেজ মিলেনি, আবার চেষ্টা করুন"); setStep("new"); setDraft(""); setFirst(""); }
     }
   };
 
@@ -2881,15 +2898,15 @@ function NotePinPad({ mode, onSubmitPin, onCancel }) {
     <div style={{ textAlign: "center", padding: "18px 4px 6px" }}>
       <Icon name="lock" size={28} color="#B5651D" />
       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 17, fontWeight: 700, margin: "8px 0 3px" }}>
-        {checking ? "যাচাই করা হচ্ছে..." : step === "unlock" ? "নোট দেখতে PIN দিন" : step === "new" ? "নতুন PIN দিন (৪-৮ সংখ্যা)" : "PIN আবার লিখে নিশ্চিত করুন"}
+        {checking ? "যাচাই করা হচ্ছে..." : step === "unlock" ? "নোট দেখতে পাসফ্রেজ দিন" : step === "new" ? "নতুন পাসফ্রেজ দিন (৮+ ক্যারেক্টার)" : "পাসফ্রেজ আবার লিখে নিশ্চিত করুন"}
       </div>
       <div style={{ fontSize: 12, color: error ? "#A14545" : "#8A7F68", marginBottom: 14, fontWeight: error ? 600 : 400 }}>
-        {error || (step === "unlock" ? "নোট এনক্রিপ্ট করা আছে, সঠিক PIN ছাড়া খোলা যাবে না" : "এই PIN দিয়ে নোট এনক্রিপ্ট হবে, ভুলে গেলে নোট আর ফেরত পাওয়া যাবে না")}
+        {error || (step === "unlock" ? "নোট এনক্রিপ্ট করা আছে, সঠিক পাসফ্রেজ ছাড়া খোলা যাবে না" : "অক্ষর ও সংখ্যা মিশিয়ে যত লম্বা পাসফ্রেজ, নোট তত নিরাপদ। ভুলে গেলে নোট আর ফেরত পাওয়া যাবে না")}
       </div>
-      <div className="field" style={{ maxWidth: 180, margin: "0 auto 12px" }}>
-        <input type="password" inputMode="numeric" maxLength={8} autoFocus disabled={checking} value={draft} onChange={e => onChangeDraft(e.target.value)} onKeyDown={e => e.key === "Enter" && trySubmit()} placeholder="৪-৮ সংখ্যা" style={{ textAlign: "center", letterSpacing: "4px", fontSize: 18 }} />
+      <div className="field" style={{ maxWidth: 220, margin: "0 auto 12px" }}>
+        <input type="password" maxLength={32} autoFocus disabled={checking} value={draft} onChange={e => onChangeDraft(e.target.value)} onKeyDown={e => e.key === "Enter" && trySubmit()} placeholder="৮+ ক্যারেক্টার পাসফ্রেজ" style={{ textAlign: "center", letterSpacing: "2px", fontSize: 16 }} />
       </div>
-      <button className="btn-primary" style={{ justifyContent: "center", margin: "0 auto 10px" }} onClick={trySubmit} disabled={checking || draft.length < 4}>নিশ্চিত করুন</button>
+      <button className="btn-primary" style={{ justifyContent: "center", margin: "0 auto 10px" }} onClick={trySubmit} disabled={checking || draft.length < 8}>নিশ্চিত করুন</button>
       <div>
         <button className="btn-ghost" style={{ justifyContent: "center", margin: "0 auto" }} onClick={onCancel} disabled={checking}>বাতিল করুন</button>
       </div>
