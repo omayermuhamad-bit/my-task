@@ -209,7 +209,16 @@
     .print-area, .print-area * { visibility:visible; }
     .print-area { display:block !important; position:absolute; left:0; top:0; width:100%; padding:10px 6px; background:#fff; }
     .modal-backdrop { display:none !important; }
+    .print-area-monthly, .print-area-monthly * { visibility:visible; }
+    body.printing-monthly .print-area { display:none !important; visibility:hidden !important; }
+    body.printing-monthly .print-area-monthly { display:block !important; position:absolute; left:0; top:0; width:100%; padding:10px 6px; background:#fff; }
   }
+  .print-area-monthly { display:none; }
+  .pr-table { width:100%; border-collapse:collapse; margin-top:6px; }
+  .pr-table th, .pr-table td { border:1px solid #C6BB9C; padding:6px 8px; font-size:12.5px; text-align:left; vertical-align:top; }
+  .pr-table th { background:#F1E9D6; font-family:'Fraunces',serif; font-weight:600; }
+  .pr-table td.pr-num { text-align:right; white-space:nowrap; font-family:'IBM Plex Mono'; }
+  .pr-table tfoot td { font-weight:700; background:#FBF6EA; }
 
   .cal-btn { background:#FBF6EA; border:1px solid #E7DDC7; border-radius:999px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#123A34; flex-shrink:0; }
   .cal-btn:hover { background:#EFE4CB; }
@@ -270,6 +279,9 @@
   .dtt-root.dark .btn-ghost { border-color:#3A4634; color:#E7E0CC; }
   .dtt-root.dark .cal-day { background:#1B241C; color:#E7E0CC; }
   .dtt-root.dark .cal-day:hover { background:#25302A; }
+  .dtt-root.dark .cal-day.selected { background:#123A34; color:#FBF6EA; }
+  .dtt-root.dark .cal-day.today { border-color:#E0B868; }
+  .dtt-root.dark .cal-wd { color:#8FA294; }
   .dtt-root.dark .cal-btn, .dtt-root.dark .cal-nav-btn { background:#25302A; color:#E0B868; }
   .dtt-root.dark .goal-pill { background:#3A2828; color:#E08A8A; }
   .dtt-root.dark .pdf-btn { background:#1F2A22; border-color:#3A4634; color:#E7E0CC; }
@@ -568,6 +580,11 @@ const ACCOUNT_CATEGORIES = [
   { key: "repair", label: "মেরামত" },
   { key: "unimportant", label: "অপ্রয়োজনীয় খরচ" },
 ];
+const OFFICE_TRANSPORT_TYPES = [
+  { key: "rickshaw", label: "রিকশা" },
+  { key: "metro", label: "মেট্রো" },
+  { key: "transport", label: "শুধু ট্রান্সপোর্ট" },
+];
 const HABIT_LIST = [
   { key: "lustControl", label: "নিজের নিয়ন্ত্রণ (Lust Control)" },
   { key: "sadaqah", label: "সদকা/দান (ছোট হলেও)" },
@@ -577,6 +594,21 @@ const HABIT_CATEGORIES = [
   { key: "health", emoji: "💪", label: "স্বাস্থ্য" },
   { key: "mental", emoji: "🧠", label: "মানসিক" },
   { key: "other", emoji: "✨", label: "অন্যান্য" },
+];
+const SUBJECT_LIST = [
+  "Bangla Grammar", "Bangla History", "English Grammar", "English History",
+  "Bangladesh Affairs", "International Affairs", "General Science", "Geography",
+  "ICT", "Mathematics", "Mental Ability", "Ethics & Good Governance",
+];
+// Index = Date.getDay() -> 0:রবি, 1:সোম, 2:মঙ্গল, 3:বুধ, 4:বৃহস্পতি, 5:শুক্র(ছুটি), 6:শনি
+const DAY_SUBJECTS = [
+  { label: "রবি", subjects: ["English Grammar", "Mental Ability", "English History"] },
+  { label: "সোম", subjects: ["General Science", "Bangladesh Affairs", "International Affairs"] },
+  { label: "মঙ্গল", subjects: ["Bangla Grammar", "Mathematics", "Geography"] },
+  { label: "বুধ", subjects: ["English Grammar", "Mental Ability", "ICT"] },
+  { label: "বৃহস্পতি", subjects: ["General Science", "Bangladesh Affairs", "Ethics & Good Governance"] },
+  { label: "শুক্র", subjects: [] },
+  { label: "শনি", subjects: ["Bangla Grammar", "Mathematics", "Bangla History"] },
 ];
 const MOOD_OPTIONS = [
   { key: "happy", emoji: "😀", label: "খুশি" },
@@ -730,6 +762,7 @@ async function computeMonthExpense(dateStr) {
   const daysInM = new Date(y, m, 0).getDate();
   const totals = Object.fromEntries(ACCOUNT_CATEGORIES.map(c => [c.key, 0]));
   let grand = 0;
+  let officeMeal = 0, officeTransport = 0, officeOthers = 0;
   for (let d = 1; d <= daysInM; d++) {
     const ds = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
     const rec = await getDayRaw(ds);
@@ -739,8 +772,70 @@ async function computeMonthExpense(dateStr) {
       const v = parseFloat(acc[c.key]);
       if (!isNaN(v)) { totals[c.key] += v; grand += v; }
     });
+    const off = acc.office;
+    if (off) {
+      const mv = parseFloat(off.meal);
+      if (!isNaN(mv)) { officeMeal += mv; grand += mv; }
+      (Array.isArray(off.transport) ? off.transport : []).forEach(t => {
+        const tv = parseFloat(t.amount);
+        if (!isNaN(tv)) { officeTransport += tv; grand += tv; }
+      });
+      (Array.isArray(off.others) ? off.others : []).forEach(o => {
+        const ov = parseFloat(o.amount);
+        if (!isNaN(ov)) { officeOthers += ov; grand += ov; }
+      });
+    }
   }
-  return { totals, grand };
+  const office = { meal: officeMeal, transport: officeTransport, others: officeOthers, grand: officeMeal + officeTransport + officeOthers };
+  return { totals, grand, office };
+}
+function isLastDayOfMonth(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const daysInM = new Date(y, m, 0).getDate();
+  return d === daysInM;
+}
+async function computeMonthExpenseDetail(dateStr) {
+  const [y, m] = dateStr.split("-").map(Number);
+  const daysInM = new Date(y, m, 0).getDate();
+  const rows = [];
+  let grandTotal = 0;
+  for (let d = 1; d <= daysInM; d++) {
+    const ds = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+    const rec = await getDayRaw(ds);
+    const acc = rec?.accounts;
+    if (!acc) continue;
+    const parts = [];
+    let dayTotal = 0;
+    ACCOUNT_CATEGORIES.forEach(c => {
+      const v = parseFloat(acc[c.key]);
+      if (!isNaN(v) && v > 0) { parts.push(c.label + ": ৳" + fmtMoney(v)); dayTotal += v; }
+    });
+    const off = acc.office;
+    if (off) {
+      const mv = parseFloat(off.meal);
+      if (!isNaN(mv) && mv > 0) { parts.push("অফিস-খাবার: ৳" + fmtMoney(mv)); dayTotal += mv; }
+      (Array.isArray(off.transport) ? off.transport : []).forEach(t => {
+        const tv = parseFloat(t.amount);
+        if (!isNaN(tv) && tv > 0) {
+          const tlabel = OFFICE_TRANSPORT_TYPES.find(x => x.key === t.type)?.label || t.type;
+          parts.push("অফিস-" + tlabel + ": ৳" + fmtMoney(tv));
+          dayTotal += tv;
+        }
+      });
+      (Array.isArray(off.others) ? off.others : []).forEach(o => {
+        const ov = parseFloat(o.amount);
+        if (!isNaN(ov) && ov > 0) { parts.push("অফিস-" + (o.name || "অন্যান্য") + ": ৳" + fmtMoney(ov)); dayTotal += ov; }
+      });
+    }
+    if (dayTotal > 0) {
+      rows.push({ date: ds, details: parts.join(", "), total: dayTotal });
+      grandTotal += dayTotal;
+    }
+  }
+  const monthAnchor = new Date(y, m - 1, 1);
+  const monthNameBn = monthAnchor.toLocaleDateString("bn-BD", { month: "long" });
+  const monthNameEn = monthAnchor.toLocaleDateString("en-US", { month: "long" });
+  return { year: y, month: m, monthNameBn, monthNameEn, rows, grandTotal };
 }
 function emptyDay() {
   return {
@@ -750,14 +845,14 @@ function emptyDay() {
       Maghrib: { status: null, sunnah: false }, Isha: { status: null, sunnah: false, witr: false }, nafl: [],
     },
     zikir: { durud: null, istegfar: null, tasbihFatemi: null, custom: [] },
-    accounts: { transport: "", meal: "", gadget: "", brother: "", sister: "", familyNeed: "", nephew: "", relative: "", friends: "", donate: "", necessity: "", repair: "", unimportant: "" },
+    accounts: { transport: "", meal: "", gadget: "", brother: "", sister: "", familyNeed: "", nephew: "", relative: "", friends: "", donate: "", necessity: "", repair: "", unimportant: "", office: { meal: "", transport: [], others: [] } },
     habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: false, walkingSteps: "", lustControl: false, noTextFirst: false, noTextStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
     quran: {
       reading: { pages: "", surah: "" },
       revision: { pages: "", surah: "" },
       amoli: { Mulk: false, Yasin: false, Waqiah: false, Kahf: false },
     },
-    study: { studied: { topics: "", hours: "", topicName: "" }, lectures: { count: "", hours: "", lectureName: "" }, pomodoroCount: 0 },
+    study: { studied: { topics: "", hours: "", topicName: "" }, lectures: { count: "", hours: "", lectureName: "" }, pomodoroCount: 0, subjects: {} },
     exercise: { checklist: { squat: "", pushup: "", gluteBridge: "", superman: "", plank: "", jumpingJack: "" }, mindfulness: { walk: false, yoga: false, breathing: false } },
     texting: { log: {}, reflection: "", quickNote: "" },
     diary: { notes: "", accomplished: "", events: "", thoughts: "", reflection: "", gratitude: ["", "", ""], moodNote: "", lastEditTime: null },
@@ -774,7 +869,15 @@ function mergeDay(loaded) {
     mood: loaded?.mood || null,
     prayers: { ...mergedPrayers, nafl: Array.isArray(loaded?.prayers?.nafl) ? loaded.prayers.nafl : [] },
     zikir: { ...base.zikir, ...(loaded?.zikir || {}), custom: Array.isArray(loaded?.zikir?.custom) ? loaded.zikir.custom : [] },
-    accounts: { ...base.accounts, ...(loaded?.accounts || {}) },
+    accounts: {
+      ...base.accounts,
+      ...(loaded?.accounts || {}),
+      office: {
+        meal: (loaded?.accounts?.office?.meal ?? ""),
+        transport: Array.isArray(loaded?.accounts?.office?.transport) ? loaded.accounts.office.transport : [],
+        others: Array.isArray(loaded?.accounts?.office?.others) ? loaded.accounts.office.others : [],
+      },
+    },
     habit: (() => {
       let legacyNoTextStatus = {};
       if (Array.isArray(loaded?.habit?.noTextPersons)) {
@@ -800,6 +903,7 @@ function mergeDay(loaded) {
       studied: { ...base.study.studied, ...(loaded?.study?.studied || {}) },
       lectures: { ...base.study.lectures, ...(loaded?.study?.lectures || {}) },
       pomodoroCount: (loaded?.study?.pomodoroCount) || 0,
+      subjects: { ...(loaded?.study?.subjects || {}) },
     },
     exercise: { ...base.exercise, ...(loaded?.exercise || {}), checklist: { ...base.exercise.checklist, ...(loaded?.exercise?.checklist || {}) }, mindfulness: { ...base.exercise.mindfulness, ...(loaded?.exercise?.mindfulness || {}) } },
     texting: { log: { ...(loaded?.texting?.log || {}) }, reflection: loaded?.texting?.reflection || "", quickNote: loaded?.texting?.quickNote || "" },
@@ -816,7 +920,8 @@ function goalsUnfinished(day) {
   const q = day.quran;
   const quranDone = q.reading.pages || q.reading.surah || q.revision.pages || q.revision.surah || q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf;
   if (!quranDone) goals.push("কুরআন");
-  const studyDone = day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours;
+  const studySubjectHours = Object.values(day.study.subjects || {}).some(v => parseFloat(v) > 0);
+  const studyDone = day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || studySubjectHours;
   if (!studyDone) goals.push("পড়াশোনা");
   if (!Object.values(day.exercise.checklist).some(v => v)) goals.push("ব্যায়াম");
   const sleepAuto = computeSleepAuto(day);
@@ -1071,15 +1176,23 @@ function MeditationTimerModal({ onClose, onComplete }) {
   );
 }
 
-function PomodoroModal({ onClose, onComplete }) {
+function PomodoroModal({ onClose, onComplete, todaySubjects }) {
+  const [subject, setSubject] = useState((todaySubjects && todaySubjects[0]) || "");
   const [duration, setDuration] = useState(25);
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
 
+  const finish = (secondsElapsed) => {
+    const hours = Math.round((secondsElapsed / 3600) * 100) / 100;
+    setDone(true);
+    setRunning(false);
+    onComplete(subject, hours);
+  };
+
   useEffect(() => {
     if (!running || done) return;
-    if (secondsLeft <= 0) { setDone(true); setRunning(false); onComplete(); return; }
+    if (secondsLeft <= 0) { finish(duration * 60); return; }
     const t = setTimeout(() => setSecondsLeft(s => s - 1), 1000);
     return () => clearTimeout(t);
   }, [running, secondsLeft, done]);
@@ -1100,6 +1213,15 @@ function PomodoroModal({ onClose, onComplete }) {
       <div style={{ textAlign: "center", padding: "10px 0" }}>
         {!done ? (
           <>
+            {todaySubjects && todaySubjects.length > 0 && (
+              <div className="field" style={{ marginBottom: 14, textAlign: "left" }}>
+                <label>আজকের সাবজেক্ট</label>
+                <select value={subject} onChange={e => setSubject(e.target.value)}>
+                  {todaySubjects.map(s => <option key={s} value={s}>{s}</option>)}
+                  <option value="">অন্যান্য / নির্দিষ্ট নয়</option>
+                </select>
+              </div>
+            )}
             {!running && secondsLeft === duration * 60 && (
               <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 14 }}>
                 <button className={"btn-ghost" + (duration === 25 ? " active" : "")} style={duration === 25 ? { background: "#4A6FA5", color: "#FBF6EA" } : {}} onClick={() => pickDuration(25)}>২৫ মিনিট</button>
@@ -1110,7 +1232,7 @@ function PomodoroModal({ onClose, onComplete }) {
             <div className="modal-q" style={{ marginTop: 8 }}>{running ? "মনোযোগ দিয়ে পড়ুন, ফোকাস ভাঙবেন না..." : "শুরু করতে প্রস্তুত?"}</div>
             <div className="modal-actions" style={{ justifyContent: "center", marginTop: 16 }}>
               <button className="btn-ghost" onClick={() => setRunning(r => !r)}>{running ? "থামান" : "শুরু করুন"}</button>
-              <button className="btn-primary" style={{ background: "#4A6FA5" }} onClick={() => { setDone(true); setRunning(false); onComplete(); }}>শেষ করুন</button>
+              <button className="btn-primary" style={{ background: "#4A6FA5" }} onClick={() => finish(duration * 60 - secondsLeft)}>শেষ করুন</button>
             </div>
           </>
         ) : (
@@ -1393,7 +1515,8 @@ function pointsStudy(rec) {
   if (!rec || !rec.study) return 0;
   const topics = parseFloat(rec.study.studied && rec.study.studied.topics) || 0;
   const lectures = parseFloat(rec.study.lectures && rec.study.lectures.count) || 0;
-  const units = topics + lectures;
+  const subjectHours = Object.values(rec.study.subjects || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+  const units = topics + lectures + subjectHours;
   return units >= 1 ? 2.7 + (units - 1) * 1.3 : 0;
 }
 function pointsExercise(rec) {
@@ -2780,7 +2903,7 @@ function NoteModal({ onClose }) {
   const [salt, setSalt] = useState("");
   const [pin, setPin] = useState(""); // held in memory only for this open session, never persisted in plaintext
   const [unlocked, setUnlocked] = useState(false);
-  const [data, setData] = useState({ gmail: [], fb: [], contacts: [], importantNote: "" });
+  const [data, setData] = useState({ gmail: [], fb: [], contacts: [], other: [], importantNote: "" });
   const [showPinSetup, setShowPinSetup] = useState(false); // "activate" | "change" | false
   const [pinMsg, setPinMsg] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -2794,9 +2917,10 @@ function NoteModal({ onClose }) {
   const [copiedRow, setCopiedRow] = useState(null);
   const [copiedNote, setCopiedNote] = useState(false);
 
-  // gmail/fb entry draft
+  // gmail/fb/other entry draft
   const [nameDraft, setNameDraft] = useState("");
   const [passDraft, setPassDraft] = useState("");
+  const [siteDraft, setSiteDraft] = useState("");
   // contact entry draft
   const [contactNameDraft, setContactNameDraft] = useState("");
   const [numbersDraft, setNumbersDraft] = useState([]);
@@ -2806,12 +2930,13 @@ function NoteModal({ onClose }) {
   const CATEGORIES = [
     { key: "gmail", label: "Gmail অ্যাকাউন্ট", icon: "mail" },
     { key: "fb", label: "Facebook অ্যাকাউন্ট", icon: "thumb_up" },
+    { key: "other", label: "অন্যান্য সাইট (GitHub, ClickUp ইত্যাদি)", icon: "language" },
     { key: "contacts", label: "কন্টাক্ট নাম্বার", icon: "contact_phone" },
     { key: "importantNote", label: "গুরুত্বপূর্ণ নোট", icon: "sticky_note_2" },
   ];
 
   const genId = () => Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-  const defaultData = () => ({ gmail: [], fb: [], contacts: [], importantNote: "" });
+  const defaultData = () => ({ gmail: [], fb: [], contacts: [], other: [], importantNote: "" });
 
   // best-effort migration from the previous single-list note format
   const migrateOldFormat = (oldList) => {
@@ -2950,7 +3075,7 @@ function NoteModal({ onClose }) {
     if (activeCategory === "contacts") {
       setContactNameDraft(""); setNumbersDraft([{ id: genId(), value: "" }]);
     } else {
-      setNameDraft(""); setPassDraft("");
+      setNameDraft(""); setPassDraft(""); setSiteDraft("");
     }
     setVisiblePass({});
     setBlurred(false);
@@ -2961,7 +3086,7 @@ function NoteModal({ onClose }) {
     if (activeCategory === "contacts") {
       setContactNameDraft(entry.name || ""); setNumbersDraft(entry.numbers && entry.numbers.length ? entry.numbers : [{ id: genId(), value: "" }]);
     } else {
-      setNameDraft(entry.name || ""); setPassDraft(entry.pass || "");
+      setNameDraft(entry.name || ""); setPassDraft(entry.pass || ""); setSiteDraft(entry.site || "");
     }
     setVisiblePass({});
     setBlurred(true);
@@ -2972,6 +3097,46 @@ function NoteModal({ onClose }) {
   const updateNumberField = (id, value) => setNumbersDraft(list => list.map(n => n.id === id ? { ...n, value } : n));
   const removeNumberField = (id) => setNumbersDraft(list => list.filter(n => n.id !== id));
 
+  const [syncingContacts, setSyncingContacts] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+  const syncPhoneContacts = async () => {
+    if (!(navigator.contacts && typeof navigator.contacts.select === "function")) {
+      window.alert("এই ব্রাউজার/ডিভাইসে ফোন কন্টাক্ট সিঙ্ক সাপোর্ট করে না। এই ফিচারটি বর্তমানে শুধুমাত্র Android-এ Chrome ব্রাউজারে কাজ করে।");
+      return;
+    }
+    setSyncingContacts(true);
+    setSyncMsg("");
+    try {
+      const picked = await navigator.contacts.select(["name", "tel"], { multiple: true });
+      if (!picked || !picked.length) { setSyncingContacts(false); return; }
+      const now = Date.now();
+      let nextContacts = [...data.contacts];
+      let addedCount = 0, updatedCount = 0;
+      picked.forEach(p => {
+        const pname = ((p.name && p.name[0]) || "নামহীন").trim() || "নামহীন";
+        const tels = (Array.isArray(p.tel) ? p.tel : []).map(t => (t || "").trim()).filter(Boolean);
+        const existingIdx = nextContacts.findIndex(c => (c.name || "").trim().toLowerCase() === pname.toLowerCase());
+        if (existingIdx >= 0) {
+          const existing = nextContacts[existingIdx];
+          const existingVals = new Set((existing.numbers || []).map(n => n.value));
+          const merged = [...(existing.numbers || [])];
+          let changed = false;
+          tels.forEach(t => { if (!existingVals.has(t)) { merged.push({ id: genId(), value: t }); changed = true; } });
+          if (changed) { nextContacts[existingIdx] = { ...existing, numbers: merged, updatedAt: now }; updatedCount++; }
+        } else {
+          nextContacts.push({ id: genId(), name: pname, numbers: tels.map(t => ({ id: genId(), value: t })), updatedAt: now });
+          addedCount++;
+        }
+      });
+      persistData({ ...data, contacts: nextContacts }, pin, salt, encrypted);
+      setSyncMsg(addedCount + "টি নতুন ও " + updatedCount + "টি আপডেট হয়েছে ✓");
+      setTimeout(() => setSyncMsg(""), 3500);
+    } catch (e) {
+      // user cancelled the picker or permission denied — no need to show an error
+    }
+    setSyncingContacts(false);
+  };
+
   const saveEntry = () => {
     if (activeCategory === "contacts") {
       const cleanNumbers = numbersDraft.filter(n => (n.value || "").trim());
@@ -2980,6 +3145,12 @@ function NoteModal({ onClose }) {
       const entry = { id: activeId || genId(), name: contactNameDraft.trim() || "নামহীন", numbers: cleanNumbers, updatedAt: now };
       const nextList = activeId ? data.contacts.map(c => c.id === activeId ? entry : c) : [entry, ...data.contacts];
       persistData({ ...data, contacts: nextList }, pin, salt, encrypted);
+    } else if (activeCategory === "other") {
+      if (!siteDraft.trim() && !nameDraft.trim() && !passDraft.trim()) { setScreen("list"); return; }
+      const now = Date.now();
+      const entry = { id: activeId || genId(), site: siteDraft.trim() || "নামহীন সাইট", name: nameDraft.trim(), pass: passDraft, updatedAt: now };
+      const nextList = activeId ? data.other.map(x => x.id === activeId ? entry : x) : [entry, ...data.other];
+      persistData({ ...data, other: nextList }, pin, salt, encrypted);
     } else {
       if (!nameDraft.trim() && !passDraft.trim()) { setScreen("list"); return; }
       const now = Date.now();
@@ -3110,17 +3281,36 @@ function NoteModal({ onClose }) {
           <button className="btn-ghost" style={{ width: "100%", justifyContent: "center", marginBottom: 10 }} onClick={openNewEntry}>
             <Icon name="add" size={16} /> {activeCategory === "contacts" ? "নতুন কন্টাক্ট যোগ করুন" : "নতুন অ্যাকাউন্ট যোগ করুন"}
           </button>
+          {activeCategory === "contacts" && (
+            <>
+              <button
+                className="btn-ghost"
+                style={{ width: "100%", justifyContent: "center", marginBottom: 8 }}
+                onClick={syncPhoneContacts}
+                disabled={syncingContacts}
+              >
+                <Icon name="sync" size={16} /> {syncingContacts ? "সিঙ্ক হচ্ছে..." : "ফোন থেকে কন্টাক্ট সিঙ্ক করুন"}
+              </button>
+              {syncMsg && <div className="goal-ok" style={{ marginBottom: 8 }}>{syncMsg}</div>}
+            </>
+          )}
           {(data[activeCategory] || []).length === 0 ? (
             <div className="empty-note" style={{ textAlign: "center", padding: "20px 0" }}>এখনো কিছু যোগ করা হয়নি। উপরের বাটনে চাপুন।</div>
           ) : (
             <div>
-              {[...data[activeCategory]].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).map(item => (
+              {[...data[activeCategory]].sort((a, b) =>
+                activeCategory === "contacts"
+                  ? (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" })
+                  : (b.updatedAt || 0) - (a.updatedAt || 0)
+              ).map(item => (
                 <div key={item.id} className="nafl-item" style={{ cursor: "pointer", alignItems: "flex-start" }} onClick={() => openExistingEntry(item)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="n-name" style={{ marginBottom: 2 }}>{item.name}</div>
+                    <div className="n-name" style={{ marginBottom: 2 }}>{activeCategory === "other" ? item.site : item.name}</div>
                     <div style={{ fontSize: 12, color: "#A69B7F", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {activeCategory === "contacts"
                         ? (item.numbers && item.numbers.length ? item.numbers.map(n => n.value).join(", ") : "কোনো নাম্বার নেই")
+                        : activeCategory === "other"
+                        ? ((item.name ? item.name : "") + (item.name && item.pass ? " · " : "") + (item.pass ? "••••••••" : (item.name ? "" : "কোনো তথ্য নেই")))
                         : (item.pass ? "••••••••" : "কোনো পাসওয়ার্ড নেই")}
                     </div>
                   </div>
@@ -3185,7 +3375,7 @@ function NoteModal({ onClose }) {
         </>
       )}
 
-      {screen === "edit" && (activeCategory === "gmail" || activeCategory === "fb") && (
+      {screen === "edit" && (activeCategory === "gmail" || activeCategory === "fb" || activeCategory === "other") && (
         <>
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
             <button
@@ -3196,10 +3386,16 @@ function NoteModal({ onClose }) {
             </button>
           </div>
           <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
+            {activeCategory === "other" && (
+              <div className="field" style={{ marginBottom: 10 }}>
+                <label>সাইটের নাম</label>
+                <input value={siteDraft} onChange={e => setSiteDraft(e.target.value)} placeholder="যেমন: GitHub, ClickUp" autoFocus />
+              </div>
+            )}
             <div className="field" style={{ marginBottom: 10 }}>
-              <label>অ্যাকাউন্ট নাম</label>
+              <label>{activeCategory === "other" ? "ইউজারনেম/ইমেইল" : "অ্যাকাউন্ট নাম"}</label>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <input value={nameDraft} onChange={e => setNameDraft(e.target.value)} placeholder="যেমন: mynameG@gmail.com" autoFocus style={{ flex: 1 }} />
+                <input value={nameDraft} onChange={e => setNameDraft(e.target.value)} placeholder={activeCategory === "other" ? "যেমন: mynameG@gmail.com" : "যেমন: mynameG@gmail.com"} autoFocus={activeCategory !== "other"} style={{ flex: 1 }} />
                 <button className="icon-btn ghost" onClick={() => copyField("name", "name", nameDraft)} title="কপি করুন">
                   <Icon name={copiedField === "name:name" ? "check" : "content_copy"} size={15} />
                 </button>
@@ -3230,6 +3426,7 @@ function NoteModal({ onClose }) {
           </div>
         </>
       )}
+
 
       {screen === "note" && (
         <>
@@ -3317,6 +3514,9 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
         <h3>পড়াশোনা</h3>
         <div className="pr-row"><b>পড়েছি:</b> {day.study.studied.topics || "০"} টপিক, {day.study.studied.hours || "০"} ঘণ্টা {day.study.studied.topicName ? "— " + day.study.studied.topicName : ""}</div>
         <div className="pr-row"><b>লেকচার:</b> {day.study.lectures.count || "০"} টি, {day.study.lectures.hours || "০"} ঘণ্টা {day.study.lectures.lectureName ? "— " + day.study.lectures.lectureName : ""}</div>
+        {Object.entries(day.study.subjects || {}).filter(([, v]) => parseFloat(v) > 0).map(([sub, v]) => (
+          <div className="pr-row" key={sub}><b>{sub}:</b> {v} ঘণ্টা</div>
+        ))}
       </div>
 
       <div className="pr-section">
@@ -3462,6 +3662,88 @@ function ReportModal({ day, date, monthData, monthExpense, monthPlan, noTextPeop
         </button>
       </div>
     </Modal>
+  );
+}
+
+function MonthlyExpenseReportContent({ detail }) {
+  if (!detail) return null;
+  return (
+    <>
+      <div className="pr-title">মাসিক খরচের বিবরণী</div>
+      <div className="pr-date">{detail.monthNameBn} {detail.year}</div>
+      <div className="pr-section">
+        {detail.rows.length === 0 ? (
+          <div className="pr-empty">এই মাসে কোনো খরচের রেকর্ড নেই</div>
+        ) : (
+          <table className="pr-table">
+            <thead>
+              <tr><th>তারিখ</th><th>বিবরণ</th><th>মোট</th></tr>
+            </thead>
+            <tbody>
+              {detail.rows.map(r => (
+                <tr key={r.date}>
+                  <td>{new Date(r.date + "T00:00:00").toLocaleDateString("bn-BD", { day: "numeric", month: "short" })}</td>
+                  <td>{r.details}</td>
+                  <td className="pr-num">৳{fmtMoney(r.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr><td colSpan={2}>সর্বমোট</td><td className="pr-num">৳{fmtMoney(detail.grandTotal)}</td></tr>
+            </tfoot>
+          </table>
+        )}
+      </div>
+    </>
+  );
+}
+
+function MonthlyExpenseReportModal({ detail, loading, onClose }) {
+  const downloadPdf = () => {
+    if (!detail) return;
+    const fileName = detail.monthNameEn + " " + detail.year + " Expense";
+    const prevTitle = document.title;
+    document.title = fileName;
+    document.body.classList.add("printing-monthly");
+    let restored = false;
+    const restore = () => {
+      if (restored) return;
+      restored = true;
+      document.body.classList.remove("printing-monthly");
+      document.title = prevTitle;
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    window.print();
+    setTimeout(restore, 3000);
+  };
+  return (
+    <Modal onClose={onClose} width={560}>
+      <div className="modal-header">
+        <Icon name="request_quote" size={18} color="#2F6B5E" />
+        <span>মাসিক খরচের বিবরণী</span>
+        <button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button>
+      </div>
+      {loading ? (
+        <div className="empty-note" style={{ textAlign: "center", padding: "20px 0" }}>লোড হচ্ছে...</div>
+      ) : (
+        <MonthlyExpenseReportContent detail={detail} />
+      )}
+      <div className="modal-actions" style={{ justifyContent: "flex-end", marginTop: 18 }}>
+        <button className="btn-primary" style={{ background: "#2F6B5E" }} onClick={downloadPdf} disabled={loading || !detail}>
+          <Icon name="picture_as_pdf" size={15} /> PDF হিসেবে ডাউনলোড
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+function PrintMonthlyExpenseReport({ detail }) {
+  if (!detail) return null;
+  return (
+    <div className="print-area-monthly">
+      <MonthlyExpenseReportContent detail={detail} />
+    </div>
   );
 }
 
@@ -3736,6 +4018,11 @@ function DailyLifeManagement() {
   const [expanded, setExpanded] = useState(null);
   const [newContact, setNewContact] = useState("");
   const [debtDraft, setDebtDraft] = useState({ name: "", amount: "", direction: "owed_to_me", note: "" });
+  const [officeExpanded, setOfficeExpanded] = useState(false);
+  const [officeTransportType, setOfficeTransportType] = useState("rickshaw");
+  const [officeTransportAmount, setOfficeTransportAmount] = useState("");
+  const [officeOtherName, setOfficeOtherName] = useState("");
+  const [officeOtherAmount, setOfficeOtherAmount] = useState("");
   const [billDraft, setBillDraft] = useState({ name: "", amount: "", dayOfMonth: "" });
   const [naflName, setNaflName] = useState("");
   const [naflRakahs, setNaflRakahs] = useState("");
@@ -3770,6 +4057,17 @@ function DailyLifeManagement() {
   const [noTextPersonName, setNoTextPersonName] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showMonthlyExpenseReport, setShowMonthlyExpenseReport] = useState(false);
+  const [monthlyExpenseDetail, setMonthlyExpenseDetail] = useState(null);
+  const [monthlyExpenseLoading, setMonthlyExpenseLoading] = useState(false);
+  const openMonthlyExpenseReport = async () => {
+    setShowMonthlyExpenseReport(true);
+    setMonthlyExpenseLoading(true);
+    setMonthlyExpenseDetail(null);
+    const detail = await computeMonthExpenseDetail(date);
+    setMonthlyExpenseDetail(detail);
+    setMonthlyExpenseLoading(false);
+  };
   const [showSettings, setShowSettings] = useState(false);
   const [showQuickExpense, setShowQuickExpense] = useState(false);
   const [showQazaTracker, setShowQazaTracker] = useState(false);
@@ -3807,7 +4105,7 @@ function DailyLifeManagement() {
   const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [showPointsGraph, setShowPointsGraph] = useState(false);
   const [monthData, setMonthData] = useState(emptyMonth());
-  const [monthExpense, setMonthExpense] = useState({ totals: {}, grand: 0 });
+  const [monthExpense, setMonthExpense] = useState({ totals: {}, grand: 0, office: { meal: 0, transport: 0, others: 0, grand: 0 } });
   const [monthLoading, setMonthLoading] = useState(false);
   const [monthPlan, setMonthPlan] = useState(emptyMonthPlan());
   const saveTimer = useRef(null);
@@ -4153,7 +4451,15 @@ function DailyLifeManagement() {
   const toggleAmoli = (key) => updateDay(prev => ({ ...prev, quran: { ...prev.quran, amoli: { ...prev.quran.amoli, [key]: !prev.quran.amoli[key] } } }));
 
   const setStudy = (kind, field, value) => updateDay(prev => ({ ...prev, study: { ...prev.study, [kind]: { ...prev.study[kind], [field]: value } } }));
-  const completePomodoro = () => updateDay(prev => ({ ...prev, study: { ...prev.study, pomodoroCount: (prev.study.pomodoroCount || 0) + 1 } }));
+  const setStudySubjectHours = (subject, value) => updateDay(prev => ({ ...prev, study: { ...prev.study, subjects: { ...prev.study.subjects, [subject]: value } } }));
+  const completePomodoro = (subject, addedHours) => updateDay(prev => {
+    const nextSubjects = { ...prev.study.subjects };
+    if (subject) {
+      const current = parseFloat(nextSubjects[subject]) || 0;
+      nextSubjects[subject] = Math.round((current + (addedHours || 0)) * 100) / 100;
+    }
+    return { ...prev, study: { ...prev.study, pomodoroCount: (prev.study.pomodoroCount || 0) + 1, subjects: nextSubjects } };
+  });
   const setExerciseSets = (key, value) => updateDay(prev => ({ ...prev, exercise: { ...prev.exercise, checklist: { ...prev.exercise.checklist, [key]: value } } }));
   const incrementSet = (key) => {
     updateDay(prev => ({ ...prev, exercise: { ...prev.exercise, checklist: { ...prev.exercise.checklist, [key]: (parseInt(prev.exercise.checklist[key]) || 0) + 1 } } }));
@@ -4186,6 +4492,38 @@ function DailyLifeManagement() {
       const current = parseFloat(prev.accounts[key]) || 0;
       return { ...prev, accounts: { ...prev.accounts, [key]: current + amt } };
     });
+    setTimeout(() => refreshMonthExpense(date), 300);
+  };
+  const setOfficeMeal = (value) => {
+    updateDay(prev => ({ ...prev, accounts: { ...prev.accounts, office: { ...prev.accounts.office, meal: value } } }));
+    clearTimeout(setOfficeMeal._t);
+    setOfficeMeal._t = setTimeout(() => refreshMonthExpense(date), 500);
+  };
+  const addOfficeTransport = (type, amount) => {
+    const amt = parseFloat(amount) || 0;
+    if (!amt) return;
+    let added = false;
+    updateDay(prev => {
+      const current = prev.accounts.office.transport || [];
+      if (current.length >= 2) return prev;
+      added = true;
+      return { ...prev, accounts: { ...prev.accounts, office: { ...prev.accounts.office, transport: [...current, { id: Date.now(), type, amount: amt }] } } };
+    });
+    if (added) setTimeout(() => refreshMonthExpense(date), 300);
+    return added;
+  };
+  const removeOfficeTransport = (id) => {
+    updateDay(prev => ({ ...prev, accounts: { ...prev.accounts, office: { ...prev.accounts.office, transport: prev.accounts.office.transport.filter(t => t.id !== id) } } }));
+    setTimeout(() => refreshMonthExpense(date), 300);
+  };
+  const addOfficeOther = (name, amount) => {
+    const amt = parseFloat(amount) || 0;
+    if (!name.trim() || !amt) return;
+    updateDay(prev => ({ ...prev, accounts: { ...prev.accounts, office: { ...prev.accounts.office, others: [...(prev.accounts.office.others || []), { id: Date.now(), name: name.trim(), amount: amt }] } } }));
+    setTimeout(() => refreshMonthExpense(date), 300);
+  };
+  const removeOfficeOther = (id) => {
+    updateDay(prev => ({ ...prev, accounts: { ...prev.accounts, office: { ...prev.accounts.office, others: prev.accounts.office.others.filter(o => o.id !== id) } } }));
     setTimeout(() => refreshMonthExpense(date), 300);
   };
   const setMonthField = (field, value) => {
@@ -4294,13 +4632,22 @@ function DailyLifeManagement() {
   const habitTotal = 10 + day.habit.custom.length;
   const habitBadge = habitDoneCount ? habitDoneCount + "/" + habitTotal : null;
   const quranBadge = (day.quran.reading.pages || day.quran.reading.surah || day.quran.revision.pages || day.quran.revision.surah || day.quran.amoli.Mulk || day.quran.amoli.Yasin || day.quran.amoli.Waqiah) ? "লগ হয়েছে" : null;
-  const studyBadge = (day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours) ? "লগ হয়েছে" : null;
+  const routineDayIndex = new Date(date + "T00:00:00").getDay();
+  const routineToday = DAY_SUBJECTS[routineDayIndex];
+  const todaySubjects = routineToday ? routineToday.subjects : [];
+  const subjectHoursLogged = Object.values(day.study.subjects || {}).some(v => parseFloat(v) > 0);
+  const studyBadge = (day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || subjectHoursLogged) ? "লগ হয়েছে" : null;
   const exerciseSetsDone = Object.values(day.exercise.checklist).filter(v => v).length;
   const exerciseBadge = exerciseSetsDone ? exerciseSetsDone + "/৬ ব্যায়াম" : null;
   const textedCount = Object.values(day.texting.log).filter(v => v.textedSelf === true).length;
   const avoidedCount = Object.values(day.texting.log).filter(v => v.profileAvoided === true && v.textedSelf !== true).length;
   const diaryBadge = (day.diary.notes || day.diary.accomplished || day.diary.events || day.diary.thoughts || day.diary.reflection) ? "লেখা হয়েছে" : null;
-  const todayExpenseTotal = ACCOUNT_CATEGORIES.reduce((s, c) => s + (parseFloat(day.accounts[c.key]) || 0), 0);
+  const officeToday = day.accounts.office || { meal: "", transport: [], others: [] };
+  const officeTodayMeal = parseFloat(officeToday.meal) || 0;
+  const officeTodayTransport = (officeToday.transport || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const officeTodayOthers = (officeToday.others || []).reduce((s, o) => s + (parseFloat(o.amount) || 0), 0);
+  const officeTodayTotal = officeTodayMeal + officeTodayTransport + officeTodayOthers;
+  const todayExpenseTotal = ACCOUNT_CATEGORIES.reduce((s, c) => s + (parseFloat(day.accounts[c.key]) || 0), 0) + officeTodayTotal;
   const accountsBadge = todayExpenseTotal > 0 ? "৳" + fmtMoney(todayExpenseTotal) + " (আজ)" : null;
   const incomeNum = parseFloat(monthData.income) || 0;
   const extraNum = parseFloat(monthData.extra) || 0;
@@ -4346,6 +4693,9 @@ function DailyLifeManagement() {
   if (!(day.quran.revision.pages || day.quran.revision.surah)) pendingChecklist.push({ key: "quran_revision", label: "কুরআন রিভিশন", sectionId: "quran" });
   if (!(day.study.studied.topics || day.study.studied.hours || day.study.studied.topicName)) pendingChecklist.push({ key: "study_studied", label: "পড়াশোনা (স্টাডি)", sectionId: "study" });
   if (!(day.study.lectures.count || day.study.lectures.hours || day.study.lectures.lectureName)) pendingChecklist.push({ key: "study_lecture", label: "লেকচার", sectionId: "study" });
+  todaySubjects.forEach(sub => {
+    if (!(parseFloat(day.study.subjects[sub]) > 0)) pendingChecklist.push({ key: "study_subject_" + sub, label: sub, sectionId: "study" });
+  });
   EXERCISE_LIST.forEach(ex => {
     if (!day.exercise.checklist[ex.key]) pendingChecklist.push({ key: "exercise_" + ex.key, label: ex.label, sectionId: "exercise" });
   });
@@ -4603,7 +4953,30 @@ function DailyLifeManagement() {
             <Icon name="timer" size={18} /> স্টাডি পমোডোরো টাইমার শুরু করুন{day.study.pomodoroCount > 0 ? " (আজ " + day.study.pomodoroCount + "টা সেশন)" : ""}
           </button>
           <div className="subblock">
-            <div className="subblock-title">পড়াশোনা করেছি</div>
+            <div className="subblock-title">{routineToday.label} — আজকের সাবজেক্ট</div>
+            {todaySubjects.length === 0 ? (
+              <div className="empty-note">আজ ছুটির দিন, রুটিনে কোনো সাবজেক্ট নেই।</div>
+            ) : (
+              todaySubjects.map(sub => (
+                <div className="field-row" key={sub} style={{ alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ flex: 1, fontSize: 13.5 }}>{sub}</div>
+                  <div className="field" style={{ maxWidth: 90 }}>
+                    <input type="number" min="0" step="0.5" value={day.study.subjects[sub] || ""} onChange={e => setStudySubjectHours(sub, e.target.value)} placeholder="ঘণ্টা" />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="subblock">
+            <div className="subblock-title">সাপ্তাহিক রুটিন</div>
+            {DAY_SUBJECTS.map(d => (
+              <div className="pr-row" key={d.label} style={d.label === routineToday.label ? { color: "#5C7A6B", fontWeight: 700 } : {}}>
+                <b>{d.label}:</b> {d.subjects.length ? d.subjects.join(", ") : "ছুটি"}
+              </div>
+            ))}
+          </div>
+          <div className="subblock">
+            <div className="subblock-title">পড়াশোনা করেছি (ফ্রি টেক্সট)</div>
             <div className="field" style={{ marginBottom: 10 }}>
               <label>কোন টপিক পড়েছি</label>
               <input value={day.study.studied.topicName} onChange={e => setStudy("studied", "topicName", e.target.value)} placeholder="যেমন Organic Chemistry — Alkenes" />
@@ -5061,9 +5434,80 @@ function DailyLifeManagement() {
                 <input type="number" min="0" style={{ maxWidth: 110 }} className="modal-input" value={day.accounts[c.key]} onChange={e => setAccountExpense(c.key, e.target.value)} placeholder="৳" />
               </div>
             ))}
+
+            <button
+              onClick={() => setOfficeExpanded(v => !v)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer", marginTop: 4 }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="business_center" size={18} color="#2F6B5E" />
+              </div>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>অফিস</div>
+                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>খাবার · ট্রান্সপোর্ট · অন্যান্য</div>
+              </div>
+              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(monthExpense.office?.grand || 0)}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>এই মাস</div></span>
+              <Icon name={officeExpanded ? "expand_less" : "expand_more"} size={20} />
+            </button>
+
+            {officeExpanded && (
+              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+                <div className="field-row" style={{ marginBottom: 10, marginTop: 8, alignItems: "center" }}>
+                  <div className="field" style={{ flex: "0 0 auto" }}>
+                    <span style={{ fontWeight: 600, fontSize: 13.5 }}>খাবার</span>
+                    <div style={{ fontSize: 10, color: "#8A7F68" }}>এই মাস: ৳{fmtMoney(monthExpense.office?.meal || 0)}</div>
+                  </div>
+                  <input type="number" min="0" style={{ maxWidth: 110 }} className="modal-input" value={day.accounts.office.meal} onChange={e => setOfficeMeal(e.target.value)} placeholder="৳" />
+                </div>
+
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ fontWeight: 600, fontSize: 13.5 }}>ট্রান্সপোর্ট</span>
+                    <span style={{ fontSize: 10, color: "#8A7F68" }}>এই মাস: ৳{fmtMoney(monthExpense.office?.transport || 0)}</span>
+                  </div>
+                  {(day.accounts.office.transport || []).map(t => (
+                    <div className="nafl-item" key={t.id}>
+                      <span className="n-name">{OFFICE_TRANSPORT_TYPES.find(x => x.key === t.type)?.label || t.type}</span>
+                      <span className="n-rakahs">৳{fmtMoney(t.amount)}</span>
+                      <button className="icon-btn ghost" onClick={() => removeOfficeTransport(t.id)}><Icon name="close" size={15} /></button>
+                    </div>
+                  ))}
+                  {(day.accounts.office.transport || []).length < 2 ? (
+                    <div className="add-row" style={{ marginTop: 6 }}>
+                      <select style={{ flex: 1 }} value={officeTransportType} onChange={e => setOfficeTransportType(e.target.value)}>
+                        {OFFICE_TRANSPORT_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                      </select>
+                      <input type="number" min="0" style={{ maxWidth: 90 }} value={officeTransportAmount} onChange={e => setOfficeTransportAmount(e.target.value)} placeholder="৳" />
+                      <button className="icon-btn" onClick={() => { if (addOfficeTransport(officeTransportType, officeTransportAmount)) setOfficeTransportAmount(""); }}><Icon name="add" size={18} /></button>
+                    </div>
+                  ) : (
+                    <div className="empty-note">আজকের জন্য সর্বোচ্চ ২টি ট্রান্সপোর্ট এন্ট্রি যোগ করা যাবে</div>
+                  )}
+                </div>
+
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ fontWeight: 600, fontSize: 13.5 }}>অন্যান্য</span>
+                    <span style={{ fontSize: 10, color: "#8A7F68" }}>এই মাস: ৳{fmtMoney(monthExpense.office?.others || 0)}</span>
+                  </div>
+                  {(day.accounts.office.others || []).map(o => (
+                    <div className="nafl-item" key={o.id}>
+                      <span className="n-name">{o.name}</span>
+                      <span className="n-rakahs">৳{fmtMoney(o.amount)}</span>
+                      <button className="icon-btn ghost" onClick={() => removeOfficeOther(o.id)}><Icon name="close" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row" style={{ marginTop: 6 }}>
+                    <input placeholder="নাম" value={officeOtherName} onChange={e => setOfficeOtherName(e.target.value)} />
+                    <input type="number" min="0" style={{ maxWidth: 90 }} value={officeOtherAmount} onChange={e => setOfficeOtherAmount(e.target.value)} placeholder="৳" />
+                    <button className="icon-btn" onClick={() => { addOfficeOther(officeOtherName, officeOtherAmount); setOfficeOtherName(""); setOfficeOtherAmount(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {todayExpenseEntries.length > 0 && (
+          {(todayExpenseEntries.length > 0 || officeTodayTotal > 0) && (
             <>
               <div className="section-label">আজকের খরচের তালিকা</div>
               <div className="subblock">
@@ -5074,6 +5518,27 @@ function DailyLifeManagement() {
                     <button className="icon-btn ghost" onClick={() => setAccountExpense(c.key, "")}><Icon name="close" size={15} /></button>
                   </div>
                 ))}
+                {officeTodayMeal > 0 && (
+                  <div className="nafl-item" key="log-office-meal">
+                    <span className="n-name">অফিস · খাবার</span>
+                    <span className="n-rakahs">৳{fmtMoney(officeTodayMeal)}</span>
+                    <button className="icon-btn ghost" onClick={() => setOfficeMeal("")}><Icon name="close" size={15} /></button>
+                  </div>
+                )}
+                {(officeToday.transport || []).map(t => (
+                  <div className="nafl-item" key={"log-office-t-" + t.id}>
+                    <span className="n-name">অফিস · {OFFICE_TRANSPORT_TYPES.find(x => x.key === t.type)?.label || t.type}</span>
+                    <span className="n-rakahs">৳{fmtMoney(t.amount)}</span>
+                    <button className="icon-btn ghost" onClick={() => removeOfficeTransport(t.id)}><Icon name="close" size={15} /></button>
+                  </div>
+                ))}
+                {(officeToday.others || []).map(o => (
+                  <div className="nafl-item" key={"log-office-o-" + o.id}>
+                    <span className="n-name">অফিস · {o.name}</span>
+                    <span className="n-rakahs">৳{fmtMoney(o.amount)}</span>
+                    <button className="icon-btn ghost" onClick={() => removeOfficeOther(o.id)}><Icon name="close" size={15} /></button>
+                  </div>
+                ))}
               </div>
             </>
           )}
@@ -5082,6 +5547,24 @@ function DailyLifeManagement() {
           <div className="subblock">
             <CategoryPieChart totals={monthExpense.totals} categories={ACCOUNT_CATEGORIES} />
           </div>
+
+          {isLastDayOfMonth(date) && (
+            <div className="subblock">
+              <button
+                onClick={openMonthlyExpenseReport}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
+              >
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon name="request_quote" size={18} color="#2F6B5E" />
+                </div>
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ fontWeight: 600, fontSize: 13.5 }}>এই মাসের খরচের বিবরণী (PDF)</div>
+                  <div style={{ fontSize: 10.5, color: "#8A7F68" }}>তারিখ অনুযায়ী টেবিল আকারে, মাস শেষে দেখা যায়</div>
+                </div>
+                <Icon name="chevron_left" size={18} color="#C6BB9C" />
+              </button>
+            </div>
+          )}
 
           <div className="section-label">ধার/দেনা</div>
           <div className="subblock">
@@ -5350,10 +5833,12 @@ function DailyLifeManagement() {
       {showDiaryReader && <DiaryReaderModal initialDate={diaryReaderStartDate || date} onClose={() => setShowDiaryReader(false)} />}
 
       {showWeeklyReview && <WeeklyReviewModal date={date} onClose={() => setShowWeeklyReview(false)} />}
-      {showPomodoro && <PomodoroModal onClose={() => setShowPomodoro(false)} onComplete={completePomodoro} />}
+      {showPomodoro && <PomodoroModal onClose={() => setShowPomodoro(false)} onComplete={completePomodoro} todaySubjects={todaySubjects} />}
       {showReport && <ReportModal day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} onClose={() => setShowReport(false)} />}
+      {showMonthlyExpenseReport && <MonthlyExpenseReportModal detail={monthlyExpenseDetail} loading={monthlyExpenseLoading} onClose={() => setShowMonthlyExpenseReport(false)} />}
 
       <PrintReport day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} />
+      <PrintMonthlyExpenseReport detail={monthlyExpenseDetail} />
     </div>
   );
 }
