@@ -85,6 +85,43 @@
   .task-card-notdone-btn.active { background:#A14545; border-color:#A14545; color:#FBF6EA; }
   .dtt-root.dark .task-card-notdone-btn { border-color:#3A4634; color:#B9AF8E; }
   .dtt-root.dark .task-card-notdone-btn:hover { background:#1B241C; }
+  .weightloss-banner { background:linear-gradient(135deg,#123A34,#1B4A42); color:#FBF6EA; border-radius:16px; padding:14px 16px; margin-bottom:16px; }
+  .weightloss-banner-title { display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-weight:700; font-size:14.5px; margin-bottom:8px; }
+  .weightloss-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px; }
+  .weightloss-stat { background:rgba(255,255,255,0.1); border-radius:10px; padding:8px 6px; text-align:center; }
+  .weightloss-stat-num { font-family:'Fraunces',serif; font-weight:700; font-size:15px; }
+  .weightloss-stat-label { font-size:9.5px; opacity:0.85; margin-top:2px; }
+  .weightloss-note { font-size:11.5px; opacity:0.9; line-height:1.6; }
+  .weightloss-source { font-size:10px; opacity:0.65; margin-top:6px; font-family:'IBM Plex Mono',monospace; }
+  .plan-pick-btn { display:block; width:100%; text-align:right; background:#FBF6EA; border:1.5px solid #E7DDC7; border-radius:14px; padding:12px 14px; cursor:pointer; }
+  .plan-pick-btn:hover { border-color:#C6BB9C; background:#F5EEDC; }
+  .plan-pick-label { font-family:'Fraunces',serif; font-weight:700; font-size:14.5px; color:#2B2A22; margin-bottom:3px; }
+  .plan-pick-desc { font-size:11.5px; color:#8A7F68; line-height:1.5; }
+  .guided-stage { display:flex; flex-direction:column; align-items:center; text-align:center; padding:10px 6px 8px; }
+  .guided-timer { font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8A7F68; margin-bottom:10px; }
+  .guided-anim-wrap { width:220px; height:220px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#FBF6EA,#F1E9D6); border:1.5px solid #E7DDC7; border-radius:24px; margin-bottom:16px; }
+  .guided-ex-name { font-family:'Fraunces',serif; font-weight:700; font-size:24px; color:#123A34; }
+  .guided-ex-target { font-size:14px; color:#8A7F68; margin-top:4px; font-weight:600; }
+  .guided-set-dots { display:flex; align-items:center; gap:8px; margin:18px 0 20px; }
+  .guided-dot { width:12px; height:12px; border-radius:50%; background:#E1D6B8; }
+  .guided-dot.done { background:#B5651D; }
+  .guided-set-text { font-size:12.5px; color:#8A7F68; font-weight:600; margin-left:6px; font-family:'IBM Plex Mono',monospace; }
+  .guided-rest-block { display:flex; flex-direction:column; align-items:center; padding:30px 10px; }
+  .guided-rest-label { font-family:'Fraunces',serif; font-weight:700; font-size:16px; color:#123A34; margin-bottom:6px; }
+  .guided-rest-count { font-family:'Fraunces',serif; font-weight:700; font-size:54px; color:#B5651D; line-height:1; margin-bottom:10px; }
+  .guided-rest-next { font-size:13px; color:#8A7F68; margin-bottom:16px; }
+  .guided-rules { margin-top:22px; width:100%; max-width:340px; }
+  .guided-rules-toggle { display:flex; align-items:center; gap:6px; justify-content:center; width:100%; background:#FBF6EA; border:1.5px solid #E7DDC7; border-radius:999px; padding:8px 14px; font-size:12.5px; font-weight:600; color:#123A34; cursor:pointer; }
+  .guided-rules-toggle:hover { background:#F1E9D6; }
+  .guided-rules-list { margin-top:10px; background:#FBF6EA; border:1.5px solid #E7DDC7; border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.8; text-align:right; }
+  .dtt-root.dark .plan-pick-btn { background:#1F2A22; border-color:#33422F; }
+  .dtt-root.dark .plan-pick-btn:hover { background:#26331F; }
+  .dtt-root.dark .plan-pick-label { color:#EDE7D3; }
+  .dtt-root.dark .guided-anim-wrap { background:linear-gradient(180deg,#1F2A22,#26331F); border-color:#33422F; }
+  .dtt-root.dark .guided-ex-name { color:#EDE7D3; }
+  .dtt-root.dark .guided-dot { background:#3A4634; }
+  .dtt-root.dark .guided-rules-toggle { background:#1F2A22; border-color:#33422F; color:#EDE7D3; }
+  .dtt-root.dark .guided-rules-list { background:#1F2A22; border-color:#33422F; }
   .untick-wrap { display:flex; align-items:center; gap:5px; flex-shrink:0; }
   .untick-btn { width:22px; height:22px; border-radius:50%; border:1.5px solid #D8C9A3; background:#FFFDF7; color:#A14545; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; cursor:pointer; flex-shrink:0; line-height:1; }
   .untick-btn:hover { background:#F1E9D6; }
@@ -597,6 +634,12 @@ const ACCOUNT_CATEGORIES = [
   { key: "repair", label: "মেরামত" },
   { key: "unimportant", label: "অপ্রয়োজনীয় খরচ" },
 ];
+// উপরের ক্যাটাগরিগুলোকে UI-তে দুইটা লজিক্যাল সেকশনে ভাগ করে দেখানোর জন্য —
+// হিসাব-এর হিসাব-নিকাশ (ACCOUNT_CATEGORIES / totals) অপরিবর্তিত থাকে, শুধু গ্রুপিং UI-এর জন্য।
+const OWN_EXPENSE_KEYS = ["transport", "meal", "gadget", "donate", "necessity", "repair", "unimportant"];
+const FRIENDS_FAMILY_KEYS = ["brother", "sister", "familyNeed", "nephew", "relative", "friends"];
+const OWN_EXPENSE_CATEGORIES = ACCOUNT_CATEGORIES.filter(c => OWN_EXPENSE_KEYS.includes(c.key));
+const FRIENDS_FAMILY_CATEGORIES = ACCOUNT_CATEGORIES.filter(c => FRIENDS_FAMILY_KEYS.includes(c.key));
 const OFFICE_TRANSPORT_TYPES = [
   { key: "rickshaw", label: "রিকশা" },
   { key: "metro", label: "মেট্রো" },
@@ -643,12 +686,53 @@ const MOOD_OPTIONS = [
 ];
 const REST_TIMER_SECONDS = 60;
 const EXERCISE_LIST = [
-  { key: "squat", label: "বডিওয়েট স্কোয়াট", target: "১০ বার" },
-  { key: "pushup", label: "পুশ-আপ", target: "৮–১০ বার" },
-  { key: "gluteBridge", label: "গ্লুট ব্রিজ", target: "১০ বার" },
-  { key: "superman", label: "সুপারম্যান", target: "১০ বার" },
-  { key: "plank", label: "প্ল্যাংক", target: "২০–৩০ সেকেন্ড" },
-  { key: "jumpingJack", label: "জাম্পিং জ্যাক", target: "২০ বার" },
+  // ওয়ার্ম-আপ
+  { key: "jumpingJack", label: "জাম্পিং জ্যাক", target: "২০ বার", category: "warmup", how: ["সোজা দাঁড়িয়ে শুরু করুন, হাত দুই পাশে রাখুন", "একসাথে লাফিয়ে পা ফাঁক করুন ও হাত মাথার উপর তুলুন", "আবার লাফিয়ে শুরুর অবস্থানে ফিরুন — ছন্দ বজায় রাখুন"] },
+  { key: "highKnees", label: "হাই নিজ (উঁচু হাঁটু দৌড়)", target: "৩০ সেকেন্ড", category: "warmup", how: ["জায়গায় দাঁড়িয়ে দৌড়ানোর মতো করুন", "প্রতিটা পা কোমর সমান উঁচুতে তুলুন", "হাত সামনে-পেছনে দুলিয়ে গতি বজায় রাখুন"] },
+  { key: "armCircle", label: "আর্ম সার্কেল", target: "১৫ বার (প্রতি দিকে)", category: "warmup", how: ["দুই হাত কাঁধ বরাবর সোজা প্রসারিত করুন", "ছোট থেকে বড় বৃত্তে হাত ঘোরান", "১৫ বার সামনের দিকে, তারপর ১৫ বার পেছনের দিকে ঘোরান"] },
+  // লোয়ার বডি
+  { key: "squat", label: "বডিওয়েট স্কোয়াট", target: "১০ বার", category: "lower", how: ["পা কাঁধ-সমান ফাঁক করে দাঁড়ান, বুক টান টান রাখুন", "হিপ পেছনে নিয়ে হাঁটু ভাঁজ করে বসুন — হাঁটু যেন পায়ের আঙুল অতিক্রম না করে", "গোড়ালিতে ভর দিয়ে সোজা হয়ে উঠুন"] },
+  { key: "lunge", label: "লাঞ্জ", target: "১০ বার (প্রতি পায়ে)", category: "lower", how: ["এক পা সামনে বড় করে ফেলুন", "দুই হাঁটু প্রায় ৯০ ডিগ্রি ভাঁজ করে নিচে নামুন, সামনের হাঁটু গোড়ালির উপরে রাখুন", "সামনের পায়ে ভর দিয়ে উঠে শুরুর অবস্থানে ফিরুন, তারপর পা বদলান"] },
+  { key: "gluteBridge", label: "গ্লুট ব্রিজ", target: "১০ বার", category: "lower", how: ["পিঠের ভর দিয়ে শুয়ে হাঁটু ভাঁজ করুন, পা মাটিতে সমান রাখুন", "হিপ উপরে তুলুন যতক্ষণ না কাঁধ-হিপ-হাঁটু এক সরলরেখায় আসে", "গ্লুট শক্ত করে ১–২ সেকেন্ড ধরে রেখে ধীরে নামান"] },
+  { key: "wallSit", label: "ওয়াল সিট", target: "২০–৩০ সেকেন্ড", category: "lower", how: ["দেয়ালে পিঠ ঠেকিয়ে দাঁড়ান", "হাঁটু প্রায় ৯০ ডিগ্রি ভাঁজ করে বসার ভঙ্গিতে থাকুন, যেন চেয়ারে বসে আছেন", "নির্দিষ্ট সময় ধরে রাখুন, শ্বাস স্বাভাবিক রাখুন"] },
+  { key: "calfRaise", label: "ক্যাফ রেইজ", target: "১৫ বার", category: "lower", how: ["সোজা দাঁড়িয়ে পা কাঁধ-সমান ফাঁক করুন", "গোড়ালি তুলে পায়ের আঙুলের উপর ভর দিয়ে দাঁড়ান", "ধীরে ধীরে নিয়ন্ত্রিতভাবে নিচে নামুন"] },
+  // আপার বডি
+  { key: "pushup", label: "পুশ-আপ", target: "৮–১০ বার", category: "upper", how: ["হাত কাঁধ-সমান ফাঁক করে প্ল্যাংক পজিশনে থাকুন", "কনুই ভাঁজ করে বুক প্রায় মাটি ছুঁইয়ে নামান, শরীর মাথা থেকে গোড়ালি পর্যন্ত সোজা রাখুন", "হাত সোজা করে ধাক্কা দিয়ে উপরে উঠুন — কঠিন লাগলে হাঁটু মাটিতে রেখে সহজ ভার্সন করুন"] },
+  { key: "pikePushup", label: "পাইক পুশ-আপ", target: "৬–৮ বার", category: "upper", how: ["ডাউনওয়ার্ড-ডগ ভঙ্গিতে হিপ উঁচু করে উল্টো-V আকৃতি তৈরি করুন", "কনুই ভাঁজ করে মাথা মাটির কাছাকাছি নিয়ে যান", "কাঁধ ও হাতে ভর দিয়ে ধাক্কা দিয়ে উপরে উঠুন — এটা কাঁধের শক্তি বাড়ায়"] },
+  { key: "tricepDip", label: "ট্রাইসেপ ডিপ", target: "১০ বার", category: "upper", how: ["চেয়ার বা বেঞ্চের কিনারায় হাত রেখে সামনে বসুন", "কনুই সোজা পেছনে ভাঁজ করে হিপ নিচে নামান", "হাতে ভর দিয়ে সোজা হয়ে আবার উপরে উঠুন"] },
+  // কোর
+  { key: "superman", label: "সুপারম্যান", target: "১০ বার", category: "core", how: ["মুখ নিচু করে শুয়ে হাত সামনে প্রসারিত করুন", "একসাথে হাত, বুক ও পা মাটি থেকে তুলুন", "২–৩ সেকেন্ড ধরে রেখে ধীরে ধীরে নামান"] },
+  { key: "plank", label: "প্ল্যাংক", target: "২০–৩০ সেকেন্ড", category: "core", how: ["কনুই ও পায়ের আঙুলের উপর ভর দিয়ে শরীর সোজা রাখুন", "হিপ যেন খুব উঁচু বা নিচু না হয় — মাথা থেকে গোড়ালি এক সরলরেখায় রাখুন", "পেট শক্ত রেখে স্বাভাবিকভাবে শ্বাস নিতে থাকুন"] },
+  { key: "sidePlank", label: "সাইড প্ল্যাংক", target: "১৫–২০ সেকেন্ড (প্রতি পাশে)", category: "core", how: ["পাশ ফিরে এক কনুই ও পায়ের পাশে ভর দিয়ে শুয়ে পড়ুন", "হিপ উপরে তুলে শরীর মাথা থেকে পা পর্যন্ত সরলরেখায় আনুন", "নির্দিষ্ট সময় ধরে রাখুন, তারপর পাশ বদলে আবার করুন"] },
+  { key: "crunch", label: "ক্রাঞ্চ", target: "১৫ বার", category: "core", how: ["পিঠের ভর দিয়ে শুয়ে হাঁটু ভাঁজ করুন, হাত মাথার পেছনে হালকা রাখুন", "ঘাড় না টেনে শুধু কাঁধ মাটি থেকে সামান্য তুলুন", "নিয়ন্ত্রিতভাবে ধীরে নিচে নামুন"] },
+  { key: "legRaise", label: "লেগ রেইজ", target: "১২ বার", category: "core", how: ["পিঠের ভর দিয়ে শুয়ে পা সোজা রাখুন", "পিঠ মাটিতে চেপে রেখে দুই পা একসাথে উপরে তুলুন", "ধীরে ধীরে নামান, মাটি স্পর্শ করার আগেই আবার তুলুন"] },
+  { key: "russianTwist", label: "রাশিয়ান টুইস্ট", target: "১৫ বার (প্রতি পাশে)", category: "core", how: ["হাঁটু ভাঁজ করে বসুন, শরীর সামান্য পেছনে হেলিয়ে ভারসাম্য রাখুন", "চাইলে পা মাটি থেকে সামান্য তুলুন, নয়তো মাটিতেই রাখুন", "দুই হাত একসাথে করে শরীর ডানে-বামে ঘুরিয়ে টুইস্ট করুন"] },
+  { key: "mountainClimber", label: "মাউন্টেন ক্লাইম্বার", target: "২০ বার (প্রতি পা)", category: "core", how: ["প্ল্যাংক পজিশনে শুরু করুন, হাত কাঁধ বরাবর রাখুন", "এক হাঁটু বুকের কাছে দ্রুত টেনে আনুন, তারপর পা বদলান", "দৌড়ানোর মতো ছন্দে পা পরিবর্তন করতে থাকুন, হিপ স্থির রাখুন"] },
+  // ফুল বডি / কার্ডিও
+  { key: "burpee", label: "বার্পি", target: "৮ বার", category: "cardio", how: ["দাঁড়ানো অবস্থা থেকে বসে হাত মাটিতে রাখুন", "লাফিয়ে পা পেছনে নিয়ে প্ল্যাংক পজিশনে যান, চাইলে একটা পুশ-আপ করুন", "পা আবার সামনে টেনে এনে লাফিয়ে উপরে উঠুন, হাত মাথার উপর তুলুন"] },
+];
+
+/* জনপ্রিয় ফিটনেস স্টাইলের উপর ভিত্তি করে কিছু রেডিমেড ওয়ার্কআউট প্ল্যান — যেকোনোটা বেছে নিলে
+   শুধু সেই প্ল্যানের এক্সারসাইজগুলোই চেকলিস্টে দেখাবে, প্রতিটার সঠিক পদ্ধতি "ℹ️" আইকনে দেখা যাবে */
+const WORKOUT_PLANS = [
+  { key: "all", label: "সব ব্যায়াম", desc: "পুরো লাইব্রেরি থেকে নিজের মতো বেছে নিন", exercises: null },
+  { key: "weightLoss", label: "🔥 ওজন কমানোর সেরা প্ল্যান", desc: "বিজ্ঞানভিত্তিক (CDC/ACSM গাইডলাইন অনুযায়ী): সপ্তাহে ৫ দিন — ২ দিন কার্ডিও/HIIT (ক্যালোরি বার্ন) + ৩ দিন ফুল-বডি স্ট্রেংথ (মাসল ধরে রাখা, যা মেটাবলিজম সচল রাখে)। প্রতি সেশন ২০–৩০ মিনিট, প্রতিটা মুভ ৩ সেট করে চেষ্টা করুন।", exercises: ["jumpingJack", "highKnees", "burpee", "mountainClimber", "squat", "lunge", "gluteBridge", "pushup", "plank", "russianTwist", "legRaise", "calfRaise"] },
+  { key: "beginnerFullBody", label: "বিগেনার ফুল বডি", desc: "নতুনদের জন্য সহজ কয়েকটা এক্সারসাইজে পুরো শরীরের ওয়ার্কআউট — সপ্তাহে ৩ দিন করুন", exercises: ["jumpingJack", "squat", "pushup", "gluteBridge", "plank", "superman"] },
+  { key: "hiit", label: "৭-মিনিট এইচআইআইটি", desc: "দ্রুত ফ্যাট বার্নের জন্য হাই-ইন্টেনসিটি সেট — প্রতিটা ৩০ সেকেন্ড কাজ, মাঝে ১০ সেকেন্ড রেস্ট", exercises: ["jumpingJack", "squat", "pushup", "mountainClimber", "lunge", "plank", "highKnees", "burpee"] },
+  { key: "lowerBody", label: "লোয়ার বডি ফোকাস", desc: "পা ও হিপের শক্তি বাড়ানোর জন্য", exercises: ["squat", "lunge", "gluteBridge", "wallSit", "calfRaise", "jumpingJack"] },
+  { key: "upperBody", label: "আপার বডি ফোকাস", desc: "বুক, কাঁধ ও হাতের শক্তি বাড়ানোর জন্য", exercises: ["pushup", "pikePushup", "tricepDip", "superman", "plank", "armCircle"] },
+  { key: "core", label: "কোর ও এবস", desc: "পেটের মাংসপেশি মজবুত করার জন্য", exercises: ["plank", "sidePlank", "crunch", "legRaise", "russianTwist", "mountainClimber"] },
+];
+
+const PLAN_SECTIONS = [
+  { key: "jobApps", label: "চাকরির আবেদন" },
+  { key: "paternalContacts", label: "বাবার দিকের আত্মীয়দের সাথে যোগাযোগ" },
+  { key: "maternalContacts", label: "মায়ের দিকের আত্মীয়দের সাথে যোগাযোগ" },
+  { key: "friendsContacted", label: "বন্ধুদের সাথে যোগাযোগ" },
+  { key: "selfPurchases", label: "এই মাসে নিজের জন্য কী কিনেছি" },
+  { key: "familyPurchases", label: "পরিবারের কারো জন্য কিছু কিনেছি কিনা" },
+  { key: "declutterItems", label: "অপ্রয়োজনীয় বিষয়/জিনিস পরিষ্কার (Declutter)" },
+  { key: "places", label: "ঘোরাঘুরি" },
 ];
 
 /* ---------------- helpers ---------------- */
@@ -869,8 +953,8 @@ function emptyDay() {
       revision: { pages: "", surah: "" },
       amoli: { Mulk: false, Yasin: false, Waqiah: false, Kahf: false },
     },
-    study: { studied: { topics: "", hours: "", topicName: "" }, lectures: { count: "", hours: "", lectureName: "" }, pomodoroCount: 0, subjects: {} },
-    exercise: { checklist: { squat: "", pushup: "", gluteBridge: "", superman: "", plank: "", jumpingJack: "" }, mindfulness: { walk: false, yoga: false, breathing: false } },
+    study: { studied: { topics: "", hours: "", topicName: "" }, lectures: { count: "", hours: "", lectureName: "" }, pomodoroCount: 0, promoterMinutes: 0, subjects: {} },
+    exercise: { checklist: { squat: "", pushup: "", gluteBridge: "", superman: "", plank: "", jumpingJack: "", highKnees: "", armCircle: "", lunge: "", wallSit: "", calfRaise: "", pikePushup: "", tricepDip: "", sidePlank: "", crunch: "", legRaise: "", russianTwist: "", mountainClimber: "", burpee: "" }, mindfulness: { walk: false, yoga: false, breathing: false }, quickSessionMinutes: 0 },
     texting: { log: {}, reflection: "", quickNote: "" },
     diary: { notes: "", accomplished: "", events: "", thoughts: "", reflection: "", gratitude: ["", "", ""], moodNote: "", lastEditTime: null },
     taskNotDone: { prayer: false, zikir: false, quran: false, study: false, exercise: false, habit: false },
@@ -920,9 +1004,10 @@ function mergeDay(loaded) {
       studied: { ...base.study.studied, ...(loaded?.study?.studied || {}) },
       lectures: { ...base.study.lectures, ...(loaded?.study?.lectures || {}) },
       pomodoroCount: (loaded?.study?.pomodoroCount) || 0,
+      promoterMinutes: (loaded?.study?.promoterMinutes) || 0,
       subjects: { ...(loaded?.study?.subjects || {}) },
     },
-    exercise: { ...base.exercise, ...(loaded?.exercise || {}), checklist: { ...base.exercise.checklist, ...(loaded?.exercise?.checklist || {}) }, mindfulness: { ...base.exercise.mindfulness, ...(loaded?.exercise?.mindfulness || {}) } },
+    exercise: { ...base.exercise, ...(loaded?.exercise || {}), checklist: { ...base.exercise.checklist, ...(loaded?.exercise?.checklist || {}) }, mindfulness: { ...base.exercise.mindfulness, ...(loaded?.exercise?.mindfulness || {}) }, quickSessionMinutes: (loaded?.exercise?.quickSessionMinutes) || 0 },
     texting: { log: { ...(loaded?.texting?.log || {}) }, reflection: loaded?.texting?.reflection || "", quickNote: loaded?.texting?.quickNote || "" },
     diary: { ...base.diary, ...(loaded?.diary || {}) },
     taskNotDone: { ...base.taskNotDone, ...(loaded?.taskNotDone || {}) },
@@ -938,9 +1023,9 @@ function goalsUnfinished(day) {
   const quranDone = q.reading.pages || q.reading.surah || q.revision.pages || q.revision.surah || q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf;
   if (!quranDone) goals.push("কুরআন");
   const studySubjectHours = Object.values(day.study.subjects || {}).some(v => parseFloat(v) > 0);
-  const studyDone = day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || studySubjectHours;
+  const studyDone = day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || studySubjectHours || (parseFloat(day.study.promoterMinutes) > 0);
   if (!studyDone) goals.push("পড়াশোনা");
-  if (!Object.values(day.exercise.checklist).some(v => v)) goals.push("ব্যায়াম");
+  if (!Object.values(day.exercise.checklist).some(v => v) && !(parseFloat(day.exercise.quickSessionMinutes) > 0)) goals.push("ব্যায়াম");
   const sleepAuto = computeSleepAuto(day);
   const habitDone = sleepAuto.earlyRising || sleepAuto.earlySleeping || day.habit.noScreenCount || day.habit.meditation || day.habit.walkingSteps || day.habit.lustControl || (day.habit.waterGlasses > 0) || (day.habit.ghorGochano > 0);
   if (!habitDone) goals.push("অভ্যাস");
@@ -955,7 +1040,7 @@ function dayCompletionScore(day, contacts, noTextPeople) {
   ratios.push([!!(q.reading.pages || q.reading.surah), !!(q.revision.pages || q.revision.surah), !!(q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf)].filter(Boolean).length / 3);
   const s = day.study;
   ratios.push(((s.studied.topics || s.studied.hours || s.studied.topicName ? 0.5 : 0) + (s.lectures.count || s.lectures.hours || s.lectures.lectureName ? 0.5 : 0)));
-  ratios.push(Math.min(1, Object.values(day.exercise.checklist).filter(v => v).length / 6));
+  ratios.push((parseFloat(day.exercise.quickSessionMinutes) > 0) ? 1 : Math.min(1, Object.values(day.exercise.checklist).filter(v => v).length / 6));
   const walkOk = (parseFloat(day.habit.walkingSteps) || 0) >= 8000;
   const waterOk = (day.habit.waterGlasses || 0) >= 8;
   const noTextOk = (noTextPeople && noTextPeople.length > 0) ? noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") : false;
@@ -988,7 +1073,7 @@ function isTaskFullyDone(taskId, day, contacts, noTextPeople) {
     }
     case "exercise": {
       const setsDone = Object.values(day.exercise.checklist).filter(v => v).length;
-      return setsDone >= 6;
+      return setsDone >= 6 || (parseFloat(day.exercise.quickSessionMinutes) > 0);
     }
     case "habit": {
       const walkOk = (parseFloat(day.habit.walkingSteps) || 0) >= 8000;
@@ -1193,73 +1278,233 @@ function MeditationTimerModal({ onClose, onComplete }) {
   );
 }
 
-function PomodoroModal({ onClose, onComplete, todaySubjects }) {
-  const [subject, setSubject] = useState((todaySubjects && todaySubjects[0]) || "");
-  const [duration, setDuration] = useState(25);
-  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
-  const [running, setRunning] = useState(false);
-  const [done, setDone] = useState(false);
+const STUDY_MIN_SECONDS = 15 * 60; // কমপক্ষে ১৫ মিনিট না হলে স্টাডি সেশন গণনা হবে না
 
-  const finish = (secondsElapsed) => {
-    const hours = Math.round((secondsElapsed / 3600) * 100) / 100;
-    setDone(true);
-    setRunning(false);
-    onComplete(subject, hours);
+function formatStopwatch(totalSec) {
+  totalSec = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function StudyPromoterModal({ onClose, studyPromoter, elapsedSeconds, todaySubjects, onStart, onPause, onResume, onEnd }) {
+  const [subject, setSubject] = useState((studyPromoter && studyPromoter.subject) || (todaySubjects && todaySubjects[0]) || "");
+  const [result, setResult] = useState(null); // { counted, seconds } after ending
+
+  const status = studyPromoter ? studyPromoter.status : "idle";
+
+  const handleEnd = () => {
+    const r = onEnd();
+    setResult(r);
   };
 
-  useEffect(() => {
-    if (!running || done) return;
-    if (secondsLeft <= 0) { finish(duration * 60); return; }
-    const t = setTimeout(() => setSecondsLeft(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [running, secondsLeft, done]);
-
-  const pickDuration = (mins) => {
-    setDuration(mins);
-    setSecondsLeft(mins * 60);
-    setRunning(false);
-    setDone(false);
-  };
-
-  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const ss = String(secondsLeft % 60).padStart(2, "0");
+  if (result) {
+    const mins = Math.floor(result.seconds / 60);
+    return (
+      <Modal onClose={onClose} width={340}>
+        <div className="modal-header"><Icon name="timer" size={18} color="#4A6FA5" /><span>স্টাডি প্রমোটার</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+        <div style={{ textAlign: "center", padding: "10px 0" }}>
+          {result.counted ? (
+            <div className="modal-q" style={{ fontSize: 17 }}>🎉 {mins} মিনিটের একটা স্টাডি সেশন গণনা হয়েছে! (+{(Math.round(mins * 0.15 * 100) / 100)} পয়েন্ট)</div>
+          ) : (
+            <div className="modal-q" style={{ fontSize: 14.5 }}>মাত্র {mins} মিনিট হয়েছে। কমপক্ষে ১৫ মিনিট না হলে সেশন গণনা হয় না, তাই এটা গণনায় যোগ হয়নি।</div>
+          )}
+          <div className="modal-actions" style={{ justifyContent: "center", marginTop: 16 }}>
+            <button className="btn-primary" style={{ background: "#4A6FA5" }} onClick={onClose}>ঠিক আছে</button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal onClose={onClose} width={340}>
-      <div className="modal-header"><Icon name="timer" size={18} color="#4A6FA5" /><span>স্টাডি পমোডোরো</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+      <div className="modal-header"><Icon name="timer" size={18} color="#4A6FA5" /><span>স্টাডি প্রমোটার</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
       <div style={{ textAlign: "center", padding: "10px 0" }}>
-        {!done ? (
-          <>
-            {todaySubjects && todaySubjects.length > 0 && (
-              <div className="field" style={{ marginBottom: 14, textAlign: "left" }}>
-                <label>আজকের সাবজেক্ট</label>
-                <select value={subject} onChange={e => setSubject(e.target.value)}>
-                  {todaySubjects.map(s => <option key={s} value={s}>{s}</option>)}
-                  <option value="">অন্যান্য / নির্দিষ্ট নয়</option>
-                </select>
-              </div>
-            )}
-            {!running && secondsLeft === duration * 60 && (
-              <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 14 }}>
-                <button className={"btn-ghost" + (duration === 25 ? " active" : "")} style={duration === 25 ? { background: "#4A6FA5", color: "#FBF6EA" } : {}} onClick={() => pickDuration(25)}>২৫ মিনিট</button>
-                <button className={"btn-ghost" + (duration === 50 ? " active" : "")} style={duration === 50 ? { background: "#4A6FA5", color: "#FBF6EA" } : {}} onClick={() => pickDuration(50)}>৫০ মিনিট</button>
-              </div>
-            )}
-            <div className="countdown">{mm}:{ss}</div>
-            <div className="modal-q" style={{ marginTop: 8 }}>{running ? "মনোযোগ দিয়ে পড়ুন, ফোকাস ভাঙবেন না..." : "শুরু করতে প্রস্তুত?"}</div>
-            <div className="modal-actions" style={{ justifyContent: "center", marginTop: 16 }}>
-              <button className="btn-ghost" onClick={() => setRunning(r => !r)}>{running ? "থামান" : "শুরু করুন"}</button>
-              <button className="btn-primary" style={{ background: "#4A6FA5" }} onClick={() => finish(duration * 60 - secondsLeft)}>শেষ করুন</button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="modal-q" style={{ fontSize: 18 }}>🎉 একটা ফোকাস সেশন শেষ হয়েছে!</div>
-            <div className="modal-actions" style={{ justifyContent: "center", marginTop: 16 }}>
-              <button className="btn-primary" style={{ background: "#4A6FA5" }} onClick={onClose}>ঠিক আছে</button>
-            </div>
-          </>
+        {status === "idle" && todaySubjects && todaySubjects.length > 0 && (
+          <div className="field" style={{ marginBottom: 14, textAlign: "left" }}>
+            <label>আজকের সাবজেক্ট</label>
+            <select value={subject} onChange={e => setSubject(e.target.value)}>
+              {todaySubjects.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">অন্যান্য / নির্দিষ্ট নয়</option>
+            </select>
+          </div>
         )}
+        <div className="countdown">{formatStopwatch(elapsedSeconds)}</div>
+        <div className="modal-q" style={{ marginTop: 8 }}>
+          {status === "running" ? "মনোযোগ দিয়ে পড়ুন, স্ক্রিন অফ থাকলেও গণনা চলতে থাকবে..." : status === "paused" ? "পজ করা আছে" : "শুরু করতে প্রস্তুত? কমপক্ষে ১৫ মিনিট না হলে সেশন গণনা হবে না।"}
+        </div>
+        <div className="modal-actions" style={{ justifyContent: "center", marginTop: 16, flexWrap: "wrap", gap: 8 }}>
+          {status === "idle" && <button className="btn-primary" style={{ background: "#4A6FA5" }} onClick={() => onStart(subject)}>স্টার্ট</button>}
+          {status === "running" && <button className="btn-ghost" onClick={onPause}>পজ</button>}
+          {status === "paused" && <button className="btn-ghost" onClick={onResume}>আবার শুরু করুন</button>}
+          {status !== "idle" && <button className="btn-primary" style={{ background: "#4A6FA5" }} onClick={handleEnd}>এন্ড</button>}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+const WORKOUT_MIN_SECONDS = 5 * 60; // কমপক্ষে ৫ মিনিট না হলে ওয়ার্কআউট সেশন গণনা হবে না
+const WORKOUT_POINTS_PER_MIN = 0.75; // প্রতি মিনিটে পয়েন্ট (~২০ মিনিট = পুরো চেকলিস্টের সমান)
+const GUIDED_TARGET_SETS = 3; // গাইডেড সেশনে প্রতিটা এক্সারসাইজের জন্য ডিফল্ট সেট সংখ্যা
+const GUIDED_REST_SECONDS = 45; // প্রতি সেটের পর রেস্ট (৩০ সে. – ১ মি. এর মাঝামাঝি)
+
+function WorkoutPromoterModal({ onClose, workoutPromoter, elapsedSeconds, onStart, onPause, onResume, onEnd, checklist, onIncrementSet }) {
+  const [result, setResult] = useState(null); // { counted, seconds } after ending
+  const [planKey, setPlanKey] = useState(null); // নির্বাচিত প্ল্যান — null মানে এখনো প্ল্যান বাছাই হয়নি
+  const [stepIndex, setStepIndex] = useState(0); // প্ল্যানের কোন এক্সারসাইজে আছি
+  const [setsDone, setSetsDone] = useState(0); // চলতি এক্সারসাইজের কয় সেট শেষ হয়েছে
+  const [resting, setResting] = useState(false);
+  const [restLeft, setRestLeft] = useState(0);
+  const [showRules, setShowRules] = useState(false);
+
+  const status = workoutPromoter ? workoutPromoter.status : "idle";
+  const plan = planKey ? WORKOUT_PLANS.find(p => p.key === planKey) : null;
+  const planExercises = plan ? (plan.exercises ? EXERCISE_LIST.filter(e => plan.exercises.includes(e.key)) : EXERCISE_LIST) : [];
+  const currentEx = planExercises[stepIndex] || null;
+  const isLastExercise = stepIndex >= planExercises.length - 1;
+
+  useEffect(() => {
+    if (!resting) return;
+    if (restLeft <= 0) { setResting(false); return; }
+    const t = setTimeout(() => setRestLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resting, restLeft]);
+
+  const handlePickPlan = (key) => {
+    setPlanKey(key);
+    setStepIndex(0);
+    setSetsDone(0);
+    setResting(false);
+    setShowRules(false);
+    if (status === "idle") onStart();
+  };
+
+  const handleEnd = () => {
+    const r = onEnd();
+    setResult(r);
+  };
+
+  const handleCompleteSet = () => {
+    if (!currentEx) return;
+    onIncrementSet(currentEx.key);
+    const nextSets = setsDone + 1;
+    if (nextSets >= GUIDED_TARGET_SETS) {
+      if (isLastExercise) { handleEnd(); return; }
+      setStepIndex(stepIndex + 1);
+      setSetsDone(0);
+      setShowRules(false);
+    } else {
+      setSetsDone(nextSets);
+    }
+    setResting(true);
+    setRestLeft(GUIDED_REST_SECONDS);
+  };
+
+  const handleSkipRest = () => { setResting(false); setRestLeft(0); };
+
+  if (result) {
+    const mins = Math.floor(result.seconds / 60);
+    return (
+      <Modal onClose={onClose} width={340}>
+        <div className="modal-header"><Icon name="fitness_center" size={18} color="#B5651D" /><span>কুইক ফুল বডি সেশন</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+        <div style={{ textAlign: "center", padding: "10px 0" }}>
+          {result.counted ? (
+            <div className="modal-q" style={{ fontSize: 17 }}>🎉 {mins} মিনিটের একটা ওয়ার্কআউট সেশন গণনা হয়েছে! (+{(Math.round(mins * WORKOUT_POINTS_PER_MIN * 100) / 100)} পয়েন্ট)</div>
+          ) : (
+            <div className="modal-q" style={{ fontSize: 14.5 }}>মাত্র {mins} মিনিট হয়েছে। কমপক্ষে ৫ মিনিট না হলে সেশন গণনা হয় না, তাই এটা গণনায় যোগ হয়নি।</div>
+          )}
+          <div className="modal-actions" style={{ justifyContent: "center", marginTop: 16 }}>
+            <button className="btn-primary" style={{ background: "#B5651D" }} onClick={onClose}>ঠিক আছে</button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  // ধাপ ১: প্ল্যান বাছাই
+  if (!plan) {
+    return (
+      <Modal onClose={onClose} width={380}>
+        <div className="modal-header"><Icon name="fitness_center" size={18} color="#B5651D" /><span>কুইক ফুল বডি সেশন</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+        <div style={{ padding: "6px 0 4px" }}>
+          <div className="modal-q" style={{ fontSize: 13.5, marginBottom: 12, lineHeight: 1.6 }}>একটা ওয়ার্কআউট প্ল্যান বেছে নিন — এরপর প্রতিটা এক্সারসাইজ ধাপে ধাপে বড় অ্যানিমেশনসহ দেখানো হবে, প্রতি সেটের পর রেস্টও থাকবে।</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {WORKOUT_PLANS.map(p => (
+              <button key={p.key} className="plan-pick-btn" onClick={() => handlePickPlan(p.key)}>
+                <div className="plan-pick-label">{p.label}</div>
+                <div className="plan-pick-desc">{p.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  // ধাপ ২: গাইডেড ফুলস্ক্রিন ফ্লো
+  return (
+    <Modal onClose={onClose} fullPage>
+      <div className="modal-header">
+        <Icon name="fitness_center" size={18} color="#B5651D" />
+        <span>{plan.label} — {planExercises.length ? (stepIndex + 1) : 0}/{planExercises.length}</span>
+        <button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button>
+      </div>
+      <div className="modal-body-scroll">
+        {!currentEx ? (
+          <div className="empty-note" style={{ textAlign: "center", padding: "24px 0" }}>এই প্ল্যানে কোনো এক্সারসাইজ নেই</div>
+        ) : (
+          <div className="guided-stage">
+            <div className="guided-timer">{formatStopwatch(elapsedSeconds)}</div>
+
+            {resting ? (
+              <div className="guided-rest-block">
+                <div className="guided-rest-label">রেস্ট নিন</div>
+                <div className="guided-rest-count">{restLeft}s</div>
+                <div className="guided-rest-next">পরের সেট: {currentEx.label}</div>
+                <button className="btn-ghost" onClick={handleSkipRest}>রেস্ট স্কিপ করুন</button>
+              </div>
+            ) : (
+              <>
+                <div className="guided-anim-wrap"><ExerciseAnim type={currentEx.key} size={150} /></div>
+                <div className="guided-ex-name">{currentEx.label}</div>
+                <div className="guided-ex-target">{currentEx.target}</div>
+                <div className="guided-set-dots">
+                  {Array.from({ length: GUIDED_TARGET_SETS }, (_, i) => (
+                    <span key={i} className={"guided-dot" + (i < setsDone ? " done" : "")} />
+                  ))}
+                  <span className="guided-set-text">সেট {setsDone}/{GUIDED_TARGET_SETS}</span>
+                </div>
+                <button className="btn-primary" style={{ background: "#B5651D", padding: "13px 28px", fontSize: 15 }} onClick={handleCompleteSet}>
+                  সেট সম্পন্ন হয়েছে ✓
+                </button>
+              </>
+            )}
+
+            {currentEx.how && (
+              <div className="guided-rules">
+                <button className="guided-rules-toggle" onClick={() => setShowRules(!showRules)}>
+                  <Icon name="info" size={15} /> সঠিক পদ্ধতি {showRules ? "লুকান" : "দেখুন"}
+                </button>
+                {showRules && (
+                  <div className="guided-rules-list">
+                    {currentEx.how.map((step, i) => <div key={i}>{i + 1}. {step}</div>)}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="modal-actions" style={{ justifyContent: "center", marginTop: 18, flexWrap: "wrap", gap: 8 }}>
+          {status === "running" && <button className="btn-ghost" onClick={onPause}>পজ</button>}
+          {status === "paused" && <button className="btn-ghost" onClick={onResume}>আবার শুরু করুন</button>}
+          <button className="btn-primary" style={{ background: "#6B7A4F" }} onClick={handleEnd}>সেশন শেষ করুন</button>
+        </div>
       </div>
     </Modal>
   );
@@ -1534,12 +1779,17 @@ function pointsStudy(rec) {
   const lectures = parseFloat(rec.study.lectures && rec.study.lectures.count) || 0;
   const subjectHours = Object.values(rec.study.subjects || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0);
   const units = topics + lectures + subjectHours;
-  return units >= 1 ? 2.7 + (units - 1) * 1.3 : 0;
+  const manualPts = units >= 1 ? 2.7 + (units - 1) * 1.3 : 0;
+  const promoterMinutes = parseFloat(rec.study.promoterMinutes) || 0;
+  const promoterPts = Math.round(promoterMinutes * 0.15 * 100) / 100;
+  return manualPts + promoterPts;
 }
 function pointsExercise(rec) {
-  if (!rec || !rec.exercise || !rec.exercise.checklist) return 0;
-  const totalSets = Object.values(rec.exercise.checklist).reduce((s, v) => s + (parseInt(v) || 0), 0);
-  return totalSets * 1.2;
+  if (!rec || !rec.exercise) return 0;
+  const totalSets = rec.exercise.checklist ? Object.values(rec.exercise.checklist).reduce((s, v) => s + (parseInt(v) || 0), 0) : 0;
+  const quickMinutes = parseFloat(rec.exercise.quickSessionMinutes) || 0;
+  const quickPts = Math.round(quickMinutes * WORKOUT_POINTS_PER_MIN * 100) / 100;
+  return totalSets * 1.2 + quickPts;
 }
 function habitUntickCount(rec) {
   if (!rec || !rec.habit || !rec.habit.unticks) return 0;
@@ -2318,92 +2568,290 @@ function CalendarModal({ selectedDate, onSelect, onClose }) {
   );
 }
 
-function ExerciseAnim({ type }) {
+function ExerciseAnim({ type, size }) {
+  size = size || 40;
   const c = "#B5651D";
   if (type === "squat") return (
-    <svg viewBox="0 0 60 60" width="40" height="40">
-      <circle cx="30" cy="11" r="5" fill={c}><animate attributeName="cy" values="11;18;11" dur="1.3s" repeatCount="indefinite" /></circle>
-      <line x1="30" y1="16" x2="30" y2="32" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y1" values="16;23;16" dur="1.3s" repeatCount="indefinite" />
-        <animate attributeName="y2" values="32;38;32" dur="1.3s" repeatCount="indefinite" />
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <ellipse cx="30" cy="58" rx="10" ry="2.3" fill="rgba(30,18,8,0.16)">
+        <animate attributeName="rx" values="12;9;12" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </ellipse>
+      <circle cx="30" cy="11" r="5" fill="url(#exGrad)"><animate attributeName="cy" values="11;18;11" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /></circle>
+      <line x1="30" y1="16" x2="30" y2="32" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="16;23;16" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="32;38;32" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="30" y1="32" x2="18" y2="54" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y1" values="32;38;32" dur="1.3s" repeatCount="indefinite" />
-        <animate attributeName="x2" values="18;12;18" dur="1.3s" repeatCount="indefinite" />
+      <line x1="30" y1="32" x2="18" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="32;38;32" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="x2" values="18;12;18" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="30" y1="32" x2="42" y2="54" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y1" values="32;38;32" dur="1.3s" repeatCount="indefinite" />
-        <animate attributeName="x2" values="42;48;42" dur="1.3s" repeatCount="indefinite" />
+      <line x1="30" y1="32" x2="42" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="32;38;32" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="x2" values="42;48;42" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
     </svg>
   );
   if (type === "pushup") return (
-    <svg viewBox="0 0 60 60" width="40" height="40">
-      <circle cx="12" cy="20" r="5" fill={c}><animate attributeName="cy" values="20;27;20" dur="1.2s" repeatCount="indefinite" /></circle>
-      <line x1="16" y1="20" x2="42" y2="24" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y1" values="20;27;20" dur="1.2s" repeatCount="indefinite" />
-        <animate attributeName="y2" values="24;30;24" dur="1.2s" repeatCount="indefinite" />
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="12" cy="20" r="5" fill="url(#exGrad)"><animate attributeName="cy" values="20;27;20" dur="1.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /></circle>
+      <line x1="16" y1="20" x2="42" y2="24" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="20;27;20" dur="1.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="24;30;24" dur="1.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="18" y1="20" x2="18" y2="44" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y1" values="20;27;20" dur="1.2s" repeatCount="indefinite" />
+      <line x1="18" y1="20" x2="18" y2="44" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="20;27;20" dur="1.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="42" y1="24" x2="52" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y1" values="24;30;24" dur="1.2s" repeatCount="indefinite" />
+      <line x1="42" y1="24" x2="52" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="24;30;24" dur="1.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
     </svg>
   );
   if (type === "gluteBridge") return (
-    <svg viewBox="0 0 60 60" width="40" height="40">
-      <circle cx="10" cy="30" r="5" fill={c} />
-      <line x1="14" y1="30" x2="30" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y2" values="30;18;30" dur="1.3s" repeatCount="indefinite" />
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="10" cy="30" r="5" fill="url(#exGrad)" />
+      <line x1="14" y1="30" x2="30" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y2" values="30;18;30" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="30" y1="30" x2="46" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y1" values="30;18;30" dur="1.3s" repeatCount="indefinite" />
+      <line x1="30" y1="30" x2="46" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="30;18;30" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
     </svg>
   );
   if (type === "superman") return (
-    <svg viewBox="0 0 60 60" width="40" height="40">
-      <circle cx="14" cy="30" r="5" fill={c} />
-      <line x1="18" y1="30" x2="38" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="18" y1="30" x2="6" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y2" values="30;18;30" dur="1.3s" repeatCount="indefinite" />
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="14" cy="30" r="5" fill="url(#exGrad)" />
+      <line x1="18" y1="30" x2="38" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="18" y1="30" x2="6" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y2" values="30;18;30" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="38" y1="30" x2="52" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="y2" values="30;18;30" dur="1.3s" repeatCount="indefinite" />
+      <line x1="38" y1="30" x2="52" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y2" values="30;18;30" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
     </svg>
   );
   if (type === "plank") return (
-    <svg viewBox="0 0 60 60" width="40" height="40">
-      <circle cx="10" cy="24" r="5" fill={c} />
-      <line x1="14" y1="24" x2="48" y2="26" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="16" y1="24" x2="16" y2="40" stroke={c} strokeWidth="3" strokeLinecap="round" />
-      <line x1="46" y1="26" x2="46" y2="40" stroke={c} strokeWidth="3" strokeLinecap="round" />
-      <circle cx="30" cy="50" r="4" fill="none" stroke={c} strokeWidth="2">
-        <animate attributeName="r" values="3;6;3" dur="1.4s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="1;0.2;1" dur="1.4s" repeatCount="indefinite" />
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="10" cy="24" r="5" fill="url(#exGrad)" />
+      <line x1="14" y1="24" x2="48" y2="26" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="16" y1="24" x2="16" y2="40" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" />
+      <line x1="46" y1="26" x2="46" y2="40" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="30" cy="50" r="4" fill="none" stroke="url(#exGrad)" strokeWidth="2">
+        <animate attributeName="r" values="3;6;3" dur="1.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="opacity" values="1;0.2;1" dur="1.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </circle>
     </svg>
   );
   if (type === "jumpingJack") return (
-    <svg viewBox="0 0 60 60" width="40" height="40">
-      <circle cx="30" cy="10" r="5" fill={c} />
-      <line x1="30" y1="15" x2="30" y2="34" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="30" y1="17" x2="34" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="x2" values="34;46;34" dur="1s" repeatCount="indefinite" />
-        <animate attributeName="y2" values="30;12;30" dur="1s" repeatCount="indefinite" />
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <ellipse cx="30" cy="58" rx="10" ry="2.3" fill="rgba(30,18,8,0.16)">
+        <animate attributeName="rx" values="9;13;9" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </ellipse>
+      <circle cx="30" cy="10" r="5" fill="url(#exGrad)" />
+      <line x1="30" y1="15" x2="30" y2="34" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="30" y1="17" x2="34" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="34;46;34" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="30;12;30" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="30" y1="17" x2="26" y2="30" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="x2" values="26;14;26" dur="1s" repeatCount="indefinite" />
-        <animate attributeName="y2" values="30;12;30" dur="1s" repeatCount="indefinite" />
+      <line x1="30" y1="17" x2="26" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="26;14;26" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="30;12;30" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="30" y1="34" x2="34" y2="54" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="x2" values="34;44;34" dur="1s" repeatCount="indefinite" />
+      <line x1="30" y1="34" x2="34" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="34;44;34" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
-      <line x1="30" y1="34" x2="26" y2="54" stroke={c} strokeWidth="3.5" strokeLinecap="round">
-        <animate attributeName="x2" values="26;16;26" dur="1s" repeatCount="indefinite" />
+      <line x1="30" y1="34" x2="26" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="26;16;26" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "highKnees") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <ellipse cx="28" cy="58" rx="10" ry="2.3" fill="rgba(30,18,8,0.16)">
+        <animate attributeName="rx" values="10;7;10" dur="0.7s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </ellipse>
+      <circle cx="28" cy="10" r="5" fill="url(#exGrad)" />
+      <line x1="28" y1="15" x2="28" y2="34" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="26" y1="30" x2="34" y2="18" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="34;40;34" dur="0.7s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="18;44;18" dur="0.7s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="30" y1="34" x2="20" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y2" values="54;36;54" dur="0.7s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="30" y1="34" x2="40" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
+  );
+  if (type === "armCircle") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="30" cy="12" r="5" fill="url(#exGrad)" />
+      <line x1="30" y1="17" x2="30" y2="40" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="30" y1="20" x2="48" y2="20" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animateTransform attributeName="transform" type="rotate" values="0 30 20;360 30 20" dur="1.4s" repeatCount="indefinite" />
+      </line>
+      <line x1="30" y1="20" x2="12" y2="20" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animateTransform attributeName="transform" type="rotate" values="0 30 20;-360 30 20" dur="1.4s" repeatCount="indefinite" />
+      </line>
+      <line x1="30" y1="40" x2="22" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="30" y1="40" x2="38" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
+  );
+  if (type === "lunge") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <ellipse cx="28" cy="58" rx="10" ry="2.3" fill="rgba(30,18,8,0.16)">
+        <animate attributeName="rx" values="13;10;13" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </ellipse>
+      <circle cx="26" cy="10" r="5" fill="url(#exGrad)"><animate attributeName="cy" values="10;16;10" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /></circle>
+      <line x1="26" y1="15" x2="28" y2="32" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="15;21;15" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="28" y1="32" x2="16" y2="34" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="16;10;16" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="16" y1="34" x2="12" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x1" values="16;10;16" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="28" y1="32" x2="42" y2="40" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y2" values="40;30;40" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="42" y1="40" x2="46" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="40;30;40" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "wallSit") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <line x1="4" y1="4" x2="4" y2="56" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
+      <circle cx="16" cy="22" r="5" fill="url(#exGrad)" />
+      <line x1="16" y1="27" x2="16" y2="40" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="16" y1="40" x2="32" y2="40" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="32" y1="40" x2="32" y2="56" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="40;38;40" dur="1.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="16" y1="40" x2="16" y2="56" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" opacity="0.5" />
+    </svg>
+  );
+  if (type === "calfRaise") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <ellipse cx="30" cy="58" rx="10" ry="2.3" fill="rgba(30,18,8,0.16)">
+        <animate attributeName="rx" values="9;7;9" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </ellipse>
+      <circle cx="30" cy="12" r="5" fill="url(#exGrad)"><animate attributeName="cy" values="12;9;12" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /></circle>
+      <line x1="30" y1="17" x2="30" y2="38" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="17;14;17" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="30" y1="38" x2="30" y2="50" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="26" y1="54" x2="34" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="54;51;54" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="54;51;54" dur="1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "pikePushup") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="16" cy="34" r="5" fill="url(#exGrad)"><animate attributeName="cy" values="34;40;34" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /></circle>
+      <line x1="20" y1="34" x2="34" y2="18" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="34;40;34" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="34" y1="18" x2="50" y2="40" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="18" y1="34" x2="16" y2="46" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round">
+        <animate attributeName="y1" values="34;40;34" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "tricepDip") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <line x1="6" y1="26" x2="30" y2="26" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
+      <circle cx="34" cy="16" r="5" fill="url(#exGrad)"><animate attributeName="cy" values="16;22;16" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /></circle>
+      <line x1="34" y1="21" x2="34" y2="34" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="21;27;21" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="34;38;34" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="22" y1="26" x2="34" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y2" values="30;34;30" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="34" y1="34" x2="50" y2="40" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="34;38;34" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "sidePlank") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="10" cy="26" r="5" fill="url(#exGrad)" />
+      <line x1="14" y1="26" x2="44" y2="32" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="20" y1="27" x2="18" y2="42" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" />
+      <line x1="44" y1="32" x2="46" y2="46" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" />
+      <line x1="20" y1="27" x2="34" y2="14" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y2" values="14;8;14" dur="1.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "crunch") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <line x1="8" y1="44" x2="52" y2="44" stroke="url(#exGrad)" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+      <circle cx="14" cy="34" r="5" fill="url(#exGrad)"><animate attributeName="cx" values="14;22;14" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /><animate attributeName="cy" values="34;28;34" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" /></circle>
+      <line x1="18" y1="36" x2="34" y2="40" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x1" values="18;26;18" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y1" values="36;30;36" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="34" y1="40" x2="34" y2="52" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="34" y1="40" x2="50" y2="44" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+  if (type === "legRaise") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <line x1="6" y1="44" x2="30" y2="44" stroke="url(#exGrad)" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+      <circle cx="10" cy="34" r="5" fill="url(#exGrad)" />
+      <line x1="14" y1="35" x2="30" y2="44" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="30" y1="44" x2="50" y2="44" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="50;46;50" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="44;16;44" dur="1.3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "russianTwist") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <circle cx="30" cy="16" r="5" fill="url(#exGrad)" />
+      <line x1="30" y1="21" x2="30" y2="38" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="30" y1="26" x2="46" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x2" values="46;14;46" dur="1.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="24" y1="38" x2="18" y2="52" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="36" y1="38" x2="42" y2="52" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
+  );
+  if (type === "mountainClimber") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <line x1="10" y1="26" x2="46" y2="30" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx="8" cy="24" r="5" fill="url(#exGrad)" />
+      <line x1="12" y1="26" x2="10" y2="40" stroke="url(#exGrad)" strokeWidth="3" strokeLinecap="round" />
+      <line x1="46" y1="30" x2="40" y2="20" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x1" values="46;28;46" dur="0.8s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y1" values="30;40;30" dur="0.8s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="46" y1="30" x2="52" y2="42" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="x1" values="46;30;46" dur="0.8s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+    </svg>
+  );
+  if (type === "burpee") return (
+    <svg viewBox="0 0 60 60" width={size} height={size}>
+      <ellipse cx="30" cy="58" rx="10" ry="2.3" fill="rgba(30,18,8,0.16)">
+        <animate attributeName="rx" values="12;8;12" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </ellipse>
+      <circle cx="30" cy="12" r="5" fill="url(#exGrad)">
+        <animate attributeName="cy" values="12;34;12" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </circle>
+      <line x1="30" y1="17" x2="30" y2="34" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="17;38;17" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="y2" values="34;38;34" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="30" y1="34" x2="18" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="34;38;34" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="x2" values="18;14;18" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+      </line>
+      <line x1="30" y1="34" x2="42" y2="54" stroke="url(#exGrad)" strokeWidth="3.5" strokeLinecap="round">
+        <animate attributeName="y1" values="34;38;34" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
+        <animate attributeName="x2" values="42;46;42" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />
       </line>
     </svg>
   );
@@ -2775,8 +3223,13 @@ function QuickExpenseModal({ onClose, onAdd }) {
     <Modal onClose={onClose} width={360}>
       <div className="modal-header"><Icon name="bolt" size={18} color="#2F6B5E" /><span>দ্রুত খরচ যোগ করুন</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
       <div className="modal-q">কোন খাতে?</div>
+      <div className="modal-q" style={{ fontSize: 11, color: "#8A7F68", marginTop: 4, marginBottom: 4 }}>নিজের খরচ</div>
       <div className="chip-grid">
-        {ACCOUNT_CATEGORIES.map(c => <Chip key={c.key} active={cat === c.key} color="#2F6B5E" onClick={() => setCat(c.key)}>{c.label}</Chip>)}
+        {OWN_EXPENSE_CATEGORIES.map(c => <Chip key={c.key} active={cat === c.key} color="#2F6B5E" onClick={() => setCat(c.key)}>{c.label}</Chip>)}
+      </div>
+      <div className="modal-q" style={{ fontSize: 11, color: "#8A7F68", marginTop: 10, marginBottom: 4 }}>বন্ধু ও পরিবার</div>
+      <div className="chip-grid">
+        {FRIENDS_FAMILY_CATEGORIES.map(c => <Chip key={c.key} active={cat === c.key} color="#2F6B5E" onClick={() => setCat(c.key)}>{c.label}</Chip>)}
       </div>
       <div className="modal-q" style={{ marginTop: 12 }}>কত টাকা?</div>
       <input className="modal-input" type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="যেমন ১০০" autoFocus />
@@ -3541,7 +3994,6 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
         {EXERCISE_LIST.map(ex => (
           <div className="pr-row" key={ex.key}><b>{ex.label} ({ex.target}):</b> {day.exercise.checklist[ex.key] ? day.exercise.checklist[ex.key] + " সেট" : "—"}</div>
         ))}
-        <div className="pr-row"><b>মাইন্ডফুলনেস:</b> {[day.exercise.mindfulness.walk && "হাঁটা", day.exercise.mindfulness.yoga && "যোগব্যায়াম", day.exercise.mindfulness.breathing && "গভীর শ্বাস"].filter(Boolean).join(", ") || "—"}</div>
       </div>
 
       <div className="pr-section">
@@ -3797,6 +4249,19 @@ function DailyLifeManagement() {
   const [appPin, setAppPinState] = useState(() => {
     try { return window.localStorage.getItem(STORAGE_PREFIX + "pin") || ""; } catch (e) { return ""; }
   });
+  const [exercisePlan, setExercisePlanState] = useState(() => {
+    try { const v = window.localStorage.getItem(STORAGE_PREFIX + "exercisePlan"); return v === "all" ? "" : (v || ""); } catch (e) { return ""; }
+  });
+  const setExercisePlan = (key) => {
+    setExercisePlanState(key);
+    try { window.localStorage.setItem(STORAGE_PREFIX + "exercisePlan", key); } catch (e) {}
+  };
+  const [exerciseInfoOpen, setExerciseInfoOpen] = useState(null);
+  const [prayerSubOpen, setPrayerSubOpen] = useState(null);
+  const [studySubOpen, setStudySubOpen] = useState(null);
+  const [zikirSubOpen, setZikirSubOpen] = useState(null);
+  const [quranSubOpen, setQuranSubOpen] = useState(null);
+  const [planSubOpen, setPlanSubOpen] = useState(null);
   const [pinUnlocked, setPinUnlocked] = useState(false);
   const setAppPin = (pin) => {
     setAppPinState(pin);
@@ -4036,6 +4501,11 @@ function DailyLifeManagement() {
   const [newContact, setNewContact] = useState("");
   const [debtDraft, setDebtDraft] = useState({ name: "", amount: "", direction: "owed_to_me", note: "" });
   const [officeExpanded, setOfficeExpanded] = useState(false);
+  const [ownExpenseExpanded, setOwnExpenseExpanded] = useState(false);
+  const [friendsFamilyExpanded, setFriendsFamilyExpanded] = useState(false);
+  const [monthlyInfoExpanded, setMonthlyInfoExpanded] = useState(false);
+  const [debtExpanded, setDebtExpanded] = useState(false);
+  const [monthSummaryExpanded, setMonthSummaryExpanded] = useState(false);
   const [officeTransportType, setOfficeTransportType] = useState("rickshaw");
   const [officeTransportAmount, setOfficeTransportAmount] = useState("");
   const [officeOtherName, setOfficeOtherName] = useState("");
@@ -4046,9 +4516,9 @@ function DailyLifeManagement() {
   const [customZikirName, setCustomZikirName] = useState("");
   const [customZikirCount, setCustomZikirCount] = useState("");
   const [jobAppName, setJobAppName] = useState("");
-  const [jobAppDate, setJobAppDate] = useState("");
+  const [jobAppDate, setJobAppDate] = useState(date);
   const [placeName, setPlaceName] = useState("");
-  const [placeDate, setPlaceDate] = useState("");
+  const [placeDate, setPlaceDate] = useState(date);
   const [customHabitName, setCustomHabitName] = useState("");
   const [customHabitCategory, setCustomHabitCategory] = useState("other");
   const [showMeditationTimer, setShowMeditationTimer] = useState(false);
@@ -4064,6 +4534,126 @@ function DailyLifeManagement() {
     const t = setTimeout(() => setRestSecondsLeft(s => s - 1), 1000);
     return () => clearTimeout(t);
   }, [restSecondsLeft]);
+
+  // --- স্টাডি প্রমোটার (Start/Pause/End স্টপওয়াচ, স্ক্রিন অফ হলেও রিয়েল টাইম গণনা) ---
+  const [studyPromoter, setStudyPromoterState] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_PREFIX + "studyPromoter");
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && (parsed.status === "running" || parsed.status === "paused")) return parsed;
+    } catch (e) {}
+    return null;
+  });
+  const setStudyPromoter = (next) => {
+    setStudyPromoterState(next);
+    try {
+      if (next) window.localStorage.setItem(STORAGE_PREFIX + "studyPromoter", JSON.stringify(next));
+      else window.localStorage.removeItem(STORAGE_PREFIX + "studyPromoter");
+    } catch (e) {}
+  };
+  const [, studyPromoterTick] = useState(0);
+  useEffect(() => {
+    if (!studyPromoter || studyPromoter.status !== "running") return;
+    const t = setInterval(() => studyPromoterTick(x => x + 1), 1000);
+    return () => clearInterval(t);
+  }, [studyPromoter && studyPromoter.status, studyPromoter && studyPromoter.startTs]);
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === "visible") studyPromoterTick(x => x + 1); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => { document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("focus", onVisible); };
+  }, []);
+  const getStudyPromoterElapsed = () => {
+    if (!studyPromoter) return 0;
+    const base = studyPromoter.accumulatedSec || 0;
+    if (studyPromoter.status === "running" && studyPromoter.startTs) {
+      return base + Math.floor((Date.now() - studyPromoter.startTs) / 1000);
+    }
+    return base;
+  };
+  const startStudyPromoter = (subject) => {
+    setStudyPromoter({ status: "running", startTs: Date.now(), accumulatedSec: 0, subject: subject || "" });
+  };
+  const pauseStudyPromoter = () => {
+    if (!studyPromoter || studyPromoter.status !== "running") return;
+    setStudyPromoter({ ...studyPromoter, status: "paused", accumulatedSec: getStudyPromoterElapsed(), startTs: null });
+  };
+  const resumeStudyPromoter = () => {
+    if (!studyPromoter || studyPromoter.status !== "paused") return;
+    setStudyPromoter({ ...studyPromoter, status: "running", startTs: Date.now() });
+  };
+  const endStudyPromoter = () => {
+    if (!studyPromoter) return { counted: false, seconds: 0 };
+    const elapsed = getStudyPromoterElapsed();
+    const subject = studyPromoter.subject;
+    setStudyPromoter(null);
+    if (elapsed >= STUDY_MIN_SECONDS) {
+      const hours = Math.round((elapsed / 3600) * 100) / 100;
+      const minutes = Math.round((elapsed / 60) * 100) / 100;
+      completePomodoro(subject, hours, minutes);
+      return { counted: true, seconds: elapsed };
+    }
+    return { counted: false, seconds: elapsed };
+  };
+
+  // --- কুইক ফুল বডি ওয়ার্কআউট প্রমোটার (Start/Pause/End, স্ক্রিন অফ হলেও রিয়েল টাইম গণনা) ---
+  const [workoutPromoter, setWorkoutPromoterState] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_PREFIX + "workoutPromoter");
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && (parsed.status === "running" || parsed.status === "paused")) return parsed;
+    } catch (e) {}
+    return null;
+  });
+  const setWorkoutPromoter = (next) => {
+    setWorkoutPromoterState(next);
+    try {
+      if (next) window.localStorage.setItem(STORAGE_PREFIX + "workoutPromoter", JSON.stringify(next));
+      else window.localStorage.removeItem(STORAGE_PREFIX + "workoutPromoter");
+    } catch (e) {}
+  };
+  const [, workoutPromoterTick] = useState(0);
+  useEffect(() => {
+    if (!workoutPromoter || workoutPromoter.status !== "running") return;
+    const t = setInterval(() => workoutPromoterTick(x => x + 1), 1000);
+    return () => clearInterval(t);
+  }, [workoutPromoter && workoutPromoter.status, workoutPromoter && workoutPromoter.startTs]);
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === "visible") workoutPromoterTick(x => x + 1); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => { document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("focus", onVisible); };
+  }, []);
+  const getWorkoutPromoterElapsed = () => {
+    if (!workoutPromoter) return 0;
+    const base = workoutPromoter.accumulatedSec || 0;
+    if (workoutPromoter.status === "running" && workoutPromoter.startTs) {
+      return base + Math.floor((Date.now() - workoutPromoter.startTs) / 1000);
+    }
+    return base;
+  };
+  const startWorkoutPromoter = () => {
+    setWorkoutPromoter({ status: "running", startTs: Date.now(), accumulatedSec: 0 });
+  };
+  const pauseWorkoutPromoter = () => {
+    if (!workoutPromoter || workoutPromoter.status !== "running") return;
+    setWorkoutPromoter({ ...workoutPromoter, status: "paused", accumulatedSec: getWorkoutPromoterElapsed(), startTs: null });
+  };
+  const resumeWorkoutPromoter = () => {
+    if (!workoutPromoter || workoutPromoter.status !== "paused") return;
+    setWorkoutPromoter({ ...workoutPromoter, status: "running", startTs: Date.now() });
+  };
+  const endWorkoutPromoter = () => {
+    if (!workoutPromoter) return { counted: false, seconds: 0 };
+    const elapsed = getWorkoutPromoterElapsed();
+    setWorkoutPromoter(null);
+    if (elapsed >= WORKOUT_MIN_SECONDS) {
+      const minutes = Math.round((elapsed / 60) * 100) / 100;
+      completeWorkoutSession(minutes);
+      return { counted: true, seconds: elapsed };
+    }
+    return { counted: false, seconds: elapsed };
+  };
   const [paternalName, setPaternalName] = useState("");
   const [maternalName, setMaternalName] = useState("");
   const [friendContactName, setFriendContactName] = useState("");
@@ -4112,6 +4702,7 @@ function DailyLifeManagement() {
   const openDiaryReader = (d) => { setDiaryReaderStartDate(d); setShowDiaryReader(true); };
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showPomodoro, setShowPomodoro] = useState(false);
+  const [showWorkoutPromoter, setShowWorkoutPromoter] = useState(false);
   const [openContact, setOpenContact] = useState(null);
   const [contactStreaks, setContactStreaks] = useState({});
   const [taskStreaks, setTaskStreaks] = useState({});
@@ -4469,13 +5060,14 @@ function DailyLifeManagement() {
 
   const setStudy = (kind, field, value) => updateDay(prev => ({ ...prev, study: { ...prev.study, [kind]: { ...prev.study[kind], [field]: value } } }));
   const setStudySubjectHours = (subject, value) => updateDay(prev => ({ ...prev, study: { ...prev.study, subjects: { ...prev.study.subjects, [subject]: value } } }));
-  const completePomodoro = (subject, addedHours) => updateDay(prev => {
+  const completePomodoro = (subject, addedHours, addedMinutes) => updateDay(prev => {
     const nextSubjects = { ...prev.study.subjects };
     if (subject) {
       const current = parseFloat(nextSubjects[subject]) || 0;
       nextSubjects[subject] = Math.round((current + (addedHours || 0)) * 100) / 100;
     }
-    return { ...prev, study: { ...prev.study, pomodoroCount: (prev.study.pomodoroCount || 0) + 1, subjects: nextSubjects } };
+    const nextPromoterMinutes = Math.round(((parseFloat(prev.study.promoterMinutes) || 0) + (addedMinutes || 0)) * 100) / 100;
+    return { ...prev, study: { ...prev.study, pomodoroCount: (prev.study.pomodoroCount || 0) + 1, promoterMinutes: nextPromoterMinutes, subjects: nextSubjects } };
   });
   const setExerciseSets = (key, value) => updateDay(prev => ({ ...prev, exercise: { ...prev.exercise, checklist: { ...prev.exercise.checklist, [key]: value } } }));
   const incrementSet = (key) => {
@@ -4484,6 +5076,10 @@ function DailyLifeManagement() {
   };
   const decrementSet = (key) => updateDay(prev => ({ ...prev, exercise: { ...prev.exercise, checklist: { ...prev.exercise.checklist, [key]: Math.max(0, (parseInt(prev.exercise.checklist[key]) || 0) - 1) } } }));
   const toggleMindfulness = (key) => updateDay(prev => ({ ...prev, exercise: { ...prev.exercise, mindfulness: { ...prev.exercise.mindfulness, [key]: !prev.exercise.mindfulness?.[key] } } }));
+  const completeWorkoutSession = (addedMinutes) => updateDay(prev => {
+    const nextQuickMinutes = Math.round(((parseFloat(prev.exercise.quickSessionMinutes) || 0) + (addedMinutes || 0)) * 100) / 100;
+    return { ...prev, exercise: { ...prev.exercise, quickSessionMinutes: nextQuickMinutes } };
+  });
   const setDiary = (field, value) => updateDay(prev => ({ ...prev, diary: { ...prev.diary, [field]: value, lastEditTime: Date.now() } }));
   const setGratitude = (index, value) => updateDay(prev => {
     const g = [...(prev.diary.gratitude || ["", "", ""])];
@@ -4576,28 +5172,28 @@ function DailyLifeManagement() {
 
   const addNameToList = (listKey, name) => {
     if (!name.trim()) return;
-    savePlan({ ...monthPlan, [listKey]: [...monthPlan[listKey], { id: Date.now(), name: name.trim(), date: "" }] });
+    savePlan({ ...monthPlan, [listKey]: [...monthPlan[listKey], { id: Date.now(), name: name.trim(), date: date }] });
   };
   const removeFromList = (listKey, id) => { if (!window.confirm("এই এন্ট্রিটি মুছে ফেলতে চান?")) return; savePlan({ ...monthPlan, [listKey]: monthPlan[listKey].filter(x => x.id !== id) }); };
   const setListItemDate = (listKey, id, dateStr) => savePlan({ ...monthPlan, [listKey]: monthPlan[listKey].map(x => x.id === id ? { ...x, date: dateStr } : x) });
 
   const addSelfPurchase = (item) => {
     if (!item.trim()) return;
-    savePlan({ ...monthPlan, selfPurchases: [...monthPlan.selfPurchases, { id: Date.now(), item: item.trim(), date: "" }] });
+    savePlan({ ...monthPlan, selfPurchases: [...monthPlan.selfPurchases, { id: Date.now(), item: item.trim(), date: date }] });
   };
   const removeSelfPurchase = (id) => { if (!window.confirm("এই কেনাকাটার তথ্য মুছে ফেলতে চান?")) return; savePlan({ ...monthPlan, selfPurchases: monthPlan.selfPurchases.filter(p => p.id !== id) }); };
   const setSelfPurchaseDate = (id, dateStr) => savePlan({ ...monthPlan, selfPurchases: monthPlan.selfPurchases.map(p => p.id === id ? { ...p, date: dateStr } : p) });
 
   const addFamilyPurchase = (forWhom, item) => {
     if (!forWhom.trim() || !item.trim()) return;
-    savePlan({ ...monthPlan, familyPurchases: [...monthPlan.familyPurchases, { id: Date.now(), forWhom: forWhom.trim(), item: item.trim(), date: "" }] });
+    savePlan({ ...monthPlan, familyPurchases: [...monthPlan.familyPurchases, { id: Date.now(), forWhom: forWhom.trim(), item: item.trim(), date: date }] });
   };
   const removeFamilyPurchase = (id) => { if (!window.confirm("এই কেনাকাটার তথ্য মুছে ফেলতে চান?")) return; savePlan({ ...monthPlan, familyPurchases: monthPlan.familyPurchases.filter(p => p.id !== id) }); };
   const setFamilyPurchaseDate = (id, dateStr) => savePlan({ ...monthPlan, familyPurchases: monthPlan.familyPurchases.map(p => p.id === id ? { ...p, date: dateStr } : p) });
 
   const addDeclutterItem = (item) => {
     if (!item.trim()) return;
-    savePlan({ ...monthPlan, declutterItems: [...monthPlan.declutterItems, { id: Date.now(), item: item.trim(), date: todayStr() }] });
+    savePlan({ ...monthPlan, declutterItems: [...monthPlan.declutterItems, { id: Date.now(), item: item.trim(), date: date }] });
   };
   const removeDeclutterItem = (id) => { if (!window.confirm("এই এন্ট্রিটি মুছে ফেলতে চান?")) return; savePlan({ ...monthPlan, declutterItems: monthPlan.declutterItems.filter(p => p.id !== id) }); };
   const setDeclutterItemDate = (id, dateStr) => savePlan({ ...monthPlan, declutterItems: monthPlan.declutterItems.map(p => p.id === id ? { ...p, date: dateStr } : p) });
@@ -4653,9 +5249,12 @@ function DailyLifeManagement() {
   const routineToday = DAY_SUBJECTS[routineDayIndex];
   const todaySubjects = routineToday ? routineToday.subjects : [];
   const subjectHoursLogged = Object.values(day.study.subjects || {}).some(v => parseFloat(v) > 0);
-  const studyBadge = (day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || subjectHoursLogged) ? "লগ হয়েছে" : null;
+  const studyBadge = (day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || subjectHoursLogged || (parseFloat(day.study.promoterMinutes) > 0)) ? "লগ হয়েছে" : null;
   const exerciseSetsDone = Object.values(day.exercise.checklist).filter(v => v).length;
-  const exerciseBadge = exerciseSetsDone ? exerciseSetsDone + "/৬ ব্যায়াম" : null;
+  const exerciseQuickDone = parseFloat(day.exercise.quickSessionMinutes) > 0;
+  const exerciseBadge = exerciseSetsDone ? exerciseSetsDone + "/৬ ব্যায়াম" : (exerciseQuickDone ? "কুইক সেশন হয়েছে" : null);
+  const activeWorkoutPlan = WORKOUT_PLANS.find(p => p.key === exercisePlan) || WORKOUT_PLANS[0];
+  const filteredExerciseList = activeWorkoutPlan.exercises ? EXERCISE_LIST.filter(ex => activeWorkoutPlan.exercises.includes(ex.key)) : EXERCISE_LIST;
   const textedCount = Object.values(day.texting.log).filter(v => v.textedSelf === true).length;
   const avoidedCount = Object.values(day.texting.log).filter(v => v.profileAvoided === true && v.textedSelf !== true).length;
   const diaryBadge = (day.diary.notes || day.diary.accomplished || day.diary.events || day.diary.thoughts || day.diary.reflection) ? "লেখা হয়েছে" : null;
@@ -4735,6 +5334,14 @@ function DailyLifeManagement() {
 
   return (
     <div className={"dtt-root" + (darkMode ? " dark" : "")}>
+      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
+        <defs>
+          <linearGradient id="exGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#E0955A" />
+            <stop offset="100%" stopColor="#A3560F" />
+          </linearGradient>
+        </defs>
+      </svg>
       <div className="dtt-inner">
         <div className="dtt-header">
           <div>
@@ -4824,7 +5431,7 @@ function DailyLifeManagement() {
               zikirDoneCount < 3 && { id: "zikir", label: "যিকির", detail: "বাকি আছে", icon: "self_improvement", accent: "#8A4A5C" },
               !quranBadge && { id: "quran", label: "কুরআন", detail: "আজ পড়া হয়নি", icon: "menu_book", accent: "#8A6A2F" },
               !studyBadge && { id: "study", label: "পড়াশোনা", detail: "আজ পড়া হয়নি", icon: "school", accent: "#5C7A6B" },
-              exerciseSetsDone < 6 && { id: "exercise", label: "ব্যায়াম", detail: (6 - exerciseSetsDone) + " সেট বাকি", icon: "fitness_center", accent: "#B5651D" },
+              exerciseSetsDone < 6 && !exerciseQuickDone && { id: "exercise", label: "ব্যায়াম", detail: (6 - exerciseSetsDone) + " সেট বাকি", icon: "fitness_center", accent: "#B5651D" },
               !diaryBadge && { id: "diary", label: "ডায়েরি", detail: "আজ লেখা হয়নি", icon: "edit_note", accent: "#4C6B8A" },
             ].filter(Boolean);
             const goToCard = (id) => {
@@ -4862,112 +5469,194 @@ function DailyLifeManagement() {
           <button className="pdf-btn" style={{ marginBottom: 10 }} onClick={() => setShowQazaTracker(true)}>
             <Icon name="update" size={16} /> কাযা নামাজ ট্র্যাকার{PRAYER_ORDER.reduce((s, p) => s + (qazaCounts[p] || 0), 0) > 0 ? " (মোট " + PRAYER_ORDER.reduce((s, p) => s + (qazaCounts[p] || 0), 0) + " টা আদায়)" : ""}
           </button>
-          <div className="section-label">ফরজ নামাজ</div>
-          {PRAYER_ORDER.map(name => {
-            const status = day.prayers[name]?.status;
-            return (
-              <div className="prayer-row" key={name}>
-                <div className="p-icon"><Icon name={PRAYER_ICON_NAME[name]} size={15} color="#123A34" /></div>
-                <div className="p-name">{PRAYER_BN[name]}</div>
-                <div className="chip-row">
-                  {PRAYER_STATUS.map(s => <Chip key={s.key} active={status === s.key} color={s.color} onClick={() => setPrayerStatus(name, s.key)}>{s.label}</Chip>)}
-                  {name === "Dhuhr" ? (
-                    <>
-                      <Chip active={!!day.prayers.Dhuhr?.sunnah2} color="#4C7A5C" onClick={() => toggleDhuhrSunnah("sunnah2")}>সুন্নত ২ রাকাত</Chip>
-                      <Chip active={!!day.prayers.Dhuhr?.sunnah4} color="#4C7A5C" onClick={() => toggleDhuhrSunnah("sunnah4")}>সুন্নত ৪ রাকাত (+১ পয়েন্ট)</Chip>
-                    </>
-                  ) : (
-                    <Chip active={!!day.prayers[name]?.sunnah} color="#4C7A5C" onClick={() => toggleSunnah(name)}>সুন্নত পড়েছি</Chip>
-                  )}
-                  {name === "Isha" && <Chip active={!!day.prayers.Isha?.witr} color="#8A4A5C" onClick={() => toggleWitr()}>বিতর পড়েছি</Chip>}
-                </div>
+          {!prayerSubOpen ? (
+            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+              <div onClick={() => setPrayerSubOpen("farz")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: "1px solid #E7DDC7" }}>
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>ফরজ নামাজ</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{prayersDone}/৫</span>
+                  <Icon name="chevron_left" size={18} color="#8A7F68" />
+                </span>
               </div>
-            );
-          })}
-          <div className="section-label">নফল নামাজ</div>
-          {day.prayers.nafl.length === 0 && <div className="empty-note">এখনো কোনো নফল যোগ করা হয়নি — যেমন তাহাজ্জুদ, ইশরাক</div>}
-          {day.prayers.nafl.map(n => (
-            <div className="nafl-item" key={n.id}><span className="n-name">{n.name}</span><span className="n-rakahs">{n.rakahs} রাকাত</span><button className="icon-btn ghost" onClick={() => removeNafl(n.id)}><Icon name="delete" size={15} /></button></div>
-          ))}
-          <div className="add-row">
-            <input placeholder="নফলের নাম (যেমন তাহাজ্জুদ)" value={naflName} onChange={e => setNaflName(e.target.value)} />
-            <input placeholder="রাকাত" type="number" min="0" style={{ width: 80 }} value={naflRakahs} onChange={e => setNaflRakahs(e.target.value)} />
-            <button className="icon-btn" onClick={addNafl}><Icon name="add" size={18} /></button>
-          </div>
+              <div onClick={() => setPrayerSubOpen("nafl")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer" }}>
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>নফল নামাজ</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{naflCount ? naflCount + " টা" : ""}</span>
+                  <Icon name="chevron_left" size={18} color="#8A7F68" />
+                </span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setPrayerSubOpen(null)}>
+                <Icon name="arrow_back" size={18} color="#123A34" />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#123A34" }}>{prayerSubOpen === "farz" ? "ফরজ নামাজ" : "নফল নামাজ"}</span>
+              </div>
+              {prayerSubOpen === "farz" && PRAYER_ORDER.map(name => {
+                const status = day.prayers[name]?.status;
+                return (
+                  <div className="prayer-row" key={name}>
+                    <div className="p-icon"><Icon name={PRAYER_ICON_NAME[name]} size={15} color="#123A34" /></div>
+                    <div className="p-name">{PRAYER_BN[name]}</div>
+                    <div className="chip-row">
+                      {PRAYER_STATUS.map(s => <Chip key={s.key} active={status === s.key} color={s.color} onClick={() => setPrayerStatus(name, s.key)}>{s.label}</Chip>)}
+                      {name === "Dhuhr" ? (
+                        <>
+                          <Chip active={!!day.prayers.Dhuhr?.sunnah2} color="#4C7A5C" onClick={() => toggleDhuhrSunnah("sunnah2")}>সুন্নত ২ রাকাত</Chip>
+                          <Chip active={!!day.prayers.Dhuhr?.sunnah4} color="#4C7A5C" onClick={() => toggleDhuhrSunnah("sunnah4")}>সুন্নত ৪ রাকাত (+১ পয়েন্ট)</Chip>
+                        </>
+                      ) : (
+                        <Chip active={!!day.prayers[name]?.sunnah} color="#4C7A5C" onClick={() => toggleSunnah(name)}>সুন্নত পড়েছি</Chip>
+                      )}
+                      {name === "Isha" && <Chip active={!!day.prayers.Isha?.witr} color="#8A4A5C" onClick={() => toggleWitr()}>বিতর পড়েছি</Chip>}
+                    </div>
+                  </div>
+                );
+              })}
+              {prayerSubOpen === "nafl" && (
+                <>
+                  {day.prayers.nafl.length === 0 && <div className="empty-note">এখনো কোনো নফল যোগ করা হয়নি — যেমন তাহাজ্জুদ, ইশরাক</div>}
+                  {day.prayers.nafl.map(n => (
+                    <div className="nafl-item" key={n.id}><span className="n-name">{n.name}</span><span className="n-rakahs">{n.rakahs} রাকাত</span><button className="icon-btn ghost" onClick={() => removeNafl(n.id)}><Icon name="delete" size={15} /></button></div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="নফলের নাম (যেমন তাহাজ্জুদ)" value={naflName} onChange={e => setNaflName(e.target.value)} />
+                    <input placeholder="রাকাত" type="number" min="0" style={{ width: 80 }} value={naflRakahs} onChange={e => setNaflRakahs(e.target.value)} />
+                    <button className="icon-btn" onClick={addNafl}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </Card>
 
         <Card id="zikir" hidden={hiddenCards.includes("zikir")} iconName="self_improvement" title="যিকির" subtitle="দৈনিক যিকির-আযকার" accent="#8A4A5C" badge={zikirBadge} points={zikirPoints} streak={taskStreaks.zikir} notDone={day.taskNotDone.zikir} onToggleNotDone={() => toggleTaskNotDone("zikir")} expanded={expanded === "zikir"} onToggle={toggle}>
-          <div className="subblock">
-            {ZIKIR_LIST.map(z => (
-              <div className="prayer-row" key={z.key} style={{ flexWrap: "wrap" }}>
-                <div className="p-name" style={{ width: "auto", marginRight: 6 }}>{z.label}</div>
-                <div className="chip-row">
-                  {ZIKIR_COUNT_OPTIONS.map(n => (
-                    <Chip key={n} active={day.zikir[z.key] === n} color="#8A4A5C" onClick={() => setZikirCount(z.key, n)}>{n} বার</Chip>
+          {!zikirSubOpen ? (
+            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+              <div onClick={() => setZikirSubOpen("tasbih")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: "1px solid #E7DDC7" }}>
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>৩ তসবিহ</span>
+                <Icon name="chevron_left" size={18} color="#8A7F68" />
+              </div>
+              <div onClick={() => setZikirSubOpen("custom")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer" }}>
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>অন্য কোনো যিকির</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{day.zikir.custom.length ? day.zikir.custom.length + " টা" : ""}</span>
+                  <Icon name="chevron_left" size={18} color="#8A7F68" />
+                </span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setZikirSubOpen(null)}>
+                <Icon name="arrow_back" size={18} color="#8A4A5C" />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#8A4A5C" }}>{zikirSubOpen === "tasbih" ? "৩ তসবিহ" : "অন্য কোনো যিকির"}</span>
+              </div>
+              {zikirSubOpen === "tasbih" && (
+                <div className="subblock">
+                  {ZIKIR_LIST.map(z => (
+                    <div className="prayer-row" key={z.key} style={{ flexWrap: "wrap" }}>
+                      <div className="p-name" style={{ width: "auto", marginRight: 6 }}>{z.label}</div>
+                      <div className="chip-row">
+                        {ZIKIR_COUNT_OPTIONS.map(n => (
+                          <Chip key={n} active={day.zikir[z.key] === n} color="#8A4A5C" onClick={() => setZikirCount(z.key, n)}>{n} বার</Chip>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="section-label">অন্য কোনো যিকির</div>
-          {day.zikir.custom.length === 0 && <div className="empty-note">এখনো কোনো কাস্টম যিকির যোগ করা হয়নি</div>}
-          {day.zikir.custom.map(z => (
-            <div className="nafl-item" key={z.id}>
-              <span className="n-name">{z.name}</span>
-              <span className="n-rakahs">{z.count ? z.count + " বার" : ""}</span>
-              <button className="icon-btn ghost" onClick={() => removeCustomZikir(z.id)}><Icon name="delete" size={15} /></button>
-            </div>
-          ))}
-          <div className="add-row">
-            <input placeholder="যিকিরের নাম লিখুন" value={customZikirName} onChange={e => setCustomZikirName(e.target.value)} />
-            <input placeholder="বার" type="number" min="0" style={{ width: 70 }} value={customZikirCount} onChange={e => setCustomZikirCount(e.target.value)} />
-            <button className="icon-btn" onClick={() => { addCustomZikir(customZikirName, customZikirCount); setCustomZikirName(""); setCustomZikirCount(""); }}><Icon name="add" size={18} /></button>
-          </div>
+              )}
+              {zikirSubOpen === "custom" && (
+                <>
+                  {day.zikir.custom.length === 0 && <div className="empty-note">এখনো কোনো কাস্টম যিকির যোগ করা হয়নি</div>}
+                  {day.zikir.custom.map(z => (
+                    <div className="nafl-item" key={z.id}>
+                      <span className="n-name">{z.name}</span>
+                      <span className="n-rakahs">{z.count ? z.count + " বার" : ""}</span>
+                      <button className="icon-btn ghost" onClick={() => removeCustomZikir(z.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="যিকিরের নাম লিখুন" value={customZikirName} onChange={e => setCustomZikirName(e.target.value)} />
+                    <input placeholder="বার" type="number" min="0" style={{ width: 70 }} value={customZikirCount} onChange={e => setCustomZikirCount(e.target.value)} />
+                    <button className="icon-btn" onClick={() => { addCustomZikir(customZikirName, customZikirCount); setCustomZikirName(""); setCustomZikirCount(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </Card>
 
         <Card id="quran" hidden={hiddenCards.includes("quran")} iconName="menu_book" title="কুরআন" subtitle="তিলাওয়াত, রিভিশন ও আমলি সূরা" accent="#8A6A2F" badge={quranBadge} points={quranPoints} streak={taskStreaks.quran} notDone={day.taskNotDone.quran} onToggleNotDone={() => toggleTaskNotDone("quran")} expanded={expanded === "quran"} onToggle={toggle}>
-          <div className="subblock">
-            <div className="subblock-title">কুরআন তিলাওয়াত</div>
-            <div className="field-row">
-              <div className="field"><label>পৃষ্ঠা সংখ্যা</label><input type="number" min="0" value={day.quran.reading.pages} onChange={e => setQuran("reading", "pages", e.target.value)} placeholder="যেমন ৫" /></div>
-              <div className="field"><label>সূরা</label><input value={day.quran.reading.surah} onChange={e => setQuran("reading", "surah", e.target.value)} placeholder="যেমন সূরা ইয়াসিন" /></div>
-            </div>
-          </div>
-          <div className="subblock">
-            <div className="subblock-title">কুরআন রিভিশন (মুরাজাআ)</div>
-            <div className="field-row">
-              <div className="field"><label>পৃষ্ঠা সংখ্যা</label><input type="number" min="0" value={day.quran.revision.pages} onChange={e => setQuran("revision", "pages", e.target.value)} placeholder="যেমন ৩" /></div>
-              <div className="field"><label>সূরা</label><input value={day.quran.revision.surah} onChange={e => setQuran("revision", "surah", e.target.value)} placeholder="যেমন সূরা মুলক" /></div>
-            </div>
-          </div>
-          <div className="subblock">
-            <div className="subblock-title">আমলি সূরা</div>
-            {AMOLI_SURAHS.map(s => (
-              <div className="amoli-row" key={s.key}>
-                <span style={{ fontWeight: 600, fontSize: 14 }}>{s.label}</span>
-                <div className="amoli-check" style={day.quran.amoli[s.key] ? { background: "#8A6A2F", borderColor: "#8A6A2F" } : {}} onClick={() => toggleAmoli(s.key)}>
-                  {day.quran.amoli[s.key] ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
+          {!quranSubOpen ? (
+            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+              {[
+                { key: "reading", label: "কুরআন তিলাওয়াত" },
+                { key: "revision", label: "কুরআন রিভিশন (মুরাজাআ)" },
+                { key: "amoli", label: "আমলি সূরা" },
+              ].map((item, i, arr) => (
+                <div
+                  key={item.key}
+                  onClick={() => setQuranSubOpen(item.key)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
+                >
+                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
+                  <Icon name="chevron_left" size={18} color="#8A7F68" />
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="subblock">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setQuranSubOpen(null)}>
+                <Icon name="arrow_back" size={18} color="#8A6A2F" />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#8A6A2F" }}>
+                  {quranSubOpen === "reading" ? "কুরআন তিলাওয়াত" : quranSubOpen === "revision" ? "কুরআন রিভিশন (মুরাজাআ)" : "আমলি সূরা"}
+                </span>
               </div>
-            ))}
-            {WEEKLY_AMOLI_SURAHS.filter(s => new Date(date + "T00:00:00").getDay() === s.weekday).map(s => (
-              <div className="amoli-row" key={s.key}>
-                <span style={{ fontWeight: 600, fontSize: 14 }}>{s.label} <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 500 }}>(শুক্রবারের আমল)</span></span>
-                <div className="amoli-check" style={day.quran.amoli[s.key] ? { background: "#8A6A2F", borderColor: "#8A6A2F" } : {}} onClick={() => toggleAmoli(s.key)}>
-                  {day.quran.amoli[s.key] ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
+              {quranSubOpen === "reading" && (
+                <div className="field-row">
+                  <div className="field"><label>পৃষ্ঠা সংখ্যা</label><input type="number" min="0" value={day.quran.reading.pages} onChange={e => setQuran("reading", "pages", e.target.value)} placeholder="যেমন ৫" /></div>
+                  <div className="field"><label>সূরা</label><input value={day.quran.reading.surah} onChange={e => setQuran("reading", "surah", e.target.value)} placeholder="যেমন সূরা ইয়াসিন" /></div>
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+              {quranSubOpen === "revision" && (
+                <div className="field-row">
+                  <div className="field"><label>পৃষ্ঠা সংখ্যা</label><input type="number" min="0" value={day.quran.revision.pages} onChange={e => setQuran("revision", "pages", e.target.value)} placeholder="যেমন ৩" /></div>
+                  <div className="field"><label>সূরা</label><input value={day.quran.revision.surah} onChange={e => setQuran("revision", "surah", e.target.value)} placeholder="যেমন সূরা মুলক" /></div>
+                </div>
+              )}
+              {quranSubOpen === "amoli" && (
+                <>
+                  {AMOLI_SURAHS.map(s => (
+                    <div className="amoli-row" key={s.key}>
+                      <span style={{ fontWeight: 600, fontSize: 14 }}>{s.label}</span>
+                      <div className="amoli-check" style={day.quran.amoli[s.key] ? { background: "#8A6A2F", borderColor: "#8A6A2F" } : {}} onClick={() => toggleAmoli(s.key)}>
+                        {day.quran.amoli[s.key] ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
+                      </div>
+                    </div>
+                  ))}
+                  {WEEKLY_AMOLI_SURAHS.filter(s => new Date(date + "T00:00:00").getDay() === s.weekday).map(s => (
+                    <div className="amoli-row" key={s.key}>
+                      <span style={{ fontWeight: 600, fontSize: 14 }}>{s.label} <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 500 }}>(শুক্রবারের আমল)</span></span>
+                      <div className="amoli-check" style={day.quran.amoli[s.key] ? { background: "#8A6A2F", borderColor: "#8A6A2F" } : {}} onClick={() => toggleAmoli(s.key)}>
+                        {day.quran.amoli[s.key] ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
         </Card>
 
         <Card id="study" hidden={hiddenCards.includes("study")} iconName="school" title="পড়াশোনা" subtitle="স্টাডি ও লেকচার" accent="#5C7A6B" badge={studyBadge} points={studyPoints} streak={taskStreaks.study} notDone={day.taskNotDone.study} onToggleNotDone={() => toggleTaskNotDone("study")} expanded={expanded === "study"} onToggle={toggle}>
           <button
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: "#4A6FA5", color: "#FBF6EA", border: "none", borderRadius: 14, padding: "13px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 12 }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: studyPromoter ? "#5C7A6B" : "#4A6FA5", color: "#FBF6EA", border: "none", borderRadius: 14, padding: "13px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 12 }}
             onClick={() => setShowPomodoro(true)}
           >
-            <Icon name="timer" size={18} /> স্টাডি পমোডোরো টাইমার শুরু করুন{day.study.pomodoroCount > 0 ? " (আজ " + day.study.pomodoroCount + "টা সেশন)" : ""}
+            <Icon name="timer" size={18} />
+            {studyPromoter
+              ? (studyPromoter.status === "paused" ? "স্টাডি প্রমোটার পজ করা আছে — " : "স্টাডি প্রমোটার চলছে — ") + formatStopwatch(getStudyPromoterElapsed())
+              : "স্টাডি প্রমোটার শুরু করুন" + (day.study.pomodoroCount > 0 ? " (আজ " + day.study.pomodoroCount + "টা সেশন)" : "")}
           </button>
           <div className="subblock">
             <div className="subblock-title">{routineToday.label} — আজকের সাবজেক্ট</div>
@@ -4984,83 +5673,147 @@ function DailyLifeManagement() {
               ))
             )}
           </div>
-          <div className="subblock">
-            <div className="subblock-title">সাপ্তাহিক রুটিন</div>
-            {DAY_SUBJECTS.map(d => (
-              <div className="pr-row" key={d.label} style={d.label === routineToday.label ? { color: "#5C7A6B", fontWeight: 700 } : {}}>
-                <b>{d.label}:</b> {d.subjects.length ? d.subjects.join(", ") : "ছুটি"}
+          {!studySubOpen ? (
+            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+              {[
+                { key: "studied", label: "পড়াশোনা করেছি (ফ্রি টেক্সট)" },
+                { key: "lectures", label: "লেকচার শুনেছি" },
+                { key: "routine", label: "সাপ্তাহিক রুটিন" },
+              ].map((item, i, arr) => (
+                <div
+                  key={item.key}
+                  onClick={() => setStudySubOpen(item.key)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
+                >
+                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
+                  <Icon name="chevron_left" size={18} color="#8A7F68" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="subblock">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setStudySubOpen(null)}>
+                <Icon name="arrow_back" size={18} color="#5C7A6B" />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#5C7A6B" }}>
+                  {studySubOpen === "studied" ? "পড়াশোনা করেছি (ফ্রি টেক্সট)" : studySubOpen === "lectures" ? "লেকচার শুনেছি" : "সাপ্তাহিক রুটিন"}
+                </span>
               </div>
-            ))}
-          </div>
-          <div className="subblock">
-            <div className="subblock-title">পড়াশোনা করেছি (ফ্রি টেক্সট)</div>
-            <div className="field" style={{ marginBottom: 10 }}>
-              <label>কোন টপিক পড়েছি</label>
-              <input value={day.study.studied.topicName} onChange={e => setStudy("studied", "topicName", e.target.value)} placeholder="যেমন Organic Chemistry — Alkenes" />
+              {studySubOpen === "routine" && DAY_SUBJECTS.map(d => (
+                <div className="pr-row" key={d.label} style={d.label === routineToday.label ? { color: "#5C7A6B", fontWeight: 700 } : {}}>
+                  <b>{d.label}:</b> {d.subjects.length ? d.subjects.join(", ") : "ছুটি"}
+                </div>
+              ))}
+              {studySubOpen === "studied" && (
+                <>
+                  <div className="field" style={{ marginBottom: 10 }}>
+                    <label>কোন টপিক পড়েছি</label>
+                    <input value={day.study.studied.topicName} onChange={e => setStudy("studied", "topicName", e.target.value)} placeholder="যেমন Organic Chemistry — Alkenes" />
+                  </div>
+                  <div className="field-row">
+                    <div className="field"><label>টপিক সংখ্যা</label><input type="number" min="0" value={day.study.studied.topics} onChange={e => setStudy("studied", "topics", e.target.value)} placeholder="যেমন ৩" /></div>
+                    <div className="field"><label>ঘণ্টা</label><input type="number" min="0" step="0.5" value={day.study.studied.hours} onChange={e => setStudy("studied", "hours", e.target.value)} placeholder="যেমন ২" /></div>
+                  </div>
+                </>
+              )}
+              {studySubOpen === "lectures" && (
+                <>
+                  <div className="field" style={{ marginBottom: 10 }}>
+                    <label>কোন লেকচার শুনেছি</label>
+                    <input value={day.study.lectures.lectureName} onChange={e => setStudy("lectures", "lectureName", e.target.value)} placeholder="যেমন Physics Lecture 5 — Thermodynamics" />
+                  </div>
+                  <div className="field-row">
+                    <div className="field"><label>লেকচার সংখ্যা</label><input type="number" min="0" value={day.study.lectures.count} onChange={e => setStudy("lectures", "count", e.target.value)} placeholder="যেমন ২" /></div>
+                    <div className="field"><label>ঘণ্টা</label><input type="number" min="0" step="0.5" value={day.study.lectures.hours} onChange={e => setStudy("lectures", "hours", e.target.value)} placeholder="যেমন ১" /></div>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="field-row">
-              <div className="field"><label>টপিক সংখ্যা</label><input type="number" min="0" value={day.study.studied.topics} onChange={e => setStudy("studied", "topics", e.target.value)} placeholder="যেমন ৩" /></div>
-              <div className="field"><label>ঘণ্টা</label><input type="number" min="0" step="0.5" value={day.study.studied.hours} onChange={e => setStudy("studied", "hours", e.target.value)} placeholder="যেমন ২" /></div>
-            </div>
-          </div>
-          <div className="subblock">
-            <div className="subblock-title">লেকচার শুনেছি</div>
-            <div className="field" style={{ marginBottom: 10 }}>
-              <label>কোন লেকচার শুনেছি</label>
-              <input value={day.study.lectures.lectureName} onChange={e => setStudy("lectures", "lectureName", e.target.value)} placeholder="যেমন Physics Lecture 5 — Thermodynamics" />
-            </div>
-            <div className="field-row">
-              <div className="field"><label>লেকচার সংখ্যা</label><input type="number" min="0" value={day.study.lectures.count} onChange={e => setStudy("lectures", "count", e.target.value)} placeholder="যেমন ২" /></div>
-              <div className="field"><label>ঘণ্টা</label><input type="number" min="0" step="0.5" value={day.study.lectures.hours} onChange={e => setStudy("lectures", "hours", e.target.value)} placeholder="যেমন ১" /></div>
-            </div>
-          </div>
+          )}
         </Card>
 
         <Card id="exercise" hidden={hiddenCards.includes("exercise")} iconName="fitness_center" title="ব্যায়াম" subtitle="আজকের শারীরিক পরিশ্রম" accent="#B5651D" badge={exerciseBadge} points={exercisePoints} streak={taskStreaks.exercise} notDone={day.taskNotDone.exercise} onToggleNotDone={() => toggleTaskNotDone("exercise")} expanded={expanded === "exercise"} onToggle={toggle}>
+          <button
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: workoutPromoter ? "#6B7A4F" : "#B5651D", color: "#FBF6EA", border: "none", borderRadius: 14, padding: "13px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 12 }}
+            onClick={() => setShowWorkoutPromoter(true)}
+          >
+            <Icon name="fitness_center" size={18} />
+            {workoutPromoter
+              ? (workoutPromoter.status === "paused" ? "কুইক সেশন পজ করা আছে — " : "কুইক সেশন চলছে — ") + formatStopwatch(getWorkoutPromoterElapsed())
+              : "কুইক ফুল বডি সেশন শুরু করুন" + (day.exercise.quickSessionMinutes > 0 ? " (আজ " + day.exercise.quickSessionMinutes + " মিনিট)" : "")}
+          </button>
           {restSecondsLeft > 0 && (
             <div className="rest-timer-banner">
               <Icon name="hourglass_top" size={16} /> রেস্ট টাইম: {restSecondsLeft}s
               <button className="rest-skip-btn" onClick={() => setRestSecondsLeft(0)}>স্কিপ</button>
             </div>
           )}
-          <div className="section-label">ব্যায়াম চেকলিস্ট (কয় সেট করেছি)</div>
-          <div className="subblock">
-            {EXERCISE_LIST.map(ex => (
-              <div className="ex-row" key={ex.key}>
-                <div className="ex-anim"><ExerciseAnim type={ex.key} /></div>
-                <div className="ex-info">
-                  <div className="ex-name">{ex.label}</div>
-                  <div className="ex-target">{ex.target}</div>
+          <div className="section-label">ওয়ার্কআউট প্ল্যান বেছে নিন</div>
+          {!exercisePlan ? (
+            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+              {WORKOUT_PLANS.map((p, i) => (
+                <div
+                  key={p.key}
+                  onClick={() => setExercisePlan(p.key)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < WORKOUT_PLANS.length - 1 ? "1px solid #E7DDC7" : "none" }}
+                >
+                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{p.label}</span>
+                  <Icon name="chevron_left" size={18} color="#8A7F68" />
                 </div>
-                <div className="set-counter">
-                  <button className="set-btn minus" onClick={() => decrementSet(ex.key)}><Icon name="remove" size={15} /></button>
-                  <span className="set-num">{day.exercise.checklist[ex.key] || 0}</span>
-                  <button className="set-btn plus" onClick={() => incrementSet(ex.key)}><Icon name="add" size={15} /></button>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setExercisePlan("")}>
+                <Icon name="arrow_back" size={18} color="#123A34" />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#123A34" }}>{activeWorkoutPlan.label}</span>
+              </div>
+              {activeWorkoutPlan.key === "weightLoss" ? (
+                <div className="weightloss-banner">
+                  <div className="weightloss-banner-title"><Icon name="local_fire_department" size={18} color="#E0B868" />ওজন কমানোর সেরা প্ল্যান — গবেষণাভিত্তিক</div>
+                  <div className="weightloss-stats">
+                    <div className="weightloss-stat"><div className="weightloss-stat-num">১৫০+</div><div className="weightloss-stat-label">মিনিট/সপ্তাহ কার্ডিও</div></div>
+                    <div className="weightloss-stat"><div className="weightloss-stat-num">২–৩x</div><div className="weightloss-stat-label">সপ্তাহে স্ট্রেংথ</div></div>
+                    <div className="weightloss-stat"><div className="weightloss-stat-num">৫</div><div className="weightloss-stat-label">ট্রেনিং দিন/সপ্তাহ</div></div>
+                  </div>
+                  <div className="weightloss-note">কার্ডিও ক্যালোরি ডেফিসিট তৈরি করে, স্ট্রেংথ ট্রেনিং মাসল ধরে রাখে যাতে মেটাবলিজম কমে না যায় — শুধু কার্ডিওর চেয়ে দুটো মিলিয়ে করলে ফলাফল অনেক ভালো ও টেকসই হয়। খাবারে প্রতি কেজি ওজনে ১.৬–২.২ গ্রাম প্রোটিন এবং পর্যাপ্ত পানি রাখুন।</div>
+                  <div className="weightloss-source">সূত্র: CDC ও ACSM ফিজিক্যাল অ্যাক্টিভিটি গাইডলাইন</div>
                 </div>
+              ) : activeWorkoutPlan.key !== "all" && (
+                <div style={{ fontSize: 12, color: "#8A7F68", marginBottom: 12, lineHeight: 1.5 }}>{activeWorkoutPlan.desc}</div>
+              )}
+              <div className="section-label">ব্যায়াম চেকলিস্ট (কয় সেট করেছি) — ঐচ্ছিক · সঠিক পদ্ধতি দেখতে ℹ️ চাপুন</div>
+              <div className="subblock">
+                {filteredExerciseList.map(ex => (
+                  <div key={ex.key}>
+                    <div className="ex-row">
+                      <div className="ex-anim"><ExerciseAnim type={ex.key} /></div>
+                      <div className="ex-info">
+                        <div className="ex-name">{ex.label}</div>
+                        <div className="ex-target">{ex.target}</div>
+                      </div>
+                      <button
+                        className={"set-btn" + (exerciseInfoOpen === ex.key ? " plus" : "")}
+                        style={{ width: 26, height: 26, flexShrink: 0 }}
+                        onClick={() => setExerciseInfoOpen(exerciseInfoOpen === ex.key ? null : ex.key)}
+                      >
+                        <Icon name="info" size={15} />
+                      </button>
+                      <div className="set-counter">
+                        <button className="set-btn minus" onClick={() => decrementSet(ex.key)}><Icon name="remove" size={15} /></button>
+                        <span className="set-num">{day.exercise.checklist[ex.key] || 0}</span>
+                        <button className="set-btn plus" onClick={() => incrementSet(ex.key)}><Icon name="add" size={15} /></button>
+                      </div>
+                    </div>
+                    {exerciseInfoOpen === ex.key && ex.how && (
+                      <div className="subblock" style={{ padding: "9px 13px", margin: "-4px 0 10px", fontSize: 12.5, lineHeight: 1.7 }}>
+                        {ex.how.map((step, i) => <div key={i}>{i + 1}. {step}</div>)}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="section-label">মাইন্ডফুলনেস</div>
-          <div className="subblock">
-            <div className="amoli-row">
-              <span style={{ fontWeight: 600, fontSize: 14 }}>🚶 হাঁটা</span>
-              <div className="amoli-check" style={day.exercise.mindfulness.walk ? { background: "#B5651D", borderColor: "#B5651D" } : {}} onClick={() => toggleMindfulness("walk")}>
-                {day.exercise.mindfulness.walk ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
-              </div>
-            </div>
-            <div className="amoli-row">
-              <span style={{ fontWeight: 600, fontSize: 14 }}>🧘 যোগব্যায়াম (Yoga)</span>
-              <div className="amoli-check" style={day.exercise.mindfulness.yoga ? { background: "#B5651D", borderColor: "#B5651D" } : {}} onClick={() => toggleMindfulness("yoga")}>
-                {day.exercise.mindfulness.yoga ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
-              </div>
-            </div>
-            <div className="amoli-row">
-              <span style={{ fontWeight: 600, fontSize: 14 }}>🌬️ গভীর শ্বাস (Breathing)</span>
-              <div className="amoli-check" style={day.exercise.mindfulness.breathing ? { background: "#B5651D", borderColor: "#B5651D" } : {}} onClick={() => toggleMindfulness("breathing")}>
-                {day.exercise.mindfulness.breathing ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </Card>
 
         <Card id="habit" hidden={hiddenCards.includes("habit")} iconName="task_alt" title="অভ্যাস" subtitle="দৈনিক গুড হ্যাবিট ট্র্যাকার" accent="#6B7A4F" badge={habitBadge} points={habitPoints} streak={taskStreaks.habit} ringPercent={(habitDoneCount / habitTotal) * 100} notDone={day.taskNotDone.habit} onToggleNotDone={() => toggleTaskNotDone("habit")} expanded={expanded === "habit"} onToggle={toggle}>
@@ -5433,28 +6186,98 @@ function DailyLifeManagement() {
         <Card id="accounts" hidden={hiddenCards.includes("accounts")} iconName="account_balance_wallet" title="হিসাব" subtitle="মাসিক আয়-ব্যয় ও সঞ্চয়" accent="#2F6B5E" badge={accountsBadge} points={accountsPoints} streak={taskStreaks.accounts} expanded={expanded === "accounts"} onToggle={(id) => { toggle(id); if (expanded !== "accounts") refreshMonthExpense(date); }}>
           <div className="section-label">{new Date(date + "T00:00:00").toLocaleDateString("bn-BD", { month: "long", year: "numeric" })} — মাসিক তথ্য</div>
           <div className="subblock">
-            <div className="field-row">
-              <div className="field"><label>এই মাসের মোট আয়</label><input type="number" min="0" value={monthData.income} onChange={e => setMonthField("income", e.target.value)} placeholder="যেমন ৩০০০০" /></div>
-              <div className="field"><label>মাসিক সঞ্চয়</label><input type="number" min="0" value={monthData.savings} onChange={e => setMonthField("savings", e.target.value)} placeholder="যেমন ৫০০০" /></div>
-            </div>
-            <div className="field">
-              <label>অতিরিক্ত আয় / সমন্বয় (ঐচ্ছিক)</label>
-              <input type="number" value={monthData.extra} onChange={e => setMonthField("extra", e.target.value)} placeholder="যেমন বোনাস, উপহার" />
-            </div>
+            <button
+              onClick={() => setMonthlyInfoExpanded(v => !v)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="payments" size={18} color="#2F6B5E" />
+              </div>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>মাসিক তথ্য</div>
+                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>আয় · সঞ্চয় · অতিরিক্ত আয়</div>
+              </div>
+              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(incomeNum + extraNum)}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>মোট আয়</div></span>
+              <Icon name={monthlyInfoExpanded ? "expand_less" : "expand_more"} size={20} />
+            </button>
+
+            {monthlyInfoExpanded && (
+              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+                <div className="field-row">
+                  <div className="field"><label>এই মাসের মোট আয়</label><input type="number" min="0" value={monthData.income} onChange={e => setMonthField("income", e.target.value)} placeholder="যেমন ৩০০০০" /></div>
+                  <div className="field"><label>মাসিক সঞ্চয়</label><input type="number" min="0" value={monthData.savings} onChange={e => setMonthField("savings", e.target.value)} placeholder="যেমন ৫০০০" /></div>
+                </div>
+                <div className="field">
+                  <label>অতিরিক্ত আয় / সমন্বয় (ঐচ্ছিক)</label>
+                  <input type="number" value={monthData.extra} onChange={e => setMonthField("extra", e.target.value)} placeholder="যেমন বোনাস, উপহার" />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="section-label">আজকের খরচ</div>
           <div className="subblock">
-            {ACCOUNT_CATEGORIES.map(c => (
-              <div className="field-row" key={c.key} style={{ marginBottom: 6 }}>
-                <div className="field" style={{ flex: "0 0 auto" }}><label style={{ visibility: "hidden" }}>.</label><span style={{ fontWeight: 600, fontSize: 13.5 }}>{c.label}</span></div>
-                <input type="number" min="0" style={{ maxWidth: 110 }} className="modal-input" value={day.accounts[c.key]} onChange={e => setAccountExpense(c.key, e.target.value)} placeholder="৳" />
+            <button
+              onClick={() => setOwnExpenseExpanded(v => !v)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="person" size={18} color="#2F6B5E" />
               </div>
-            ))}
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>নিজের খরচ</div>
+                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>ট্রান্সপোর্ট · খাবার · গ্যাজেট · দান · প্রয়োজনীয় · মেরামত · অপ্রয়োজনীয়</div>
+              </div>
+              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(OWN_EXPENSE_KEYS.reduce((s, k) => s + (monthExpense.totals?.[k] || 0), 0))}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>এই মাস</div></span>
+              <Icon name={ownExpenseExpanded ? "expand_less" : "expand_more"} size={20} />
+            </button>
+
+            {ownExpenseExpanded && (
+              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+                {OWN_EXPENSE_CATEGORIES.map(c => (
+                  <div className="field-row" key={c.key} style={{ marginBottom: 10, alignItems: "center" }}>
+                    <div className="field" style={{ flex: "0 0 auto" }}>
+                      <span style={{ fontWeight: 600, fontSize: 13.5 }}>{c.label}</span>
+                      <div style={{ fontSize: 10, color: "#8A7F68" }}>এই মাস: ৳{fmtMoney(monthExpense.totals?.[c.key] || 0)}</div>
+                    </div>
+                    <input type="number" min="0" style={{ maxWidth: 110 }} className="modal-input" value={day.accounts[c.key]} onChange={e => setAccountExpense(c.key, e.target.value)} placeholder="৳" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => setFriendsFamilyExpanded(v => !v)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer", marginTop: 10 }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="groups" size={18} color="#2F6B5E" />
+              </div>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>বন্ধু ও পরিবার</div>
+                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>ভাই · বোন · পারিবারিক প্রয়োজন · ভাগ্নে · আত্মীয়স্বজন · বন্ধুবান্ধব</div>
+              </div>
+              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(FRIENDS_FAMILY_KEYS.reduce((s, k) => s + (monthExpense.totals?.[k] || 0), 0))}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>এই মাস</div></span>
+              <Icon name={friendsFamilyExpanded ? "expand_less" : "expand_more"} size={20} />
+            </button>
+
+            {friendsFamilyExpanded && (
+              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+                {FRIENDS_FAMILY_CATEGORIES.map(c => (
+                  <div className="field-row" key={c.key} style={{ marginBottom: 10, alignItems: "center" }}>
+                    <div className="field" style={{ flex: "0 0 auto" }}>
+                      <span style={{ fontWeight: 600, fontSize: 13.5 }}>{c.label}</span>
+                      <div style={{ fontSize: 10, color: "#8A7F68" }}>এই মাস: ৳{fmtMoney(monthExpense.totals?.[c.key] || 0)}</div>
+                    </div>
+                    <input type="number" min="0" style={{ maxWidth: 110 }} className="modal-input" value={day.accounts[c.key]} onChange={e => setAccountExpense(c.key, e.target.value)} placeholder="৳" />
+                  </div>
+                ))}
+              </div>
+            )}
 
             <button
               onClick={() => setOfficeExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer", marginTop: 4 }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer", marginTop: 10 }}
             >
               <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name="business_center" size={18} color="#2F6B5E" />
@@ -5585,62 +6408,102 @@ function DailyLifeManagement() {
 
           <div className="section-label">ধার/দেনা</div>
           <div className="subblock">
-            <div className="field-row">
-              <div className="field"><label>নাম</label><input value={debtDraft.name} onChange={e => setDebtDraft({ ...debtDraft, name: e.target.value })} placeholder="যেমন রাহাত" /></div>
-              <div className="field"><label>টাকা</label><input type="number" min="0" value={debtDraft.amount} onChange={e => setDebtDraft({ ...debtDraft, amount: e.target.value })} placeholder="৳" /></div>
-            </div>
-            <div className="field-row" style={{ marginTop: 8 }}>
-              <div className="field" style={{ flex: 2 }}>
-                <label>ধরন</label>
-                <select value={debtDraft.direction} onChange={e => setDebtDraft({ ...debtDraft, direction: e.target.value })}>
-                  <option value="owed_to_me">ওর কাছে আমি পাব</option>
-                  <option value="i_owe">আমি ওকে দেব</option>
-                </select>
-              </div>
-            </div>
-            <div className="field" style={{ marginTop: 8, marginBottom: 8 }}>
-              <label>নোট (ঐচ্ছিক)</label>
-              <input value={debtDraft.note} onChange={e => setDebtDraft({ ...debtDraft, note: e.target.value })} placeholder="যেমন বই কেনার জন্য" />
-            </div>
             <button
-              className="btn-primary" style={{ width: "100%", justifyContent: "center" }}
-              onClick={() => {
-                if (!debtDraft.name.trim() || !parseFloat(debtDraft.amount)) return;
-                addDebt(debtDraft.name, debtDraft.amount, debtDraft.direction, debtDraft.note);
-                setDebtDraft({ name: "", amount: "", direction: "owed_to_me", note: "" });
-              }}
-            ><Icon name="add" size={15} /> যোগ করুন</button>
+              onClick={() => setDebtExpanded(v => !v)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="handshake" size={18} color="#2F6B5E" />
+              </div>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>ধার/দেনা</div>
+                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>{debts.filter(d => !d.settled).length > 0 ? debts.filter(d => !d.settled).length + "টি বকেয়া" : "কোনো বকেয়া নেই"}</div>
+              </div>
+              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(debts.filter(d => !d.settled).reduce((s, d) => s + (d.direction === "owed_to_me" ? (parseFloat(d.amount) || 0) : -(parseFloat(d.amount) || 0)), 0))}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>নিট</div></span>
+              <Icon name={debtExpanded ? "expand_less" : "expand_more"} size={20} />
+            </button>
+
+            {debtExpanded && (
+              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+                <div className="field-row">
+                  <div className="field"><label>নাম</label><input value={debtDraft.name} onChange={e => setDebtDraft({ ...debtDraft, name: e.target.value })} placeholder="যেমন রাহাত" /></div>
+                  <div className="field"><label>টাকা</label><input type="number" min="0" value={debtDraft.amount} onChange={e => setDebtDraft({ ...debtDraft, amount: e.target.value })} placeholder="৳" /></div>
+                </div>
+                <div className="field-row" style={{ marginTop: 8 }}>
+                  <div className="field" style={{ flex: 2 }}>
+                    <label>ধরন</label>
+                    <select value={debtDraft.direction} onChange={e => setDebtDraft({ ...debtDraft, direction: e.target.value })}>
+                      <option value="owed_to_me">ওর কাছে আমি পাব</option>
+                      <option value="i_owe">আমি ওকে দেব</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="field" style={{ marginTop: 8, marginBottom: 8 }}>
+                  <label>নোট (ঐচ্ছিক)</label>
+                  <input value={debtDraft.note} onChange={e => setDebtDraft({ ...debtDraft, note: e.target.value })} placeholder="যেমন বই কেনার জন্য" />
+                </div>
+                <button
+                  className="btn-primary" style={{ width: "100%", justifyContent: "center" }}
+                  onClick={() => {
+                    if (!debtDraft.name.trim() || !parseFloat(debtDraft.amount)) return;
+                    addDebt(debtDraft.name, debtDraft.amount, debtDraft.direction, debtDraft.note);
+                    setDebtDraft({ name: "", amount: "", direction: "owed_to_me", note: "" });
+                  }}
+                ><Icon name="add" size={15} /> যোগ করুন</button>
+
+                {debts.filter(d => !d.settled).length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+                    {debts.filter(d => !d.settled).map(d => (
+                      <div key={d.id} className="subblock" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Icon name={d.direction === "owed_to_me" ? "call_received" : "call_made"} size={18} color={d.direction === "owed_to_me" ? "#2F6B5E" : "#A14545"} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13.5 }}>{d.name} — ৳{fmtMoney(d.amount)}</div>
+                          <div style={{ fontSize: 11.5, color: "#8A7F68" }}>{d.direction === "owed_to_me" ? "আমি পাব" : "আমি দেব"}{d.note ? " · " + d.note : ""}</div>
+                        </div>
+                        <button className="icon-btn ghost" onClick={() => toggleDebtSettled(d.id)} title="মিটে গেছে"><Icon name="check_circle" size={17} /></button>
+                        <button className="icon-btn ghost" onClick={() => deleteDebt(d.id)}><Icon name="close" size={15} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {debts.filter(d => !d.settled).length === 0 && (
+                  <div className="empty-note" style={{ textAlign: "center", marginTop: 12 }}>কোনো বকেয়া ধার/দেনা নেই</div>
+                )}
+              </div>
+            )}
           </div>
 
-          {debts.filter(d => !d.settled).length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
-              {debts.filter(d => !d.settled).map(d => (
-                <div key={d.id} className="subblock" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Icon name={d.direction === "owed_to_me" ? "call_received" : "call_made"} size={18} color={d.direction === "owed_to_me" ? "#2F6B5E" : "#A14545"} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{d.name} — ৳{fmtMoney(d.amount)}</div>
-                    <div style={{ fontSize: 11.5, color: "#8A7F68" }}>{d.direction === "owed_to_me" ? "আমি পাব" : "আমি দেব"}{d.note ? " · " + d.note : ""}</div>
-                  </div>
-                  <button className="icon-btn ghost" onClick={() => toggleDebtSettled(d.id)} title="মিটে গেছে"><Icon name="check_circle" size={17} /></button>
-                  <button className="icon-btn ghost" onClick={() => deleteDebt(d.id)}><Icon name="close" size={15} /></button>
-                </div>
-              ))}
-            </div>
-          )}
-          {debts.filter(d => !d.settled).length === 0 && (
-            <div className="empty-note" style={{ textAlign: "center", marginBottom: 12 }}>কোনো বকেয়া ধার/দেনা নেই</div>
-          )}
-
           <div className="section-label">এই মাসের সারাংশ</div>
-          <div className="stats-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
-            <div className="stat-box"><div className="stat-num">৳{fmtMoney(incomeNum + extraNum)}</div><div className="stat-label">মোট আয়</div></div>
-            <div className="stat-box"><div className="stat-num">{monthLoading ? "..." : "৳" + fmtMoney(monthExpense.grand)}</div><div className="stat-label">মোট খরচ (এই মাস)</div></div>
-            <div className="stat-box"><div className="stat-num">৳{fmtMoney(savingsNum)}</div><div className="stat-label">সঞ্চয়</div></div>
-            <div className="stat-box" style={{ background: monthBudgetLow ? "#F1E4E4" : "#EAF2EC" }}>
-              <div className="stat-num" style={{ color: monthBudgetLow ? "#A14545" : "#2F6B5E" }}>৳{fmtMoney(monthRemaining)}</div>
-              <div className="stat-label" style={{ color: monthBudgetLow ? "#A14545" : "#8A7F68" }}>{monthRemaining < 0 ? "ঘাটতি" : (monthBudgetLow ? "বাজেটের ২০%-এর নিচে!" : "বাকি আছে")}</div>
-            </div>
-            <div className="stat-box"><div className="stat-num">{monthLoading ? "..." : "৳" + fmtMoney(monthExpense.totals.donate || 0)}</div><div className="stat-label">মোট দান (এই মাস)</div></div>
+          <div className="subblock">
+            <button
+              onClick={() => setMonthSummaryExpanded(v => !v)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="summarize" size={18} color="#2F6B5E" />
+              </div>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>এই মাসের সারাংশ</div>
+                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>আয় · খরচ · সঞ্চয় · দান</div>
+              </div>
+              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: monthBudgetLow ? "#A14545" : "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(monthRemaining)}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>বাকি আছে</div></span>
+              <Icon name={monthSummaryExpanded ? "expand_less" : "expand_more"} size={20} />
+            </button>
+
+            {monthSummaryExpanded && (
+              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+                <div className="stats-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                  <div className="stat-box"><div className="stat-num">৳{fmtMoney(incomeNum + extraNum)}</div><div className="stat-label">মোট আয়</div></div>
+                  <div className="stat-box"><div className="stat-num">{monthLoading ? "..." : "৳" + fmtMoney(monthExpense.grand)}</div><div className="stat-label">মোট খরচ (এই মাস)</div></div>
+                  <div className="stat-box"><div className="stat-num">৳{fmtMoney(savingsNum)}</div><div className="stat-label">সঞ্চয়</div></div>
+                  <div className="stat-box" style={{ background: monthBudgetLow ? "#F1E4E4" : "#EAF2EC" }}>
+                    <div className="stat-num" style={{ color: monthBudgetLow ? "#A14545" : "#2F6B5E" }}>৳{fmtMoney(monthRemaining)}</div>
+                    <div className="stat-label" style={{ color: monthBudgetLow ? "#A14545" : "#8A7F68" }}>{monthRemaining < 0 ? "ঘাটতি" : (monthBudgetLow ? "বাজেটের ২০%-এর নিচে!" : "বাকি আছে")}</div>
+                  </div>
+                  <div className="stat-box"><div className="stat-num">{monthLoading ? "..." : "৳" + fmtMoney(monthExpense.totals.donate || 0)}</div><div className="stat-label">মোট দান (এই মাস)</div></div>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -5674,137 +6537,170 @@ function DailyLifeManagement() {
             <div style={{ fontSize: 11, color: "#8A7F68", marginTop: 4, textAlign: "right" }}>{planDoneCount}/{planTotalGoals} সম্পন্ন ({Math.round((planDoneCount / planTotalGoals) * 100)}%)</div>
           </div>
 
-          <div className="subblock">
-            <div className="subblock-title">চাকরির আবেদন</div>
-            {monthPlan.jobApps.length === 0 && <div className="empty-note">এখনো কোনো আবেদন যোগ করা হয়নি</div>}
-            {monthPlan.jobApps.map(j => (
-              <div className="nafl-item" key={j.id}>
-                <span className="n-name">{j.name}</span>
-                <span className="n-rakahs">{j.date || ""}</span>
-                <button className="icon-btn ghost" onClick={() => removeJobApp(j.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="কোন চাকরিতে আবেদন করেছেন" value={jobAppName} onChange={e => setJobAppName(e.target.value)} />
-              <input type="date" style={{ maxWidth: 145 }} value={jobAppDate} onChange={e => setJobAppDate(e.target.value)} />
-              <button className="icon-btn" onClick={() => { addJobApp(jobAppName, jobAppDate); setJobAppName(""); setJobAppDate(""); }}><Icon name="add" size={18} /></button>
+          {!planSubOpen ? (
+            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+              {PLAN_SECTIONS.map((item, i) => (
+                <div
+                  key={item.key}
+                  onClick={() => setPlanSubOpen(item.key)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < PLAN_SECTIONS.length - 1 ? "1px solid #E7DDC7" : "none" }}
+                >
+                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{monthPlan[item.key].length ? monthPlan[item.key].length + " টা" : ""}</span>
+                    <Icon name="chevron_left" size={18} color="#8A7F68" />
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="subblock">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setPlanSubOpen(null)}>
+                <Icon name="arrow_back" size={18} color="#4A6FA5" />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#4A6FA5" }}>{PLAN_SECTIONS.find(s => s.key === planSubOpen)?.label}</span>
+              </div>
 
-          <div className="subblock">
-            <div className="subblock-title">বাবার দিকের আত্মীয়দের সাথে যোগাযোগ</div>
-            {monthPlan.paternalContacts.length === 0 && <div className="empty-note">এখনো কারো নাম যোগ করা হয়নি</div>}
-            {monthPlan.paternalContacts.map(c => (
-              <div className="nafl-item" key={c.id}>
-                <span className="n-name">{c.name}</span>
-                <input type="date" className="n-date-input" value={c.date || ""} onChange={e => setListItemDate("paternalContacts", c.id, e.target.value)} />
-                <button className="icon-btn ghost" onClick={() => removeFromList("paternalContacts", c.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="নাম লিখুন" value={paternalName} onChange={e => setPaternalName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNameToList("paternalContacts", paternalName), setPaternalName(""))} />
-              <button className="icon-btn" onClick={() => { addNameToList("paternalContacts", paternalName); setPaternalName(""); }}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
+              {planSubOpen === "jobApps" && (
+                <>
+                  {monthPlan.jobApps.length === 0 && <div className="empty-note">এখনো কোনো আবেদন যোগ করা হয়নি</div>}
+                  {monthPlan.jobApps.map(j => (
+                    <div className="nafl-item" key={j.id}>
+                      <span className="n-name">{j.name}</span>
+                      <span className="n-rakahs">{j.date || ""}</span>
+                      <button className="icon-btn ghost" onClick={() => removeJobApp(j.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="কোন চাকরিতে আবেদন করেছেন" value={jobAppName} onChange={e => setJobAppName(e.target.value)} />
+                    <input type="date" style={{ maxWidth: 145 }} value={jobAppDate} onChange={e => setJobAppDate(e.target.value)} />
+                    <button className="icon-btn" onClick={() => { addJobApp(jobAppName, jobAppDate); setJobAppName(""); setJobAppDate(date); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
 
-          <div className="subblock">
-            <div className="subblock-title">মায়ের দিকের আত্মীয়দের সাথে যোগাযোগ</div>
-            {monthPlan.maternalContacts.length === 0 && <div className="empty-note">এখনো কারো নাম যোগ করা হয়নি</div>}
-            {monthPlan.maternalContacts.map(c => (
-              <div className="nafl-item" key={c.id}>
-                <span className="n-name">{c.name}</span>
-                <input type="date" className="n-date-input" value={c.date || ""} onChange={e => setListItemDate("maternalContacts", c.id, e.target.value)} />
-                <button className="icon-btn ghost" onClick={() => removeFromList("maternalContacts", c.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="নাম লিখুন" value={maternalName} onChange={e => setMaternalName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNameToList("maternalContacts", maternalName), setMaternalName(""))} />
-              <button className="icon-btn" onClick={() => { addNameToList("maternalContacts", maternalName); setMaternalName(""); }}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
+              {planSubOpen === "paternalContacts" && (
+                <>
+                  {monthPlan.paternalContacts.length === 0 && <div className="empty-note">এখনো কারো নাম যোগ করা হয়নি</div>}
+                  {monthPlan.paternalContacts.map(c => (
+                    <div className="nafl-item" key={c.id}>
+                      <span className="n-name">{c.name}</span>
+                      <input type="date" className="n-date-input" value={c.date || ""} onChange={e => setListItemDate("paternalContacts", c.id, e.target.value)} />
+                      <button className="icon-btn ghost" onClick={() => removeFromList("paternalContacts", c.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="নাম লিখুন" value={paternalName} onChange={e => setPaternalName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNameToList("paternalContacts", paternalName), setPaternalName(""))} />
+                    <button className="icon-btn" onClick={() => { addNameToList("paternalContacts", paternalName); setPaternalName(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
 
-          <div className="subblock">
-            <div className="subblock-title">বন্ধুদের সাথে যোগাযোগ</div>
-            {monthPlan.friendsContacted.length === 0 && <div className="empty-note">এখনো কারো নাম যোগ করা হয়নি</div>}
-            {monthPlan.friendsContacted.map(c => (
-              <div className="nafl-item" key={c.id}>
-                <span className="n-name">{c.name}</span>
-                <input type="date" className="n-date-input" value={c.date || ""} onChange={e => setListItemDate("friendsContacted", c.id, e.target.value)} />
-                <button className="icon-btn ghost" onClick={() => removeFromList("friendsContacted", c.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="নাম লিখুন" value={friendContactName} onChange={e => setFriendContactName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNameToList("friendsContacted", friendContactName), setFriendContactName(""))} />
-              <button className="icon-btn" onClick={() => { addNameToList("friendsContacted", friendContactName); setFriendContactName(""); }}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
+              {planSubOpen === "maternalContacts" && (
+                <>
+                  {monthPlan.maternalContacts.length === 0 && <div className="empty-note">এখনো কারো নাম যোগ করা হয়নি</div>}
+                  {monthPlan.maternalContacts.map(c => (
+                    <div className="nafl-item" key={c.id}>
+                      <span className="n-name">{c.name}</span>
+                      <input type="date" className="n-date-input" value={c.date || ""} onChange={e => setListItemDate("maternalContacts", c.id, e.target.value)} />
+                      <button className="icon-btn ghost" onClick={() => removeFromList("maternalContacts", c.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="নাম লিখুন" value={maternalName} onChange={e => setMaternalName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNameToList("maternalContacts", maternalName), setMaternalName(""))} />
+                    <button className="icon-btn" onClick={() => { addNameToList("maternalContacts", maternalName); setMaternalName(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
 
-          <div className="subblock">
-            <div className="subblock-title">এই মাসে নিজের জন্য কী কিনেছি</div>
-            {monthPlan.selfPurchases.length === 0 && <div className="empty-note">এখনো কিছু যোগ করা হয়নি</div>}
-            {monthPlan.selfPurchases.map(p => (
-              <div className="nafl-item" key={p.id}>
-                <span className="n-name">{p.item}</span>
-                <input type="date" className="n-date-input" value={p.date || ""} onChange={e => setSelfPurchaseDate(p.id, e.target.value)} />
-                <button className="icon-btn ghost" onClick={() => removeSelfPurchase(p.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="কী কিনেছেন" value={selfPurchaseItem} onChange={e => setSelfPurchaseItem(e.target.value)} onKeyDown={e => e.key === "Enter" && (addSelfPurchase(selfPurchaseItem), setSelfPurchaseItem(""))} />
-              <button className="icon-btn" onClick={() => { addSelfPurchase(selfPurchaseItem); setSelfPurchaseItem(""); }}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
+              {planSubOpen === "friendsContacted" && (
+                <>
+                  {monthPlan.friendsContacted.length === 0 && <div className="empty-note">এখনো কারো নাম যোগ করা হয়নি</div>}
+                  {monthPlan.friendsContacted.map(c => (
+                    <div className="nafl-item" key={c.id}>
+                      <span className="n-name">{c.name}</span>
+                      <input type="date" className="n-date-input" value={c.date || ""} onChange={e => setListItemDate("friendsContacted", c.id, e.target.value)} />
+                      <button className="icon-btn ghost" onClick={() => removeFromList("friendsContacted", c.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="নাম লিখুন" value={friendContactName} onChange={e => setFriendContactName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNameToList("friendsContacted", friendContactName), setFriendContactName(""))} />
+                    <button className="icon-btn" onClick={() => { addNameToList("friendsContacted", friendContactName); setFriendContactName(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
 
-          <div className="subblock">
-            <div className="subblock-title">পরিবারের কারো জন্য কিছু কিনেছি কিনা</div>
-            {monthPlan.familyPurchases.length === 0 && <div className="empty-note">এখনো কিছু যোগ করা হয়নি</div>}
-            {monthPlan.familyPurchases.map(p => (
-              <div className="nafl-item" key={p.id}>
-                <span className="n-name">{p.forWhom}</span>
-                <span className="n-rakahs">{p.item}</span>
-                <input type="date" className="n-date-input" value={p.date || ""} onChange={e => setFamilyPurchaseDate(p.id, e.target.value)} />
-                <button className="icon-btn ghost" onClick={() => removeFamilyPurchase(p.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="কার জন্য" value={familyPurchaseFor} onChange={e => setFamilyPurchaseFor(e.target.value)} />
-              <input placeholder="কী কিনেছেন" value={familyPurchaseItem} onChange={e => setFamilyPurchaseItem(e.target.value)} />
-              <button className="icon-btn" onClick={() => { addFamilyPurchase(familyPurchaseFor, familyPurchaseItem); setFamilyPurchaseFor(""); setFamilyPurchaseItem(""); }}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
+              {planSubOpen === "selfPurchases" && (
+                <>
+                  {monthPlan.selfPurchases.length === 0 && <div className="empty-note">এখনো কিছু যোগ করা হয়নি</div>}
+                  {monthPlan.selfPurchases.map(p => (
+                    <div className="nafl-item" key={p.id}>
+                      <span className="n-name">{p.item}</span>
+                      <input type="date" className="n-date-input" value={p.date || ""} onChange={e => setSelfPurchaseDate(p.id, e.target.value)} />
+                      <button className="icon-btn ghost" onClick={() => removeSelfPurchase(p.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="কী কিনেছেন" value={selfPurchaseItem} onChange={e => setSelfPurchaseItem(e.target.value)} onKeyDown={e => e.key === "Enter" && (addSelfPurchase(selfPurchaseItem), setSelfPurchaseItem(""))} />
+                    <button className="icon-btn" onClick={() => { addSelfPurchase(selfPurchaseItem); setSelfPurchaseItem(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
 
-          <div className="subblock">
-            <div className="subblock-title">অপ্রয়োজনীয় বিষয়/জিনিস পরিষ্কার (Declutter)</div>
-            {monthPlan.declutterItems.length === 0 && <div className="empty-note">এখনো কিছু যোগ করা হয়নি</div>}
-            {monthPlan.declutterItems.map(p => (
-              <div className="nafl-item" key={p.id}>
-                <span className="n-name">{p.item}</span>
-                <input type="date" className="n-date-input" value={p.date || ""} onChange={e => setDeclutterItemDate(p.id, e.target.value)} />
-                <button className="icon-btn ghost" onClick={() => removeDeclutterItem(p.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="কী পরিষ্কার/রিমুভ করেছেন" value={declutterItem} onChange={e => setDeclutterItem(e.target.value)} onKeyDown={e => e.key === "Enter" && (addDeclutterItem(declutterItem), setDeclutterItem(""))} />
-              <button className="icon-btn" onClick={() => { addDeclutterItem(declutterItem); setDeclutterItem(""); }}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
+              {planSubOpen === "familyPurchases" && (
+                <>
+                  {monthPlan.familyPurchases.length === 0 && <div className="empty-note">এখনো কিছু যোগ করা হয়নি</div>}
+                  {monthPlan.familyPurchases.map(p => (
+                    <div className="nafl-item" key={p.id}>
+                      <span className="n-name">{p.forWhom}</span>
+                      <span className="n-rakahs">{p.item}</span>
+                      <input type="date" className="n-date-input" value={p.date || ""} onChange={e => setFamilyPurchaseDate(p.id, e.target.value)} />
+                      <button className="icon-btn ghost" onClick={() => removeFamilyPurchase(p.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="কার জন্য" value={familyPurchaseFor} onChange={e => setFamilyPurchaseFor(e.target.value)} />
+                    <input placeholder="কী কিনেছেন" value={familyPurchaseItem} onChange={e => setFamilyPurchaseItem(e.target.value)} />
+                    <button className="icon-btn" onClick={() => { addFamilyPurchase(familyPurchaseFor, familyPurchaseItem); setFamilyPurchaseFor(""); setFamilyPurchaseItem(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
 
-          <div className="subblock">
-            <div className="subblock-title">ঘোরাঘুরি</div>
-            {monthPlan.places.length === 0 && <div className="empty-note">এখনো কোনো জায়গা যোগ করা হয়নি</div>}
-            {monthPlan.places.map(p => (
-              <div className="nafl-item" key={p.id}>
-                <span className="n-name">{p.name}</span>
-                <span className="n-rakahs">{p.date || ""}</span>
-                <button className="icon-btn ghost" onClick={() => removePlace(p.id)}><Icon name="delete" size={15} /></button>
-              </div>
-            ))}
-            <div className="add-row">
-              <input placeholder="কোথায় ঘুরতে গিয়েছেন" value={placeName} onChange={e => setPlaceName(e.target.value)} />
-              <input type="date" style={{ maxWidth: 145 }} value={placeDate} onChange={e => setPlaceDate(e.target.value)} />
-              <button className="icon-btn" onClick={() => { addPlace(placeName, placeDate); setPlaceName(""); setPlaceDate(""); }}><Icon name="add" size={18} /></button>
+              {planSubOpen === "declutterItems" && (
+                <>
+                  {monthPlan.declutterItems.length === 0 && <div className="empty-note">এখনো কিছু যোগ করা হয়নি</div>}
+                  {monthPlan.declutterItems.map(p => (
+                    <div className="nafl-item" key={p.id}>
+                      <span className="n-name">{p.item}</span>
+                      <input type="date" className="n-date-input" value={p.date || ""} onChange={e => setDeclutterItemDate(p.id, e.target.value)} />
+                      <button className="icon-btn ghost" onClick={() => removeDeclutterItem(p.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="কী পরিষ্কার/রিমুভ করেছেন" value={declutterItem} onChange={e => setDeclutterItem(e.target.value)} onKeyDown={e => e.key === "Enter" && (addDeclutterItem(declutterItem), setDeclutterItem(""))} />
+                    <button className="icon-btn" onClick={() => { addDeclutterItem(declutterItem); setDeclutterItem(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
+
+              {planSubOpen === "places" && (
+                <>
+                  {monthPlan.places.length === 0 && <div className="empty-note">এখনো কোনো জায়গা যোগ করা হয়নি</div>}
+                  {monthPlan.places.map(p => (
+                    <div className="nafl-item" key={p.id}>
+                      <span className="n-name">{p.name}</span>
+                      <span className="n-rakahs">{p.date || ""}</span>
+                      <button className="icon-btn ghost" onClick={() => removePlace(p.id)}><Icon name="delete" size={15} /></button>
+                    </div>
+                  ))}
+                  <div className="add-row">
+                    <input placeholder="কোথায় ঘুরতে গিয়েছেন" value={placeName} onChange={e => setPlaceName(e.target.value)} />
+                    <input type="date" style={{ maxWidth: 145 }} value={placeDate} onChange={e => setPlaceDate(e.target.value)} />
+                    <button className="icon-btn" onClick={() => { addPlace(placeName, placeDate); setPlaceName(""); setPlaceDate(date); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
+          )}
         </Card>
 
         {customTasks.map(task => {
@@ -5850,7 +6746,31 @@ function DailyLifeManagement() {
       {showDiaryReader && <DiaryReaderModal initialDate={diaryReaderStartDate || date} onClose={() => setShowDiaryReader(false)} />}
 
       {showWeeklyReview && <WeeklyReviewModal date={date} onClose={() => setShowWeeklyReview(false)} />}
-      {showPomodoro && <PomodoroModal onClose={() => setShowPomodoro(false)} onComplete={completePomodoro} todaySubjects={todaySubjects} />}
+      {showPomodoro && (
+        <StudyPromoterModal
+          onClose={() => setShowPomodoro(false)}
+          studyPromoter={studyPromoter}
+          elapsedSeconds={getStudyPromoterElapsed()}
+          todaySubjects={todaySubjects}
+          onStart={startStudyPromoter}
+          onPause={pauseStudyPromoter}
+          onResume={resumeStudyPromoter}
+          onEnd={endStudyPromoter}
+        />
+      )}
+      {showWorkoutPromoter && (
+        <WorkoutPromoterModal
+          onClose={() => setShowWorkoutPromoter(false)}
+          workoutPromoter={workoutPromoter}
+          elapsedSeconds={getWorkoutPromoterElapsed()}
+          onStart={startWorkoutPromoter}
+          onPause={pauseWorkoutPromoter}
+          onResume={resumeWorkoutPromoter}
+          onEnd={endWorkoutPromoter}
+          checklist={day.exercise.checklist}
+          onIncrementSet={incrementSet}
+        />
+      )}
       {showReport && <ReportModal day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} onClose={() => setShowReport(false)} />}
       {showMonthlyExpenseReport && <MonthlyExpenseReportModal detail={monthlyExpenseDetail} loading={monthlyExpenseLoading} onClose={() => setShowMonthlyExpenseReport(false)} />}
 
