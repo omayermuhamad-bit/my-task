@@ -4262,6 +4262,7 @@ function DailyLifeManagement() {
   const [zikirSubOpen, setZikirSubOpen] = useState(null);
   const [quranSubOpen, setQuranSubOpen] = useState(null);
   const [planSubOpen, setPlanSubOpen] = useState(null);
+  const [habitSubOpen, setHabitSubOpen] = useState(null);
   const [pinUnlocked, setPinUnlocked] = useState(false);
   const setAppPin = (pin) => {
     setAppPinState(pin);
@@ -4498,6 +4499,22 @@ function DailyLifeManagement() {
   const [noTextPeople, setNoTextPeople] = useState([]);
   const [customTasks, setCustomTasks] = useState([]);
   const [expanded, setExpanded] = useState(null);
+  useEffect(() => {
+    if (expanded !== "prayer") setPrayerSubOpen(null);
+    if (expanded !== "study") setStudySubOpen(null);
+    if (expanded !== "zikir") setZikirSubOpen(null);
+    if (expanded !== "quran") setQuranSubOpen(null);
+    if (expanded !== "plan") setPlanSubOpen(null);
+    if (expanded !== "habit") setHabitSubOpen(null);
+    if (expanded !== "accounts") {
+      setMonthlyInfoExpanded(false);
+      setOwnExpenseExpanded(false);
+      setFriendsFamilyExpanded(false);
+      setOfficeExpanded(false);
+      setDebtExpanded(false);
+      setPieChartExpanded(false);
+    }
+  }, [expanded]);
   const [newContact, setNewContact] = useState("");
   const [debtDraft, setDebtDraft] = useState({ name: "", amount: "", direction: "owed_to_me", note: "" });
   const [officeExpanded, setOfficeExpanded] = useState(false);
@@ -4505,6 +4522,7 @@ function DailyLifeManagement() {
   const [friendsFamilyExpanded, setFriendsFamilyExpanded] = useState(false);
   const [monthlyInfoExpanded, setMonthlyInfoExpanded] = useState(false);
   const [debtExpanded, setDebtExpanded] = useState(false);
+  const [pieChartExpanded, setPieChartExpanded] = useState(false);
   const [monthSummaryExpanded, setMonthSummaryExpanded] = useState(false);
   const [officeTransportType, setOfficeTransportType] = useState("rickshaw");
   const [officeTransportAmount, setOfficeTransportAmount] = useState("");
@@ -5658,34 +5676,23 @@ function DailyLifeManagement() {
               ? (studyPromoter.status === "paused" ? "স্টাডি প্রমোটার পজ করা আছে — " : "স্টাডি প্রমোটার চলছে — ") + formatStopwatch(getStudyPromoterElapsed())
               : "স্টাডি প্রমোটার শুরু করুন" + (day.study.pomodoroCount > 0 ? " (আজ " + day.study.pomodoroCount + "টা সেশন)" : "")}
           </button>
-          <div className="subblock">
-            <div className="subblock-title">{routineToday.label} — আজকের সাবজেক্ট</div>
-            {todaySubjects.length === 0 ? (
-              <div className="empty-note">আজ ছুটির দিন, রুটিনে কোনো সাবজেক্ট নেই।</div>
-            ) : (
-              todaySubjects.map(sub => (
-                <div className="field-row" key={sub} style={{ alignItems: "center", marginBottom: 8 }}>
-                  <div style={{ flex: 1, fontSize: 13.5 }}>{sub}</div>
-                  <div className="field" style={{ maxWidth: 90 }}>
-                    <input type="number" min="0" step="0.5" value={day.study.subjects[sub] || ""} onChange={e => setStudySubjectHours(sub, e.target.value)} placeholder="ঘণ্টা" />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
           {!studySubOpen ? (
             <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
               {[
-                { key: "studied", label: "পড়াশোনা করেছি (ফ্রি টেক্সট)" },
-                { key: "lectures", label: "লেকচার শুনেছি" },
-                { key: "routine", label: "সাপ্তাহিক রুটিন" },
+                { key: "subjects", icon: "auto_stories", label: "আজকের সাবজেক্ট" },
+                { key: "studied", icon: "edit_note", label: "পড়াশোনা করেছি (ফ্রি টেক্সট)" },
+                { key: "lectures", icon: "headphones", label: "লেকচার শুনেছি" },
+                { key: "routine", icon: "calendar_view_week", label: "সাপ্তাহিক রুটিন" },
               ].map((item, i, arr) => (
                 <div
                   key={item.key}
                   onClick={() => setStudySubOpen(item.key)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
                 >
-                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: "#5C7A6B22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon name={item.icon} size={18} color="#5C7A6B" />
+                  </div>
+                  <span style={{ flex: 1, fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
                   <Icon name="chevron_left" size={18} color="#8A7F68" />
                 </div>
               ))}
@@ -5695,9 +5702,23 @@ function DailyLifeManagement() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setStudySubOpen(null)}>
                 <Icon name="arrow_back" size={18} color="#5C7A6B" />
                 <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#5C7A6B" }}>
-                  {studySubOpen === "studied" ? "পড়াশোনা করেছি (ফ্রি টেক্সট)" : studySubOpen === "lectures" ? "লেকচার শুনেছি" : "সাপ্তাহিক রুটিন"}
+                  {studySubOpen === "subjects" ? "আজকের সাবজেক্ট" : studySubOpen === "studied" ? "পড়াশোনা করেছি (ফ্রি টেক্সট)" : studySubOpen === "lectures" ? "লেকচার শুনেছি" : "সাপ্তাহিক রুটিন"}
                 </span>
               </div>
+              {studySubOpen === "subjects" && (
+                todaySubjects.length === 0 ? (
+                  <div className="empty-note">আজ ছুটির দিন, রুটিনে কোনো সাবজেক্ট নেই।</div>
+                ) : (
+                  todaySubjects.map(sub => (
+                    <div className="field-row" key={sub} style={{ alignItems: "center", marginBottom: 8 }}>
+                      <div style={{ flex: 1, fontSize: 13.5 }}>{sub}</div>
+                      <div className="field" style={{ maxWidth: 90 }}>
+                        <input type="number" min="0" step="0.5" value={day.study.subjects[sub] || ""} onChange={e => setStudySubjectHours(sub, e.target.value)} placeholder="ঘণ্টা" />
+                      </div>
+                    </div>
+                  ))
+                )
+              )}
               {studySubOpen === "routine" && DAY_SUBJECTS.map(d => (
                 <div className="pr-row" key={d.label} style={d.label === routineToday.label ? { color: "#5C7A6B", fontWeight: 700 } : {}}>
                   <b>{d.label}:</b> {d.subjects.length ? d.subjects.join(", ") : "ছুটি"}
@@ -5824,216 +5845,266 @@ function DailyLifeManagement() {
             </div>
           )}
 
-          <div className="subblock">
-            <div className="amoli-row">
-              <span style={{ fontWeight: 600, fontSize: 14 }}>মেডিটেশন ১০ মিনিট</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <button className="med-timer-btn" onClick={() => setShowMeditationTimer(true)}><Icon name="timer" size={14} /> Start</button>
-                <div className="amoli-check" style={day.habit.meditation ? { background: "#6B7A4F", borderColor: "#6B7A4F" } : {}} onClick={() => toggleHabit("meditation")}>
-                  {day.habit.meditation ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
-                </div>
-                <UntickControl count={(day.habit.unticks || {}).meditation} onInc={() => adjustUntick("meditation", 1)} onDec={() => adjustUntick("meditation", -1)} />
-              </div>
-            </div>
-          </div>
-
-          <div className="subblock">
-            <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>হাঁটা (লক্ষ্য ৮k–১০k স্টেপ)</span>
-              <UntickControl count={(day.habit.unticks || {}).walkingSteps} onInc={() => adjustUntick("walkingSteps", 1)} onDec={() => adjustUntick("walkingSteps", -1)} />
-            </div>
-            <div className="water-counter">
-              <button className="water-btn" onClick={() => adjustWalkingSteps(-1000)}><Icon name="remove" size={18} /></button>
-              <input type="number" min="0" className="steps-input" value={day.habit.walkingSteps} onChange={e => setWalkingSteps(e.target.value)} placeholder="0" />
-              <button className="water-btn" onClick={() => adjustWalkingSteps(1000)}><Icon name="add" size={18} /></button>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 10 }}>
-              <button
-                className="med-timer-btn"
-                style={pedometerActive ? { background: "#B5651D" } : {}}
-                onClick={togglePedometer}
-              >
-                <Icon name={pedometerActive ? "stop" : "directions_walk"} size={14} />
-                {pedometerActive ? "ট্র্যাকিং বন্ধ করুন" : "সেন্সর দিয়ে অটো কাউন্ট শুরু করুন"}
-              </button>
-            </div>
-            {pedometerActive && (
-              <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#6B7A4F" }}>
-                ফোন পকেটে/হাতে নিয়ে হাঁটুন — অ্যাপ খোলা রাখতে হবে, স্টেপ স্বয়ংক্রিয়ভাবে যোগ হচ্ছে
-              </div>
-            )}
-            {pedometerError && (
-              <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#B5651D" }}>
-                {pedometerError}
-              </div>
-            )}
-            {walkingDone && <div className="goal-ok" style={{ textAlign: "center" }}>লক্ষ্য পূরণ হয়েছে ✓</div>}
-          </div>
-
-          <div className="subblock">
-            <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>পানি ট্র্যাকার (লক্ষ্য ৮–১০ গ্লাস)</span>
-              <UntickControl count={(day.habit.unticks || {}).waterGlasses} onInc={() => adjustUntick("waterGlasses", 1)} onDec={() => adjustUntick("waterGlasses", -1)} />
-            </div>
-            <div className="water-counter">
-              <button className="water-btn" onClick={() => adjustWaterGlasses(-1)}><Icon name="remove" size={18} /></button>
-              <div className="water-count">🥤 {day.habit.waterGlasses || 0} <span style={{ fontSize: 12, fontWeight: 500 }}>গ্লাস</span></div>
-              <button className="water-btn" onClick={() => adjustWaterGlasses(1)}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
-
-          <div className="subblock">
-            <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>নো-স্ক্রিন টাইম (৩০ মিনিট) — কতবার হয়েছে</span>
-              <UntickControl count={(day.habit.unticks || {}).noScreenCount} onInc={() => adjustUntick("noScreenCount", 1)} onDec={() => adjustUntick("noScreenCount", -1)} />
-            </div>
-            <div className="water-counter">
-              <button className="water-btn" onClick={() => adjustNoScreenCount(-1)}><Icon name="remove" size={18} /></button>
-              <div className="water-count">{day.habit.noScreenCount || 0} <span style={{ fontSize: 12, fontWeight: 500 }}>বার</span></div>
-              <button className="water-btn" onClick={() => adjustNoScreenCount(1)}><Icon name="add" size={18} /></button>
-            </div>
-            <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#8A7F68" }}>
-              সকাল ১০টা–রাত ১২টার মধ্যে অ্যাপ/ফোন ৩০ মিনিট বা তার বেশি সময় না ধরলে এখানে অটো +১ হবে
-            </div>
-            {noScreenAutoMsg && (
-              <div className="goal-ok" style={{ textAlign: "center", marginTop: 6 }}>{noScreenAutoMsg}</div>
-            )}
-          </div>
-
-          <div className="subblock">
-            <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>ঘর গোছানো — কতবার হয়েছে</span>
-              <UntickControl rate={1.2} count={day.habit.ghorGochanoMiss} onInc={() => adjustGhorGochanoMiss(1)} onDec={() => adjustGhorGochanoMiss(-1)} />
-            </div>
-            <div className="water-counter">
-              <button className="water-btn" onClick={() => adjustGhorGochano(-1)}><Icon name="remove" size={18} /></button>
-              <div className="water-count">{day.habit.ghorGochano || 0} <span style={{ fontSize: 12, fontWeight: 500 }}>বার</span></div>
-              <button className="water-btn" onClick={() => adjustGhorGochano(1)}><Icon name="add" size={18} /></button>
-            </div>
-            <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#8A7F68" }}>
-              প্রতিবার ঘর গুছালে +১.২ পয়েন্ট। না গুছালে পাশের ✕ চেপে রাখুন, প্রতিটা ✕ -১.২ পয়েন্ট
-            </div>
-          </div>
-
-          <div className="subblock sleep-tracker">
-            <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>ঘুম ট্র্যাকার <span style={{ fontWeight: 400, fontSize: 11, color: "#8A7F68" }}>(দিনে একাধিকবার যোগ করা যায়)</span></span>
-              <UntickControl count={(day.habit.unticks || {}).sleep} onInc={() => adjustUntick("sleep", 1)} onDec={() => adjustUntick("sleep", -1)} />
-            </div>
-
-            {(() => {
-              const sa = computeSleepAuto(day);
-              return (
-                <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "5px 10px", borderRadius: 999, background: sa.bedTime ? (sa.earlySleeping ? "#6B7A4F22" : "#A1454522") : "#EFE6D2", color: sa.bedTime ? (sa.earlySleeping ? "#4E5C38" : "#A14545") : "#8A7F68" }}>
-                    {sa.bedTime ? (sa.earlySleeping ? "✓" : "✕") : "—"} আর্লি স্লিপিং (রাত ১২:১০ এর আগে)
+          {!habitSubOpen ? (
+            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+              {[
+                { key: "meditation", icon: "self_improvement", label: "মেডিটেশন ১০ মিনিট", value: day.habit.meditation ? "হয়েছে ✓" : "বাকি" },
+                { key: "walking", icon: "directions_walk", label: "হাঁটা", value: (day.habit.walkingSteps || 0) + " স্টেপ" },
+                { key: "water", icon: "water_drop", label: "পানি ট্র্যাকার", value: (day.habit.waterGlasses || 0) + " গ্লাস" },
+                { key: "noScreen", icon: "phonelink_off", label: "নো-স্ক্রিন টাইম", value: (day.habit.noScreenCount || 0) + " বার" },
+                { key: "ghorGochano", icon: "cleaning_services", label: "ঘর গোছানো", value: (day.habit.ghorGochano || 0) + " বার" },
+                { key: "sleep", icon: "bedtime", label: "ঘুম ট্র্যাকার", value: day.habit.sleepSessions.length ? day.habit.sleepSessions.length + " এন্ট্রি" : "" },
+                { key: "weight", icon: "monitor_weight", label: "ওজন ট্র্যাকার", value: day.habit.weight ? day.habit.weight + " কেজি" : "" },
+                { key: "noText", icon: "block", label: "নো টেক্সট ফার্স্ট", value: noTextPeople.length ? noTextPeople.filter(p => (day.habit.noTextStatus || {})[p.name] === "yes").length + "/" + noTextPeople.length + " হ্যাঁ" : "" },
+              ].map((item, i, arr) => (
+                <div
+                  key={item.key}
+                  onClick={() => setHabitSubOpen(item.key)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: "#6B7A4F22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon name={item.icon} size={18} color="#6B7A4F" />
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "5px 10px", borderRadius: 999, background: sa.wakeTimeVal ? (sa.earlyRising ? "#6B7A4F22" : "#A1454522") : "#EFE6D2", color: sa.wakeTimeVal ? (sa.earlyRising ? "#4E5C38" : "#A14545") : "#8A7F68" }}>
-                    {sa.wakeTimeVal ? (sa.earlyRising ? "✓" : "✕") : "—"} আর্লি রাইজিং (ভোর ৬টার আগে)
-                  </div>
+                  <span style={{ flex: 1, fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
+                  {item.value && <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'IBM Plex Mono'", color: "#6B7A4F", whiteSpace: "nowrap" }}>{item.value}</span>}
+                  <Icon name="chevron_left" size={18} color="#8A7F68" />
                 </div>
-              );
-            })()}
+              ))}
+            </div>
+          ) : (
+            <div className="subblock sleep-tracker">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setHabitSubOpen(null)}>
+                <Icon name="arrow_back" size={18} color="#6B7A4F" />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#6B7A4F" }}>
+                  {{ meditation: "মেডিটেশন ১০ মিনিট", walking: "হাঁটা", water: "পানি ট্র্যাকার", noScreen: "নো-স্ক্রিন টাইম", ghorGochano: "ঘর গোছানো", sleep: "ঘুম ট্র্যাকার", weight: "ওজন ট্র্যাকার", noText: "নো টেক্সট ফার্স্ট" }[habitSubOpen]}
+                </span>
+              </div>
 
-            {day.habit.sleepSessions.length === 0 && (
-              <div className="empty-note" style={{ textAlign: "center", marginBottom: 10 }}>এখনো কোনো ঘুম যোগ করা হয়নি</div>
-            )}
-
-            {day.habit.sleepSessions.map((s, idx) => {
-              const mins = sleepSessionMinutes(s.start, s.end);
-              return (
-                <div className="sleep-session-row" key={s.id}>
-                  <Icon name={idx === 0 ? "bedtime" : "hotel"} size={16} color="#4C6B8A" style={{ flexShrink: 0 }} />
-                  <input
-                    className="sleep-label-input"
-                    value={s.label}
-                    onChange={e => updateSleepSession(s.id, "label", e.target.value)}
-                    placeholder="যেমন রাতের ঘুম / ভাতঘুম"
-                  />
-                  <input type="time" className="sleep-time-input" value={s.start} onChange={e => updateSleepSession(s.id, "start", e.target.value)} />
-                  <span style={{ color: "#8A7F68", fontSize: 12 }}>–</span>
-                  <input type="time" className="sleep-time-input" value={s.end} onChange={e => updateSleepSession(s.id, "end", e.target.value)} />
-                  <button className="icon-btn ghost" onClick={() => removeSleepSession(s.id)}><Icon name="close" size={14} /></button>
-                  {mins > 0 && <div className="sleep-duration-chip">{minutesToLabel(mins)}</div>}
-                </div>
-              );
-            })}
-
-            <button className="btn-ghost" style={{ width: "100%", justifyContent: "center", marginTop: 6 }} onClick={addSleepSession}>
-              <Icon name="add" size={15} /> {day.habit.sleepSessions.length === 0 ? "ঘুম যোগ করুন" : "আরেকটা ঘুম যোগ করুন"}
-            </button>
-
-            {(() => {
-              const totalMin = day.habit.sleepSessions.reduce((s, sess) => s + sleepSessionMinutes(sess.start, sess.end), 0);
-              if (totalMin <= 0) return null;
-              const goalMin = 8 * 60;
-              const pct = Math.min(100, Math.round((totalMin / goalMin) * 100));
-              const segments = day.habit.sleepSessions
-                .filter(s => s.start && s.end)
-                .map(s => {
-                  const [sh, sm] = s.start.split(":").map(Number);
-                  const startPct = ((sh * 60 + sm) / 1440) * 100;
-                  const widthPct = Math.min(100 - startPct, (sleepSessionMinutes(s.start, s.end) / 1440) * 100);
-                  return { left: startPct, width: Math.max(widthPct, 0.6) };
-                });
-              return (
-                <>
-                  <div className="sleep-timeline">
-                    {[0, 6, 12, 18, 24].map(h => (
-                      <div key={h} className="sleep-timeline-tick" style={{ left: (h / 24) * 100 + "%" }}>{h}</div>
-                    ))}
-                    <div className="sleep-timeline-track">
-                      {segments.map((seg, i) => (
-                        <div key={i} className="sleep-timeline-block" style={{ left: seg.left + "%", width: seg.width + "%" }}></div>
-                      ))}
+              {habitSubOpen === "meditation" && (
+                <div className="amoli-row">
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>মেডিটেশন ১০ মিনিট</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button className="med-timer-btn" onClick={() => setShowMeditationTimer(true)}><Icon name="timer" size={14} /> Start</button>
+                    <div className="amoli-check" style={day.habit.meditation ? { background: "#6B7A4F", borderColor: "#6B7A4F" } : {}} onClick={() => toggleHabit("meditation")}>
+                      {day.habit.meditation ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
                     </div>
+                    <UntickControl count={(day.habit.unticks || {}).meditation} onInc={() => adjustUntick("meditation", 1)} onDec={() => adjustUntick("meditation", -1)} />
                   </div>
-                  <div className="progress-bar-track" style={{ background: "#EFE6D2", marginTop: 10 }}>
-                    <div className="progress-bar-fill" style={{ width: pct + "%", background: "linear-gradient(90deg,#4C6B8A,#7B9CC9)" }}></div>
+                </div>
+              )}
+
+              {habitSubOpen === "walking" && (
+                <>
+                  <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>হাঁটা (লক্ষ্য ৮k–১০k স্টেপ)</span>
+                    <UntickControl count={(day.habit.unticks || {}).walkingSteps} onInc={() => adjustUntick("walkingSteps", 1)} onDec={() => adjustUntick("walkingSteps", -1)} />
                   </div>
-                  <div className="goal-ok" style={{ textAlign: "center", marginTop: 6 }}>
-                    আজকের মোট ঘুম: {minutesToLabel(totalMin)} {totalMin >= goalMin ? "✓" : "(লক্ষ্য ৮ ঘণ্টা — " + pct + "%)"}
+                  <div className="water-counter">
+                    <button className="water-btn" onClick={() => adjustWalkingSteps(-1000)}><Icon name="remove" size={18} /></button>
+                    <input type="number" min="0" className="steps-input" value={day.habit.walkingSteps} onChange={e => setWalkingSteps(e.target.value)} placeholder="0" />
+                    <button className="water-btn" onClick={() => adjustWalkingSteps(1000)}><Icon name="add" size={18} /></button>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: 10 }}>
+                    <button
+                      className="med-timer-btn"
+                      style={pedometerActive ? { background: "#B5651D" } : {}}
+                      onClick={togglePedometer}
+                    >
+                      <Icon name={pedometerActive ? "stop" : "directions_walk"} size={14} />
+                      {pedometerActive ? "ট্র্যাকিং বন্ধ করুন" : "সেন্সর দিয়ে অটো কাউন্ট শুরু করুন"}
+                    </button>
+                  </div>
+                  {pedometerActive && (
+                    <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#6B7A4F" }}>
+                      ফোন পকেটে/হাতে নিয়ে হাঁটুন — অ্যাপ খোলা রাখতে হবে, স্টেপ স্বয়ংক্রিয়ভাবে যোগ হচ্ছে
+                    </div>
+                  )}
+                  {pedometerError && (
+                    <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#B5651D" }}>
+                      {pedometerError}
+                    </div>
+                  )}
+                  {walkingDone && <div className="goal-ok" style={{ textAlign: "center" }}>লক্ষ্য পূরণ হয়েছে ✓</div>}
+                </>
+              )}
+
+              {habitSubOpen === "water" && (
+                <>
+                  <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>পানি ট্র্যাকার (লক্ষ্য ৮–১০ গ্লাস)</span>
+                    <UntickControl count={(day.habit.unticks || {}).waterGlasses} onInc={() => adjustUntick("waterGlasses", 1)} onDec={() => adjustUntick("waterGlasses", -1)} />
+                  </div>
+                  <div className="water-counter">
+                    <button className="water-btn" onClick={() => adjustWaterGlasses(-1)}><Icon name="remove" size={18} /></button>
+                    <div className="water-count">🥤 {day.habit.waterGlasses || 0} <span style={{ fontSize: 12, fontWeight: 500 }}>গ্লাস</span></div>
+                    <button className="water-btn" onClick={() => adjustWaterGlasses(1)}><Icon name="add" size={18} /></button>
                   </div>
                 </>
-              );
-            })()}
-          </div>
+              )}
 
-          <div className="subblock">
-            <div className="subblock-title">ওজন ট্র্যাকার (কেজি)</div>
-            <div className="field">
-              <input type="number" min="0" step="0.1" className="modal-input" value={day.habit.weight} onChange={e => setWeight(e.target.value)} placeholder="যেমন ৬৫.৫" />
-            </div>
-            <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#8A7F68" }}>
-              সপ্তাহে ১-২ বার লিখলেই ট্রেন্ড গ্রাফে (📈) পরিবর্তন দেখতে পারবে
-            </div>
-          </div>
+              {habitSubOpen === "noScreen" && (
+                <>
+                  <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>নো-স্ক্রিন টাইম (৩০ মিনিট) — কতবার হয়েছে</span>
+                    <UntickControl count={(day.habit.unticks || {}).noScreenCount} onInc={() => adjustUntick("noScreenCount", 1)} onDec={() => adjustUntick("noScreenCount", -1)} />
+                  </div>
+                  <div className="water-counter">
+                    <button className="water-btn" onClick={() => adjustNoScreenCount(-1)}><Icon name="remove" size={18} /></button>
+                    <div className="water-count">{day.habit.noScreenCount || 0} <span style={{ fontSize: 12, fontWeight: 500 }}>বার</span></div>
+                    <button className="water-btn" onClick={() => adjustNoScreenCount(1)}><Icon name="add" size={18} /></button>
+                  </div>
+                  <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#8A7F68" }}>
+                    সকাল ১০টা–রাত ১২টার মধ্যে অ্যাপ/ফোন ৩০ মিনিট বা তার বেশি সময় না ধরলে এখানে অটো +১ হবে
+                  </div>
+                  {noScreenAutoMsg && (
+                    <div className="goal-ok" style={{ textAlign: "center", marginTop: 6 }}>{noScreenAutoMsg}</div>
+                  )}
+                </>
+              )}
 
-          <div className="section-label">চলমান অভ্যাস</div>
-          <div className="subblock" style={{ marginBottom: 14 }}>
-            <div className="subblock-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              নো টেক্সট ফার্স্ট (ব্যক্তি অনুযায়ী)
-              {noTextPeople.length > 0 && !!habitItemStreaks.noTextAll && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#B5651D" }}>🔥 {habitItemStreaks.noTextAll} দিন ধরে সবাই মিলে চলছে</span>
+              {habitSubOpen === "ghorGochano" && (
+                <>
+                  <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>ঘর গোছানো — কতবার হয়েছে</span>
+                    <UntickControl rate={1.2} count={day.habit.ghorGochanoMiss} onInc={() => adjustGhorGochanoMiss(1)} onDec={() => adjustGhorGochanoMiss(-1)} />
+                  </div>
+                  <div className="water-counter">
+                    <button className="water-btn" onClick={() => adjustGhorGochano(-1)}><Icon name="remove" size={18} /></button>
+                    <div className="water-count">{day.habit.ghorGochano || 0} <span style={{ fontSize: 12, fontWeight: 500 }}>বার</span></div>
+                    <button className="water-btn" onClick={() => adjustGhorGochano(1)}><Icon name="add" size={18} /></button>
+                  </div>
+                  <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#8A7F68" }}>
+                    প্রতিবার ঘর গুছালে +১.২ পয়েন্ট। না গুছালে পাশের ✕ চেপে রাখুন, প্রতিটা ✕ -১.২ পয়েন্ট
+                  </div>
+                </>
+              )}
+
+              {habitSubOpen === "sleep" && (
+                <>
+                  <div className="subblock-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>ঘুম ট্র্যাকার <span style={{ fontWeight: 400, fontSize: 11, color: "#8A7F68" }}>(দিনে একাধিকবার যোগ করা যায়)</span></span>
+                    <UntickControl count={(day.habit.unticks || {}).sleep} onInc={() => adjustUntick("sleep", 1)} onDec={() => adjustUntick("sleep", -1)} />
+                  </div>
+
+                  {(() => {
+                    const sa = computeSleepAuto(day);
+                    return (
+                      <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "5px 10px", borderRadius: 999, background: sa.bedTime ? (sa.earlySleeping ? "#6B7A4F22" : "#A1454522") : "#EFE6D2", color: sa.bedTime ? (sa.earlySleeping ? "#4E5C38" : "#A14545") : "#8A7F68" }}>
+                          {sa.bedTime ? (sa.earlySleeping ? "✓" : "✕") : "—"} আর্লি স্লিপিং (রাত ১২:১০ এর আগে)
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "5px 10px", borderRadius: 999, background: sa.wakeTimeVal ? (sa.earlyRising ? "#6B7A4F22" : "#A1454522") : "#EFE6D2", color: sa.wakeTimeVal ? (sa.earlyRising ? "#4E5C38" : "#A14545") : "#8A7F68" }}>
+                          {sa.wakeTimeVal ? (sa.earlyRising ? "✓" : "✕") : "—"} আর্লি রাইজিং (ভোর ৬টার আগে)
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {day.habit.sleepSessions.length === 0 && (
+                    <div className="empty-note" style={{ textAlign: "center", marginBottom: 10 }}>এখনো কোনো ঘুম যোগ করা হয়নি</div>
+                  )}
+
+                  {day.habit.sleepSessions.map((s, idx) => {
+                    const mins = sleepSessionMinutes(s.start, s.end);
+                    return (
+                      <div className="sleep-session-row" key={s.id}>
+                        <Icon name={idx === 0 ? "bedtime" : "hotel"} size={16} color="#4C6B8A" style={{ flexShrink: 0 }} />
+                        <input
+                          className="sleep-label-input"
+                          value={s.label}
+                          onChange={e => updateSleepSession(s.id, "label", e.target.value)}
+                          placeholder="যেমন রাতের ঘুম / ভাতঘুম"
+                        />
+                        <input type="time" className="sleep-time-input" value={s.start} onChange={e => updateSleepSession(s.id, "start", e.target.value)} />
+                        <span style={{ color: "#8A7F68", fontSize: 12 }}>–</span>
+                        <input type="time" className="sleep-time-input" value={s.end} onChange={e => updateSleepSession(s.id, "end", e.target.value)} />
+                        <button className="icon-btn ghost" onClick={() => removeSleepSession(s.id)}><Icon name="close" size={14} /></button>
+                        {mins > 0 && <div className="sleep-duration-chip">{minutesToLabel(mins)}</div>}
+                      </div>
+                    );
+                  })}
+
+                  <button className="btn-ghost" style={{ width: "100%", justifyContent: "center", marginTop: 6 }} onClick={addSleepSession}>
+                    <Icon name="add" size={15} /> {day.habit.sleepSessions.length === 0 ? "ঘুম যোগ করুন" : "আরেকটা ঘুম যোগ করুন"}
+                  </button>
+
+                  {(() => {
+                    const totalMin = day.habit.sleepSessions.reduce((s, sess) => s + sleepSessionMinutes(sess.start, sess.end), 0);
+                    if (totalMin <= 0) return null;
+                    const goalMin = 8 * 60;
+                    const pct = Math.min(100, Math.round((totalMin / goalMin) * 100));
+                    const segments = day.habit.sleepSessions
+                      .filter(s => s.start && s.end)
+                      .map(s => {
+                        const [sh, sm] = s.start.split(":").map(Number);
+                        const startPct = ((sh * 60 + sm) / 1440) * 100;
+                        const widthPct = Math.min(100 - startPct, (sleepSessionMinutes(s.start, s.end) / 1440) * 100);
+                        return { left: startPct, width: Math.max(widthPct, 0.6) };
+                      });
+                    return (
+                      <>
+                        <div className="sleep-timeline">
+                          {[0, 6, 12, 18, 24].map(h => (
+                            <div key={h} className="sleep-timeline-tick" style={{ left: (h / 24) * 100 + "%" }}>{h}</div>
+                          ))}
+                          <div className="sleep-timeline-track">
+                            {segments.map((seg, i) => (
+                              <div key={i} className="sleep-timeline-block" style={{ left: seg.left + "%", width: seg.width + "%" }}></div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="progress-bar-track" style={{ background: "#EFE6D2", marginTop: 10 }}>
+                          <div className="progress-bar-fill" style={{ width: pct + "%", background: "linear-gradient(90deg,#4C6B8A,#7B9CC9)" }}></div>
+                        </div>
+                        <div className="goal-ok" style={{ textAlign: "center", marginTop: 6 }}>
+                          আজকের মোট ঘুম: {minutesToLabel(totalMin)} {totalMin >= goalMin ? "✓" : "(লক্ষ্য ৮ ঘণ্টা — " + pct + "%)"}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </>
+              )}
+
+              {habitSubOpen === "weight" && (
+                <>
+                  <div className="field">
+                    <input type="number" min="0" step="0.1" className="modal-input" value={day.habit.weight} onChange={e => setWeight(e.target.value)} placeholder="যেমন ৬৫.৫" />
+                  </div>
+                  <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#8A7F68" }}>
+                    সপ্তাহে ১-২ বার লিখলেই ট্রেন্ড গ্রাফে (📈) পরিবর্তন দেখতে পারবে
+                  </div>
+                </>
+              )}
+              {habitSubOpen === "noText" && (
+                <>
+                  <div className="subblock-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    নো টেক্সট ফার্স্ট (ব্যক্তি অনুযায়ী)
+                    {noTextPeople.length > 0 && !!habitItemStreaks.noTextAll && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#B5651D" }}>🔥 {habitItemStreaks.noTextAll} দিন ধরে সবাই মিলে চলছে</span>
+                    )}
+                  </div>
+                  {noTextPeople.length === 0 && <div className="empty-note">এখনো কেউ যোগ করা হয়নি</div>}
+                  {noTextPeople.map(p => {
+                    const status = (day.habit.noTextStatus || {})[p.name] || null;
+                    return (
+                      <div className="nafl-item" key={p.id}>
+                        <span className="n-name">{p.name}</span>
+                        <Chip active={status === "yes"} color="#6B7A4F" onClick={() => setNoTextStatus(p.name, "yes")}>হ্যাঁ (+০.৫)</Chip>
+                        <Chip active={status === "no"} color="#A14545" onClick={() => setNoTextStatus(p.name, "no")}>না (-০.৫)</Chip>
+                        <button className="icon-btn ghost" onClick={() => removeNoTextPerson(p.id)}><Icon name="delete" size={15} /></button>
+                      </div>
+                    );
+                  })}
+                  <div className="add-row">
+                    <input placeholder="নাম লিখুন" value={noTextPersonName} onChange={e => setNoTextPersonName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNoTextPerson(noTextPersonName), setNoTextPersonName(""))} />
+                    <button className="icon-btn" onClick={() => { addNoTextPerson(noTextPersonName); setNoTextPersonName(""); }}><Icon name="add" size={18} /></button>
+                  </div>
+                </>
               )}
             </div>
-            {noTextPeople.length === 0 && <div className="empty-note">এখনো কেউ যোগ করা হয়নি</div>}
-            {noTextPeople.map(p => {
-              const status = (day.habit.noTextStatus || {})[p.name] || null;
-              return (
-                <div className="nafl-item" key={p.id}>
-                  <span className="n-name">{p.name}</span>
-                  <Chip active={status === "yes"} color="#6B7A4F" onClick={() => setNoTextStatus(p.name, "yes")}>হ্যাঁ (+০.৫)</Chip>
-                  <Chip active={status === "no"} color="#A14545" onClick={() => setNoTextStatus(p.name, "no")}>না (-০.৫)</Chip>
-                  <button className="icon-btn ghost" onClick={() => removeNoTextPerson(p.id)}><Icon name="delete" size={15} /></button>
-                </div>
-              );
-            })}
-            <div className="add-row">
-              <input placeholder="নাম লিখুন" value={noTextPersonName} onChange={e => setNoTextPersonName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNoTextPerson(noTextPersonName), setNoTextPersonName(""))} />
-              <button className="icon-btn" onClick={() => { addNoTextPerson(noTextPersonName); setNoTextPersonName(""); }}><Icon name="add" size={18} /></button>
-            </div>
-          </div>
+          )}
+
+          <div className="section-label">চলমান অভ্যাস</div>
           {pendingHabitItems.length === 0 && <div className="goal-ok">সবগুলো সম্পন্ন! 🎉</div>}
           {pendingHabitItems.map(item => {
             const streakKey = item.isCustom ? "custom:" + item.label : "fixed:" + item.id;
@@ -6385,7 +6456,25 @@ function DailyLifeManagement() {
 
           <div className="section-label">খরচের বিভাজন (এই মাস)</div>
           <div className="subblock">
-            <CategoryPieChart totals={monthExpense.totals} categories={ACCOUNT_CATEGORIES} />
+            <button
+              onClick={() => setPieChartExpanded(v => !v)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="pie_chart" size={18} color="#2F6B5E" />
+              </div>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>খরচের বিভাজন</div>
+                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>ক্যাটাগরি অনুযায়ী পাইচার্ট</div>
+              </div>
+              <Icon name={pieChartExpanded ? "expand_less" : "expand_more"} size={20} />
+            </button>
+
+            {pieChartExpanded && (
+              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+                <CategoryPieChart totals={monthExpense.totals} categories={ACCOUNT_CATEGORIES} />
+              </div>
+            )}
           </div>
 
           {isLastDayOfMonth(date) && (
