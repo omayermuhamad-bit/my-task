@@ -4682,6 +4682,7 @@ function DailyLifeManagement() {
   const [placeDate, setPlaceDate] = useState(date);
   const [customHabitName, setCustomHabitName] = useState("");
   const [customHabitCategory, setCustomHabitCategory] = useState("other");
+  const [showAddHabitInput, setShowAddHabitInput] = useState(false);
   const [showMeditationTimer, setShowMeditationTimer] = useState(false);
   const [celebrateStreak, setCelebrateStreak] = useState(null);
   const [restSecondsLeft, setRestSecondsLeft] = useState(0);
@@ -5623,26 +5624,34 @@ function DailyLifeManagement() {
             if (categoryPending.length === 0 && pendingHabitItems.length === 0) {
               return <div className="goal-ok">সবকিছু সম্পন্ন! 🎉</div>;
             }
+            const pendingBtnStyle = {
+              width: 40, height: 40, borderRadius: 12, flexShrink: 0, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+              background: darkMode ? "#1F2A22" : "#FBF6EA",
+            };
             return (
-              <>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-start" }}>
                 {categoryPending.map(item => (
-                  <div className="nafl-item" key={item.id} style={{ cursor: "pointer" }} onClick={() => goToCard(item.id)}>
-                    <Icon name={item.icon} size={16} color={item.accent} />
-                    <span className="n-name">{item.label}</span>
-                    <span className="n-rakahs" style={{ color: item.accent }}>{item.detail}</span>
-                    <Icon name="chevron_left" size={16} color="#8A7F68" />
-                  </div>
+                  <button key={item.id} title={item.label} style={pendingBtnStyle} onClick={() => goToCard(item.id)}>
+                    <Icon name={item.icon} size={18} color={item.accent} />
+                  </button>
                 ))}
                 {pendingHabitItems.map(item => (
-                  <div className="nafl-item" key={(item.isCustom ? "c" : "f") + item.id}>
-                    <div className="amoli-check" onClick={() => item.isCustom ? toggleCustomHabit(item.id) : toggleHabit(item.id)}></div>
-                    <span className="n-name">
-                      {item.isCustom && <span style={{ marginRight: 6 }}>{HABIT_CATEGORIES.find(c => c.key === item.category)?.emoji}</span>}
-                      {item.label}
-                    </span>
-                  </div>
+                  <button
+                    key={(item.isCustom ? "c" : "f") + item.id}
+                    title={item.label}
+                    style={pendingBtnStyle}
+                    onClick={() => item.isCustom ? toggleCustomHabit(item.id) : toggleHabit(item.id)}
+                  >
+                    {item.isCustom ? (
+                      <span style={{ fontSize: 18 }}>{HABIT_CATEGORIES.find(c => c.key === item.category)?.emoji}</span>
+                    ) : (
+                      <Icon name="task_alt" size={18} color="#6B7A4F" />
+                    )}
+                  </button>
                 ))}
-              </>
+              </div>
             );
           })()}
         </div>
@@ -5850,7 +5859,7 @@ function DailyLifeManagement() {
                                 onClick={() => { setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
                                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 12px", borderBottom: i < PREVIOUS_SURAHS.length - 1 ? "1px solid #F0E9D6" : "none", background: selected ? "#F5EEDC" : "transparent", cursor: "pointer" }}
                               >
-                                <span style={{ fontSize: 13.5, fontWeight: selected ? 700 : 500 }}>{s.number}. {s.label} <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 500 }}>({s.pages} পৃষ্ঠা, {s.para} নং পারা)</span></span>
+                                <span style={{ fontSize: 13.5, fontWeight: selected ? 700 : 500, color: selected ? "#2B2A22" : (darkMode ? "#E7E0CC" : "#2B2A22") }}>{s.number}. {s.label} <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 500 }}>({s.pages} পৃষ্ঠা, {s.para} নং পারা)</span></span>
                                 <span
                                   onClick={(e) => { e.stopPropagation(); cycleSurahStatus(s.number); }}
                                   style={{ fontSize: 11, fontWeight: 700, color: meta.color, background: meta.bg, borderRadius: 999, padding: "2px 9px", minWidth: 22, textAlign: "center", flexShrink: 0 }}
@@ -5891,7 +5900,7 @@ function DailyLifeManagement() {
                                   onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
                                   style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: 10, background: SURAH_STATUS_META[group.key].bg, marginBottom: 6, cursor: "pointer" }}
                                 >
-                                  <span style={{ fontSize: 13.5, fontWeight: 600 }}>{s.number}. {s.label}</span>
+                                  <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22" }}>{s.number}. {s.label}</span>
                                   <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>{s.pages} পৃষ্ঠা</span>
                                 </div>
                               ))}
@@ -6116,30 +6125,94 @@ function DailyLifeManagement() {
           )}
 
           {!habitSubOpen ? (
-            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
-              {[
-                { key: "meditation", icon: "self_improvement", label: "মেডিটেশন ১০ মিনিট", value: day.habit.meditation ? "হয়েছে ✓" : "বাকি" },
-                { key: "walking", icon: "directions_walk", label: "হাঁটা", value: (day.habit.walkingSteps || 0) + " স্টেপ" },
-                { key: "water", icon: "water_drop", label: "পানি ট্র্যাকার", value: (day.habit.waterGlasses || 0) + " গ্লাস" },
-                { key: "noScreen", icon: "phonelink_off", label: "নো-স্ক্রিন টাইম", value: (day.habit.noScreenCount || 0) + " বার" },
-                { key: "ghorGochano", icon: "cleaning_services", label: "ঘর গোছানো", value: (day.habit.ghorGochano || 0) + " বার" },
-                { key: "sleep", icon: "bedtime", label: "ঘুম ট্র্যাকার", value: day.habit.sleepSessions.length ? day.habit.sleepSessions.length + " এন্ট্রি" : "" },
-                { key: "weight", icon: "monitor_weight", label: "ওজন ট্র্যাকার", value: day.habit.weight ? day.habit.weight + " কেজি" : "" },
-                { key: "noText", icon: "block", label: "নো টেক্সট ফার্স্ট", value: noTextPeople.length ? noTextPeople.filter(p => (day.habit.noTextStatus || {})[p.name] === "yes").length + "/" + noTextPeople.length + " হ্যাঁ" : "" },
-              ].map((item, i, arr) => (
-                <div
-                  key={item.key}
-                  onClick={() => setHabitSubOpen(item.key)}
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
-                >
-                  <div style={{ width: 32, height: 32, borderRadius: 10, background: "#6B7A4F22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Icon name={item.icon} size={18} color="#6B7A4F" />
+            <div className="subblock" style={{ padding: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                {[
+                  { key: "meditation", icon: "self_improvement", label: "মেডিটেশন ১০ মিনিট", done: !!day.habit.meditation },
+                  { key: "walking", icon: "directions_walk", label: "হাঁটা", done: (day.habit.walkingSteps || 0) > 0 },
+                  { key: "water", icon: "water_drop", label: "পানি ট্র্যাকার", done: (day.habit.waterGlasses || 0) > 0 },
+                  { key: "noScreen", icon: "phonelink_off", label: "নো-স্ক্রিন টাইম", done: (day.habit.noScreenCount || 0) > 0 },
+                  { key: "ghorGochano", icon: "cleaning_services", label: "ঘর গোছানো", done: (day.habit.ghorGochano || 0) > 0 },
+                  { key: "sleep", icon: "bedtime", label: "ঘুম ট্র্যাকার", done: day.habit.sleepSessions.length > 0 },
+                  { key: "weight", icon: "monitor_weight", label: "ওজন ট্র্যাকার", done: !!day.habit.weight },
+                  { key: "noText", icon: "block", label: "নো টেক্সট ফার্স্ট", done: noTextPeople.length > 0 && noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") },
+                ].map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => setHabitSubOpen(item.key)}
+                    title={item.label}
+                    style={{
+                      width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                      background: item.done ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                    }}
+                  >
+                    <Icon name={item.icon} size={22} color={item.done ? "#FBF6EA" : "#6B7A4F"} />
+                  </button>
+                ))}
+
+                {simpleHabitItems.map(item => (
+                  <div key={(item.isCustom ? "c" : "f") + item.id} style={{ position: "relative" }}>
+                    <button
+                      onClick={() => item.isCustom ? toggleCustomHabit(item.id) : toggleHabit(item.id)}
+                      title={item.label}
+                      style={{
+                        width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                        background: item.done ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                      }}
+                    >
+                      {item.isCustom ? (
+                        <span style={{ fontSize: 22 }}>{HABIT_CATEGORIES.find(c => c.key === item.category)?.emoji}</span>
+                      ) : (
+                        <Icon name="task_alt" size={22} color={item.done ? "#FBF6EA" : "#6B7A4F"} />
+                      )}
+                    </button>
+                    {item.isCustom && (
+                      <button
+                        onClick={() => removeCustomHabit(item.id)}
+                        title="মুছে ফেলুন"
+                        style={{
+                          position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%",
+                          border: "none", background: "#A14545", color: "#FBF6EA", padding: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                        }}
+                      >
+                        <Icon name="close" size={12} color="#FBF6EA" />
+                      </button>
+                    )}
                   </div>
-                  <span style={{ flex: 1, fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
-                  {item.value && <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'IBM Plex Mono'", color: "#6B7A4F", whiteSpace: "nowrap" }}>{item.value}</span>}
-                  <Icon name="chevron_left" size={18} color="#8A7F68" />
+                ))}
+
+                <button
+                  onClick={() => setShowAddHabitInput(v => !v)}
+                  title="নতুন অভ্যাস যোগ করুন"
+                  style={{
+                    width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "1.5px dashed " + (darkMode ? "#31402F" : "#C6BB9C"),
+                    background: darkMode ? "#1F2A22" : "#FBF6EA",
+                  }}
+                >
+                  <Icon name="add" size={22} color="#6B7A4F" />
+                </button>
+              </div>
+
+              {showAddHabitInput && (
+                <div className="add-row" style={{ marginTop: 12 }}>
+                  <input
+                    placeholder="নতুন অভ্যাসের নাম লিখুন"
+                    value={customHabitName}
+                    onChange={e => setCustomHabitName(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && customHabitName.trim() && (addCustomHabit(customHabitName, "other"), setCustomHabitName(""), setShowAddHabitInput(false))}
+                  />
+                  <button className="icon-btn" onClick={() => { if (customHabitName.trim()) { addCustomHabit(customHabitName, "other"); setCustomHabitName(""); setShowAddHabitInput(false); } }}>
+                    <Icon name="add" size={18} />
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           ) : (
             <div className="subblock sleep-tracker">
@@ -6374,61 +6447,6 @@ function DailyLifeManagement() {
             </div>
           )}
 
-          <div className="section-label">চলমান অভ্যাস</div>
-          {pendingHabitItems.length === 0 && <div className="goal-ok">সবগুলো সম্পন্ন! 🎉</div>}
-          {pendingHabitItems.map(item => {
-            const streakKey = item.isCustom ? "custom:" + item.label : "fixed:" + item.id;
-            const itemStreak = habitItemStreaks[streakKey] || 0;
-            const untickKey = item.isCustom ? "c" + item.id : item.id;
-            return (
-              <div className="amoli-row habit-anim" key={(item.isCustom ? "c" : "f") + item.id}>
-                <span style={{ fontWeight: 600, fontSize: 14, flex: 1 }}>
-                  {item.isCustom && <span style={{ marginRight: 6 }}>{HABIT_CATEGORIES.find(c => c.key === item.category)?.emoji}</span>}
-                  {item.label}
-                  {itemStreak > 0 && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: "#B5651D" }}>🔥 {itemStreak} দিন</span>}
-                </span>
-                <UntickControl count={(day.habit.unticks || {})[untickKey]} onInc={() => adjustUntick(untickKey, 1)} onDec={() => adjustUntick(untickKey, -1)} />
-                <div className="amoli-check" style={{ marginLeft: 8 }} onClick={() => item.isCustom ? toggleCustomHabit(item.id) : toggleHabit(item.id)}></div>
-                {item.isCustom && <button className="icon-btn ghost" style={{ marginLeft: 8 }} onClick={() => removeCustomHabit(item.id)}><Icon name="delete" size={15} /></button>}
-              </div>
-            );
-          })}
-
-          {completedHabitItems.length > 0 && (
-            <>
-              <div className="section-label" style={{ color: "#6B7A4F" }}>সম্পন্ন অভ্যাস ✓</div>
-              {completedHabitItems.map(item => {
-                const streakKey = item.isCustom ? "custom:" + item.label : "fixed:" + item.id;
-                const itemStreak = habitItemStreaks[streakKey] || 0;
-                const untickKey = item.isCustom ? "c" + item.id : item.id;
-                return (
-                  <div className="amoli-row habit-anim done" key={(item.isCustom ? "c" : "f") + item.id}>
-                    <span style={{ fontWeight: 600, fontSize: 14, flex: 1, textDecoration: "line-through", color: "#8A7F68" }}>
-                      {item.isCustom && <span style={{ marginRight: 6 }}>{HABIT_CATEGORIES.find(c => c.key === item.category)?.emoji}</span>}
-                      {item.label}
-                      {itemStreak > 0 && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: "#B5651D", textDecoration: "none" }}>🔥 {itemStreak} দিন</span>}
-                    </span>
-                    <UntickControl count={(day.habit.unticks || {})[untickKey]} onInc={() => adjustUntick(untickKey, 1)} onDec={() => adjustUntick(untickKey, -1)} />
-                    <div className="amoli-check" style={{ background: "#6B7A4F", borderColor: "#6B7A4F", marginLeft: 8 }} onClick={() => item.isCustom ? toggleCustomHabit(item.id) : toggleHabit(item.id)}>
-                      <Icon name="check" size={16} color="#FBF6EA" />
-                    </div>
-                    {item.isCustom && <button className="icon-btn ghost" style={{ marginLeft: 8 }} onClick={() => removeCustomHabit(item.id)}><Icon name="delete" size={15} /></button>}
-                  </div>
-                );
-              })}
-            </>
-          )}
-
-          <div className="section-label">নতুন অভ্যাস যোগ করুন</div>
-          <div className="chip-grid" style={{ marginBottom: 8 }}>
-            {HABIT_CATEGORIES.map(c => (
-              <Chip key={c.key} active={customHabitCategory === c.key} color="#6B7A4F" onClick={() => setCustomHabitCategory(c.key)}>{c.emoji} {c.label}</Chip>
-            ))}
-          </div>
-          <div className="add-row">
-            <input placeholder="নতুন অভ্যাসের নাম লিখুন" value={customHabitName} onChange={e => setCustomHabitName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addCustomHabit(customHabitName, customHabitCategory), setCustomHabitName(""))} />
-            <button className="icon-btn" onClick={() => { addCustomHabit(customHabitName, customHabitCategory); setCustomHabitName(""); }}><Icon name="add" size={18} /></button>
-          </div>
         </Card>
 
         <Card id="texting" hidden={hiddenCards.includes("texting")} iconName="chat_bubble" title="সেলফ-ডিসিপ্লিন ও শান্তি" subtitle="আজ নিজের শান্তি নষ্ট করোনি তো?" accent="#7A5C8A"
