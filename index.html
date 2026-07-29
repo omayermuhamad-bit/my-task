@@ -613,6 +613,125 @@ const AMOLI_SURAHS = [
 const WEEKLY_AMOLI_SURAHS = [
   { key: "Kahf", label: "সূরা আল-কাহফ", weekday: 5 }, // 5 = Friday
 ];
+const PREVIOUS_SURAHS = [
+  { number: 32, label: "সূরা আস-সাজদাহ", status: "B", pages: 3, para: 21 },
+  { number: 36, label: "সূরা ইয়াসীন", status: "G", pages: 6, para: 22 },
+  { number: 37, label: "সূরা আস-সাফফাত", status: "N", pages: 7, para: 23 },
+  { number: 38, label: "সূরা সোয়াদ", status: "N", pages: 6, para: 23 },
+  { number: 39, label: "সূরা আয-যুমার", status: "N", pages: 10, para: 23 },
+  { number: 40, label: "সূরা আল-মু'মিন", status: "B", pages: 10, para: 24 },
+  { number: 41, label: "সূরা হা-মীম আস-সাজদাহ", status: "N", pages: 6, para: 24 },
+  { number: 42, label: "সূরা আশ-শূরা", status: "N", pages: 7, para: 25 },
+  { number: 43, label: "সূরা আয-যুখরুফ", status: "B", pages: 7, para: 25 },
+  { number: 44, label: "সূরা আদ-দুখান", status: "N", pages: 3, para: 25 },
+  { number: 45, label: "সূরা আল-জাসিয়াহ", status: "B", pages: 4, para: 25 },
+  { number: 46, label: "সূরা আল-আহকাফ", status: "N", pages: 5, para: 26 },
+  { number: 47, label: "সূরা মুহাম্মাদ", status: "N", pages: 4, para: 26 },
+  { number: 48, label: "সূরা আল-ফাতহ", status: "B", pages: 5, para: 26 },
+  { number: 49, label: "সূরা আল-হুজুরাত", status: "B", pages: 3, para: 26 },
+  { number: 50, label: "সূরা ক্বাফ", status: "B", pages: 3, para: 26 },
+  { number: 51, label: "সূরা আয-যারিয়াত", status: "B", pages: 4, para: 26 },
+  { number: 52, label: "সূরা আত-তূর", status: "N", pages: 3, para: 27 },
+  { number: 53, label: "সূরা আন-নাজম", status: "N", pages: 3, para: 27 },
+  { number: 54, label: "সূরা আল-ক্বামার", status: "B", pages: 4, para: 27 },
+  { number: 55, label: "সূরা আর-রাহমান", status: "N", pages: 4, para: 27 },
+  { number: 56, label: "সূরা আল-ওয়াক্বিয়াহ", status: "G", pages: 4, para: 27 },
+  { number: 57, label: "সূরা আল-হাদীদ", status: "B", pages: 5, para: 27 },
+  { number: 58, label: "সূরা আল-মুজাদিলাহ", status: "N", pages: 4, para: 28 },
+  { number: 59, label: "সূরা আল-হাশর", status: "N", pages: 4, para: 28 },
+  { number: 60, label: "সূরা আল-মুমতাহিনাহ", status: "B", pages: 3, para: 28 },
+  { number: 61, label: "সূরা আস-সাফ", status: "B", pages: 2, para: 28 },
+  { number: 62, label: "সূরা আল-জুমু'আহ", status: "N", pages: 2, para: 28 },
+  { number: 63, label: "সূরা আল-মুনাফিকুন", status: "B", pages: 2, para: 28 },
+  { number: 64, label: "সূরা আত-তাগাবুন", status: "B", pages: 2, para: 28 },
+  { number: 65, label: "সূরা আত-তালাক", status: "B", pages: 2, para: 28 },
+  { number: 66, label: "সূরা আত-তাহরীম", status: "N", pages: 2, para: 28 },
+  { number: 67, label: "সূরা আল-মুলক", status: "G", pages: 3, para: 29 },
+  { number: 68, label: "সূরা আল-কালাম", status: "G", pages: 3, para: 29 },
+  { number: 69, label: "সূরা আল-হাক্কাহ", status: "G", pages: 3, para: 29 },
+  { number: 70, label: "সূরা আল-মা'আরিজ", status: "G", pages: 3, para: 29 },
+  { number: 71, label: "সূরা নূহ", status: "G", pages: 2, para: 29 },
+  { number: 72, label: "সূরা আল-জিন", status: "N", pages: 2, para: 29 },
+  { number: 73, label: "সূরা আল-মুজ্জাম্মিল", status: "N", pages: 2, para: 29 },
+  { number: 74, label: "সূরা আল-মুদ্দাসসির", status: "B", pages: 3, para: 29 },
+  { number: 75, label: "সূরা আল-কিয়ামাহ", status: "N", pages: 2, para: 29 },
+  { number: 76, label: "সূরা আদ-দাহর", status: "N", pages: 3, para: 29 },
+  { number: 77, label: "সূরা আল-মুরসালাত", status: "B", pages: 2, para: 29 },
+  { number: 78, label: "সূরা আন-নাবা", status: "N", pages: 2, para: 30 },
+  { number: 79, label: "সূরা আন-নাযিয়াত", status: "G", pages: 2, para: 30 },
+  { number: 80, label: "সূরা আবাসা", status: "N", pages: 1, para: 30 },
+  { number: 81, label: "সূরা আত-তাকভীর", status: "N", pages: 1, para: 30 },
+  { number: 82, label: "সূরা আল-ইনফিতার", status: "N", pages: 1, para: 30 },
+  { number: 83, label: "সূরা আল-মুতাফফিফিন", status: "N", pages: 3, para: 30 },
+  { number: 84, label: "সূরা আল-ইনশিকাক", status: "N", pages: 1, para: 30 },
+  { number: 85, label: "সূরা আল-বুরুজ", status: "G", pages: 1, para: 30 },
+  { number: 86, label: "সূরা আত-তারিক", status: "G", pages: 1, para: 30 },
+  { number: 87, label: "সূরা আল-আ'লা", status: "G", pages: 2, para: 30 },
+  { number: 88, label: "সূরা আল-গাশিয়াহ", status: "G", pages: 1, para: 30 },
+  { number: 89, label: "সূরা আল-ফাজর", status: "N", pages: 2, para: 30 },
+  { number: 90, label: "সূরা আল-বালাদ", status: "B", pages: 1, para: 30 },
+  { number: 91, label: "সূরা আশ-শামস", status: "N", pages: 1, para: 30 },
+  { number: 92, label: "সূরা আল-লায়ল", status: "N", pages: 2, para: 30 },
+  { number: 93, label: "সূরা আদ-দুহা", status: "G", pages: 1, para: 30 },
+  { number: 94, label: "সূরা আল-ইনশিরাহ", status: "N", pages: 1, para: 30 },
+  { number: 95, label: "সূরা আত-তীন", status: "G", pages: 1, para: 30 },
+  { number: 96, label: "সূরা আল-আলাক", status: "N", pages: 1, para: 30 },
+  { number: 97, label: "সূরা আল-ক্বাদর", status: "G", pages: 1, para: 30 },
+  { number: 98, label: "সূরা আল-বাইয়্যিনাহ", status: "N", pages: 2, para: 30 },
+  { number: 99, label: "সূরা আয-যিলযাল", status: "G", pages: 1, para: 30 },
+  { number: 100, label: "সূরা আল-আদিয়াত", status: "G", pages: 2, para: 30 },
+  { number: 101, label: "সূরা আল-কারিয়াহ", status: "G", pages: 1, para: 30 },
+  { number: 102, label: "সূরা আত-তাকাসুর", status: "G", pages: 1, para: 30 },
+  { number: 103, label: "সূরা আল-আসর", status: "G", pages: 1, para: 30 },
+  { number: 104, label: "সূরা আল-হুমাযাহ", status: "G", pages: 1, para: 30 },
+];
+const SURAH_STATUS_META = {
+  N: { label: "Normal", color: "#8A7F68", bg: "#F1E9D6" },
+  G: { label: "Good", color: "#2E7D4F", bg: "#DCEFE2" },
+  B: { label: "Bad", color: "#A14545", bg: "#F5DCDC" },
+};
+const SURAH_STATUS_CYCLE = ["N", "G", "B"];
+// সূরা-সংখ্যা না গুনে পৃষ্ঠা-সংখ্যা গুনে প্ল্যান করা হয়, যাতে প্রতিদিনের রিভিশনের বোঝা (পৃষ্ঠা হিসেবে) সমান/ব্যালান্সড থাকে —
+// নাহলে কোনোদিন ২টা ছোট সূরা (২-৩ পৃষ্ঠা) আবার কোনোদিন ২টা বড় সূরা (৯-১০ পৃষ্ঠা) পড়ে গিয়ে রুটিন এলোমেলো হয়ে যেত।
+// সপ্তাহে ৫ দিন (শনি-বৃহস্পতি) নিয়মিত রুটিন, আর ২ দিন (শুক্র, রবি) আলাদা — Bad কমিয়ে Good-এ বেশি সময় দেওয়া।
+// প্রতিদিন একটাই পারা ধরে রুটিন বানানো হয় (পারা মিক্স হয়না) — পারাগুলো ঘুরে ঘুরে আসে, যাতে সবগুলো পারা কভার হয়।
+const SURAH_REVISION_WEEKDAY_TARGET = { B: 2, N: 5, G: 0 };  // শনি, সোম, মঙ্গল, বুধ, বৃহস্পতি
+const SURAH_REVISION_SPECIAL_TARGET = { B: 1, N: 0, G: 10 }; // শুক্র, রবি
+const SPECIAL_REVISION_WEEKDAYS = [0, 5]; // 0 = রবিবার, 5 = শুক্রবার
+const ALL_PARAS = Array.from(new Set(PREVIOUS_SURAHS.map(s => s.para))).sort((a, b) => a - b);
+function computeSurahRevisionPlan(dateStr, statusMap) {
+  const dayIndex = Math.floor(new Date(dateStr + "T00:00:00").getTime() / 86400000);
+  const weekday = new Date(dateStr + "T00:00:00").getDay();
+  const pageTarget = SPECIAL_REVISION_WEEKDAYS.includes(weekday) ? SURAH_REVISION_SPECIAL_TARGET : SURAH_REVISION_WEEKDAY_TARGET;
+  const todayPara = ALL_PARAS[dayIndex % ALL_PARAS.length];
+  const paraSurahs = PREVIOUS_SURAHS.filter(s => s.para === todayPara);
+  const byStatus = { B: [], N: [], G: [] };
+  paraSurahs.forEach(s => {
+    const st = (statusMap && statusMap[s.number]) || s.status;
+    (byStatus[st] || byStatus.N).push(s);
+  });
+  const pickByPages = (list, target) => {
+    if (!list.length || target <= 0) return [];
+    const n = list.length;
+    const start = dayIndex % n;
+    const result = [];
+    let pageSum = 0;
+    let i = 0;
+    while (pageSum < target && i < n) {
+      const surah = list[(start + i) % n];
+      result.push(surah);
+      pageSum += surah.pages;
+      i++;
+    }
+    return result;
+  };
+  return {
+    para: todayPara,
+    B: pickByPages(byStatus.B, pageTarget.B),
+    N: pickByPages(byStatus.N, pageTarget.N),
+    G: pickByPages(byStatus.G, pageTarget.G),
+  };
+}
 const ZIKIR_LIST = [
   { key: "durud", label: "দুরুদ শরীফ" },
   { key: "istegfar", label: "ইস্তেগফার" },
@@ -950,7 +1069,7 @@ function emptyDay() {
     habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: false, walkingSteps: "", lustControl: false, noTextFirst: false, noTextStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
     quran: {
       reading: { pages: "", surah: "" },
-      revision: { pages: "", surah: "" },
+      revision: { fix: { pages: "", surah: "" }, memorize: { pages: "", surah: "" } },
       amoli: { Mulk: false, Yasin: false, Waqiah: false, Kahf: false },
     },
     study: { studied: { topics: "", hours: "", topicName: "" }, lectures: { count: "", hours: "", lectureName: "" }, pomodoroCount: 0, promoterMinutes: 0, subjects: {} },
@@ -997,7 +1116,17 @@ function mergeDay(loaded) {
     })(),
     quran: {
       reading: { ...base.quran.reading, ...(loaded?.quran?.reading || {}) },
-      revision: { ...base.quran.revision, ...(loaded?.quran?.revision || {}) },
+      revision: (() => {
+        const r = loaded?.quran?.revision;
+        // Legacy flat format { pages, surah } -> migrate into "memorize"
+        if (r && (r.pages !== undefined || r.surah !== undefined) && !r.fix && !r.memorize) {
+          return { fix: { ...base.quran.revision.fix }, memorize: { ...base.quran.revision.memorize, pages: r.pages || "", surah: r.surah || "" } };
+        }
+        return {
+          fix: { ...base.quran.revision.fix, ...(r?.fix || {}) },
+          memorize: { ...base.quran.revision.memorize, ...(r?.memorize || {}) },
+        };
+      })(),
       amoli: { ...base.quran.amoli, ...(loaded?.quran?.amoli || {}) },
     },
     study: {
@@ -1020,7 +1149,7 @@ function goalsUnfinished(day) {
   if (prayersDone < 5) goals.push("নামাজ");
   if (!day.zikir.durud && !day.zikir.istegfar && !day.zikir.tasbihFatemi && !(day.zikir.custom && day.zikir.custom.length > 0)) goals.push("যিকির");
   const q = day.quran;
-  const quranDone = q.reading.pages || q.reading.surah || q.revision.pages || q.revision.surah || q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf;
+  const quranDone = q.reading.pages || q.reading.surah || q.revision.fix.pages || q.revision.fix.surah || q.revision.memorize.pages || q.revision.memorize.surah || q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf;
   if (!quranDone) goals.push("কুরআন");
   const studySubjectHours = Object.values(day.study.subjects || {}).some(v => parseFloat(v) > 0);
   const studyDone = day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || studySubjectHours || (parseFloat(day.study.promoterMinutes) > 0);
@@ -1037,7 +1166,7 @@ function dayCompletionScore(day, contacts, noTextPeople) {
   ratios.push(PRAYER_ORDER.filter(p => !!day.prayers[p]?.status).length / PRAYER_ORDER.length);
   ratios.push([day.zikir.durud, day.zikir.istegfar, day.zikir.tasbihFatemi].filter(Boolean).length / 3);
   const q = day.quran;
-  ratios.push([!!(q.reading.pages || q.reading.surah), !!(q.revision.pages || q.revision.surah), !!(q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf)].filter(Boolean).length / 3);
+  ratios.push([!!(q.reading.pages || q.reading.surah), !!(q.revision.fix.pages || q.revision.fix.surah || q.revision.memorize.pages || q.revision.memorize.surah), !!(q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf)].filter(Boolean).length / 3);
   const s = day.study;
   ratios.push(((s.studied.topics || s.studied.hours || s.studied.topicName ? 0.5 : 0) + (s.lectures.count || s.lectures.hours || s.lectures.lectureName ? 0.5 : 0)));
   ratios.push((parseFloat(day.exercise.quickSessionMinutes) > 0) ? 1 : Math.min(1, Object.values(day.exercise.checklist).filter(v => v).length / 6));
@@ -1063,7 +1192,7 @@ function isTaskFullyDone(taskId, day, contacts, noTextPeople) {
     case "quran": {
       const q = day.quran;
       const reading = !!(q.reading.pages || q.reading.surah);
-      const revision = !!(q.revision.pages || q.revision.surah);
+      const revision = !!(q.revision.fix.pages || q.revision.fix.surah || q.revision.memorize.pages || q.revision.memorize.surah);
       const amoli = !!(q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf);
       return reading && revision && amoli;
     }
@@ -1768,8 +1897,9 @@ function pointsQuran(rec) {
   if (!rec || !rec.quran) return 0;
   const qReadPages = parseFloat(rec.quran.reading && rec.quran.reading.pages) || 0;
   const readPts = qReadPages >= 5 ? 2.5 + (qReadPages - 5) * 1.25 : 0;
-  const qRevPages = parseFloat(rec.quran.revision && rec.quran.revision.pages) || 0;
-  const revPts = qRevPages * 1.25;
+  const qRevFixPages = parseFloat(rec.quran.revision && rec.quran.revision.fix && rec.quran.revision.fix.pages) || 0;
+  const qRevMemPages = parseFloat(rec.quran.revision && rec.quran.revision.memorize && rec.quran.revision.memorize.pages) || 0;
+  const revPts = (qRevFixPages + qRevMemPages) * 1.25;
   const amoliPts = rec.quran.amoli ? Object.values(rec.quran.amoli).filter(Boolean).length * 1.25 : 0;
   return readPts + revPts + amoliPts;
 }
@@ -3976,7 +4106,8 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
       <div className="pr-section">
         <h3>কুরআন</h3>
         <div className="pr-row"><b>তিলাওয়াত:</b> {q.reading.pages ? q.reading.pages + " পৃষ্ঠা" : "—"} {q.reading.surah ? "(" + q.reading.surah + ")" : ""}</div>
-        <div className="pr-row"><b>রিভিশন:</b> {q.revision.pages ? q.revision.pages + " পৃষ্ঠা" : "—"} {q.revision.surah ? "(" + q.revision.surah + ")" : ""}</div>
+        <div className="pr-row"><b>রিভিশন (আগের সূরা ঠিক করা):</b> {q.revision.fix.pages ? q.revision.fix.pages + " পৃষ্ঠা" : "—"} {q.revision.fix.surah ? "(" + q.revision.fix.surah + ")" : ""}</div>
+        <div className="pr-row"><b>রিভিশন (নতুন সূরা মুখস্ত):</b> {q.revision.memorize.pages ? q.revision.memorize.pages + " পৃষ্ঠা" : "—"} {q.revision.memorize.surah ? "(" + q.revision.memorize.surah + ")" : ""}</div>
         <div className="pr-row"><b>আমলি সূরা:</b> {AMOLI_SURAHS.concat(new Date(date + "T00:00:00").getDay() === 5 ? WEEKLY_AMOLI_SURAHS : []).filter(s => q.amoli[s.key]).map(s => s.label).join(", ") || "—"}</div>
       </div>
 
@@ -4261,6 +4392,7 @@ function DailyLifeManagement() {
   const [studySubOpen, setStudySubOpen] = useState(null);
   const [zikirSubOpen, setZikirSubOpen] = useState(null);
   const [quranSubOpen, setQuranSubOpen] = useState(null);
+  const [revisionSubOpen, setRevisionSubOpen] = useState(null);
   const [planSubOpen, setPlanSubOpen] = useState(null);
   const [habitSubOpen, setHabitSubOpen] = useState(null);
   const [pinUnlocked, setPinUnlocked] = useState(false);
@@ -4499,11 +4631,22 @@ function DailyLifeManagement() {
   const [noTextPeople, setNoTextPeople] = useState([]);
   const [customTasks, setCustomTasks] = useState([]);
   const [expanded, setExpanded] = useState(null);
+  const prevExpandedRef = useRef(null);
   useEffect(() => {
     if (expanded !== "prayer") setPrayerSubOpen(null);
     if (expanded !== "study") setStudySubOpen(null);
     if (expanded !== "zikir") setZikirSubOpen(null);
-    if (expanded !== "quran") setQuranSubOpen(null);
+    if (expanded !== "quran") {
+      setQuranSubOpen(null);
+      setRevisionSubOpen(null);
+    } else if (prevExpandedRef.current !== "quran") {
+      // কুরআন কার্ড প্রথমবার খোলার সাথে সাথে সরাসরি আজকের রিভিশন রুটিন দেখাও
+      setQuranSubOpen("revision");
+      setRevisionSubOpen("routine");
+    } else if (quranSubOpen !== "revision") {
+      setRevisionSubOpen(null);
+    }
+    prevExpandedRef.current = expanded;
     if (expanded !== "plan") setPlanSubOpen(null);
     if (expanded !== "habit") setHabitSubOpen(null);
     if (expanded !== "accounts") {
@@ -4514,7 +4657,7 @@ function DailyLifeManagement() {
       setDebtExpanded(false);
       setPieChartExpanded(false);
     }
-  }, [expanded]);
+  }, [expanded, quranSubOpen]);
   const [newContact, setNewContact] = useState("");
   const [debtDraft, setDebtDraft] = useState({ name: "", amount: "", direction: "owed_to_me", note: "" });
   const [officeExpanded, setOfficeExpanded] = useState(false);
@@ -4707,6 +4850,25 @@ function DailyLifeManagement() {
   const setQazaCounts = (next) => {
     setQazaCountsState(next);
     try { window.localStorage.setItem(STORAGE_PREFIX + "qazaCounts", JSON.stringify(next)); } catch (e) {}
+  };
+  const [surahStatus, setSurahStatusState] = useState(() => {
+    const def = {};
+    PREVIOUS_SURAHS.forEach(s => { def[s.number] = s.status; });
+    try {
+      const raw = window.localStorage.getItem(STORAGE_PREFIX + "surahStatus");
+      const saved = raw ? JSON.parse(raw) : null;
+      return saved && typeof saved === "object" ? { ...def, ...saved } : def;
+    } catch (e) { return def; }
+  });
+  const setSurahStatus = (next) => {
+    setSurahStatusState(next);
+    try { window.localStorage.setItem(STORAGE_PREFIX + "surahStatus", JSON.stringify(next)); } catch (e) {}
+  };
+  const cycleSurahStatus = (number) => {
+    const current = surahStatus[number] || "N";
+    const idx = SURAH_STATUS_CYCLE.indexOf(current);
+    const next = SURAH_STATUS_CYCLE[(idx + 1) % SURAH_STATUS_CYCLE.length];
+    setSurahStatus({ ...surahStatus, [number]: next });
   };
   const adjustQaza = (name, delta) => {
     setQazaCounts({ ...qazaCounts, [name]: Math.max(0, (qazaCounts[name] || 0) + delta) });
@@ -5074,6 +5236,7 @@ function DailyLifeManagement() {
   const removeNafl = (id) => { if (!window.confirm("এই নফল নামাজের এন্ট্রি মুছে ফেলতে চান?")) return; updateDay(prev => ({ ...prev, prayers: { ...prev.prayers, nafl: prev.prayers.nafl.filter(n => n.id !== id) } })); };
 
   const setQuran = (kind, field, value) => updateDay(prev => ({ ...prev, quran: { ...prev.quran, [kind]: { ...prev.quran[kind], [field]: value } } }));
+  const setQuranRevision = (subKind, field, value) => updateDay(prev => ({ ...prev, quran: { ...prev.quran, revision: { ...prev.quran.revision, [subKind]: { ...prev.quran.revision[subKind], [field]: value } } } }));
   const toggleAmoli = (key) => updateDay(prev => ({ ...prev, quran: { ...prev.quran, amoli: { ...prev.quran.amoli, [key]: !prev.quran.amoli[key] } } }));
 
   const setStudy = (kind, field, value) => updateDay(prev => ({ ...prev, study: { ...prev.study, [kind]: { ...prev.study[kind], [field]: value } } }));
@@ -5262,7 +5425,7 @@ function DailyLifeManagement() {
   const habitDoneCount = habitFixedDone + habitCustomDone;
   const habitTotal = 10 + day.habit.custom.length;
   const habitBadge = habitDoneCount ? habitDoneCount + "/" + habitTotal : null;
-  const quranBadge = (day.quran.reading.pages || day.quran.reading.surah || day.quran.revision.pages || day.quran.revision.surah || day.quran.amoli.Mulk || day.quran.amoli.Yasin || day.quran.amoli.Waqiah) ? "লগ হয়েছে" : null;
+  const quranBadge = (day.quran.reading.pages || day.quran.reading.surah || day.quran.revision.fix.pages || day.quran.revision.fix.surah || day.quran.revision.memorize.pages || day.quran.revision.memorize.surah || day.quran.amoli.Mulk || day.quran.amoli.Yasin || day.quran.amoli.Waqiah) ? "লগ হয়েছে" : null;
   const routineDayIndex = new Date(date + "T00:00:00").getDay();
   const routineToday = DAY_SUBJECTS[routineDayIndex];
   const todaySubjects = routineToday ? routineToday.subjects : [];
@@ -5305,6 +5468,7 @@ function DailyLifeManagement() {
   const prayerPoints = pointsPrayer(day);
   const zikirPoints = pointsZikir(day);
   const quranPoints = pointsQuran(day);
+  const surahRevisionPlan = computeSurahRevisionPlan(date, surahStatus);
   const studyPoints = pointsStudy(day);
   const exercisePoints = pointsExercise(day);
   const habitPoints = pointsHabit(day);
@@ -5324,7 +5488,7 @@ function DailyLifeManagement() {
     if (!(parseFloat(day.zikir[z.key]) > 0)) pendingChecklist.push({ key: "zikir_" + z.key, label: z.label, sectionId: "zikir" });
   });
   if (!(day.quran.reading.pages || day.quran.reading.surah)) pendingChecklist.push({ key: "quran_reading", label: "কুরআন তিলাওয়াত", sectionId: "quran" });
-  if (!(day.quran.revision.pages || day.quran.revision.surah)) pendingChecklist.push({ key: "quran_revision", label: "কুরআন রিভিশন", sectionId: "quran" });
+  if (!(day.quran.revision.fix.pages || day.quran.revision.fix.surah || day.quran.revision.memorize.pages || day.quran.revision.memorize.surah)) pendingChecklist.push({ key: "quran_revision", label: "কুরআন রিভিশন", sectionId: "quran" });
   if (!(day.study.studied.topics || day.study.studied.hours || day.study.studied.topicName)) pendingChecklist.push({ key: "study_studied", label: "পড়াশোনা (স্টাডি)", sectionId: "study" });
   if (!(day.study.lectures.count || day.study.lectures.hours || day.study.lectures.lectureName)) pendingChecklist.push({ key: "study_lecture", label: "লেকচার", sectionId: "study" });
   todaySubjects.forEach(sub => {
@@ -5637,10 +5801,116 @@ function DailyLifeManagement() {
                 </div>
               )}
               {quranSubOpen === "revision" && (
-                <div className="field-row">
-                  <div className="field"><label>পৃষ্ঠা সংখ্যা</label><input type="number" min="0" value={day.quran.revision.pages} onChange={e => setQuran("revision", "pages", e.target.value)} placeholder="যেমন ৩" /></div>
-                  <div className="field"><label>সূরা</label><input value={day.quran.revision.surah} onChange={e => setQuran("revision", "surah", e.target.value)} placeholder="যেমন সূরা মুলক" /></div>
-                </div>
+                !revisionSubOpen ? (
+                  <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
+                    {[
+                      { key: "fix", label: "আগের সূরা ঠিক করুন" },
+                      { key: "memorize", label: "নতুন সূরা মুখস্ত করুন" },
+                      { key: "routine", label: "রিভিশন রুটিন (আজকের প্ল্যান)" },
+                    ].map((item, i, arr) => (
+                      <div
+                        key={item.key}
+                        onClick={() => setRevisionSubOpen(item.key)}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
+                      >
+                        <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
+                        <Icon name="chevron_left" size={18} color="#8A7F68" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="subblock">
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setRevisionSubOpen(null)}>
+                      <Icon name="arrow_back" size={18} color="#8A6A2F" />
+                      <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#8A6A2F" }}>
+                        {revisionSubOpen === "fix" ? "আগের সূরা ঠিক করুন" : revisionSubOpen === "memorize" ? "নতুন সূরা মুখস্ত করুন" : "রিভিশন রুটিন"}
+                      </span>
+                    </div>
+                    {(revisionSubOpen === "fix" || revisionSubOpen === "memorize") && (
+                      <div className="field-row">
+                        <div className="field"><label>পৃষ্ঠা সংখ্যা</label><input type="number" min="0" value={day.quran.revision[revisionSubOpen].pages} onChange={e => setQuranRevision(revisionSubOpen, "pages", e.target.value)} placeholder="যেমন ৩" /></div>
+                        {revisionSubOpen !== "fix" && (
+                          <div className="field"><label>সূরা</label><input value={day.quran.revision[revisionSubOpen].surah} onChange={e => setQuranRevision(revisionSubOpen, "surah", e.target.value)} placeholder="যেমন সূরা মুলক" /></div>
+                        )}
+                      </div>
+                    )}
+                    {revisionSubOpen === "fix" && (
+                      <>
+                        <div style={{ fontSize: 12, color: "#8A7F68", fontWeight: 600, margin: "2px 0 8px" }}>
+                          সূরা বাছাই করতে ট্যাপ করুন, অবস্থা (N/G/B) পরিবর্তন করতে ব্যাজে ট্যাপ করুন
+                        </div>
+                        <div style={{ maxHeight: 340, overflowY: "auto", border: "1px solid #E7DDC7", borderRadius: 12 }}>
+                          {PREVIOUS_SURAHS.map((s, i) => {
+                            const st = surahStatus[s.number] || s.status;
+                            const meta = SURAH_STATUS_META[st];
+                            const selected = day.quran.revision.fix.surah === s.label;
+                            return (
+                              <div
+                                key={s.number}
+                                onClick={() => { setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
+                                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 12px", borderBottom: i < PREVIOUS_SURAHS.length - 1 ? "1px solid #F0E9D6" : "none", background: selected ? "#F5EEDC" : "transparent", cursor: "pointer" }}
+                              >
+                                <span style={{ fontSize: 13.5, fontWeight: selected ? 700 : 500 }}>{s.number}. {s.label} <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 500 }}>({s.pages} পৃষ্ঠা, {s.para} নং পারা)</span></span>
+                                <span
+                                  onClick={(e) => { e.stopPropagation(); cycleSurahStatus(s.number); }}
+                                  style={{ fontSize: 11, fontWeight: 700, color: meta.color, background: meta.bg, borderRadius: 999, padding: "2px 9px", minWidth: 22, textAlign: "center", flexShrink: 0 }}
+                                >
+                                  {st}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                    {revisionSubOpen === "routine" && (
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#8A6A2F", borderRadius: 12, padding: "10px 14px", marginBottom: 10 }}>
+                          <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, color: "#FBF6EA" }}>আজকের পারা</span>
+                          <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, color: "#F5EEDC" }}>{surahRevisionPlan.para} নং পারা</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#8A7F68", fontWeight: 600, marginBottom: 12 }}>
+                          আজকের পুরো রিভিশন এই একটাই পারা থেকে — পারা মিক্স হবে না, প্রতিদিন পারা পাল্টে পাল্টে সবগুলো পারা কভার হবে। এর মধ্যে N/G/B অবস্থা অনুযায়ী পৃষ্ঠা সংখ্যা গুনে বাছাই করা হয়েছে, যাতে বোঝা সমান থাকে (Bad সূরা সবচেয়ে বেশি গুরুত্ব পাবে)
+                        </div>
+                        {[
+                          { key: "B", label: "🔴 সবচেয়ে জরুরি (Bad)" },
+                          { key: "N", label: "🟤 নিয়মিত (Normal)" },
+                          { key: "G", label: "🟢 মেইনটেন্যান্স (Good)" },
+                        ].map(group => {
+                          const list = surahRevisionPlan[group.key];
+                          const groupPages = list.reduce((sum, s) => sum + s.pages, 0);
+                          return list.length > 0 && (
+                            <div key={group.key} style={{ marginBottom: 14 }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                                <span style={{ fontSize: 12.5, fontWeight: 700, color: SURAH_STATUS_META[group.key].color }}>{group.label}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: "#8A7F68" }}>মোট {groupPages} পৃষ্ঠা</span>
+                              </div>
+                              {list.map(s => (
+                                <div
+                                  key={s.number}
+                                  onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
+                                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: 10, background: SURAH_STATUS_META[group.key].bg, marginBottom: 6, cursor: "pointer" }}
+                                >
+                                  <span style={{ fontSize: 13.5, fontWeight: 600 }}>{s.number}. {s.label}</span>
+                                  <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>{s.pages} পৃষ্ঠা</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                        {surahRevisionPlan.B.length === 0 && surahRevisionPlan.N.length === 0 && surahRevisionPlan.G.length === 0 && (
+                          <div className="empty-note">{surahRevisionPlan.para} নং পারায় আজকের টার্গেট অনুযায়ী কোনো সূরা পাওয়া যায়নি (এই পারায় হয়তো সেই অবস্থার সূরা নেই)</div>
+                        )}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 10, background: "#123A34", marginTop: 4 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#FBF6EA" }}>আজকের মোট রিভিশন</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#E0B868" }}>
+                            {["B", "N", "G"].reduce((sum, k) => sum + surahRevisionPlan[k].reduce((s2, s) => s2 + s.pages, 0), 0)} পৃষ্ঠা
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
               )}
               {quranSubOpen === "amoli" && (
                 <>
