@@ -28,8 +28,9 @@
   .date-nav button:hover { background:#EFE4CB; }
   .date-nav .label { font-family:'Fraunces',serif; font-size:15px; font-weight:600; padding:0 4px; white-space:nowrap; }
   .date-nav .today-btn { font-family:'Inter'; font-size:11px; font-weight:600; color:#C08A3E; border:1px solid #E1C99A; border-radius:999px; padding:4px 10px; width:auto; height:auto; }
-  .icon-toolbar { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:5px; margin:0 0 18px; }
-  .icon-toolbar button { background:#FBF6EA; border:1px solid #E7DDC7; cursor:pointer; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:999px; color:#123A34; flex-shrink:0; overflow:hidden; }
+  .icon-toolbar { display:flex; align-items:center; justify-content:center; flex-wrap:nowrap; gap:3px; margin:0 0 18px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .icon-toolbar::-webkit-scrollbar { display:none; }
+  .icon-toolbar button { background:#FBF6EA; border:1px solid #E7DDC7; cursor:pointer; display:flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:999px; color:#123A34; flex-shrink:0; overflow:hidden; }
   .icon-toolbar button:hover { background:#EFE4CB; }
   .mindful-btn { display:flex; align-items:center; gap:8px; background:#123A34; color:#FBF6EA; border:none; border-radius:14px; padding:12px 16px; font-weight:600; font-size:13.5px; cursor:pointer; margin-bottom:18px; width:100%; justify-content:center; }
   .mindful-btn:hover { background:#0D2C27; }
@@ -71,6 +72,15 @@
   .summary-icon { width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center; }
   .summary-value { font-family:'Fraunces',serif; font-weight:700; font-size:13.5px; color:#2B2A22; text-align:center; line-height:1.2; }
   .summary-label { font-size:10.5px; color:#8A7F68; font-weight:600; }
+  .hishab-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .hishab-tile { grid-column:span 1; display:flex; flex-direction:column; align-items:center; text-align:center; gap:3px; background:#F5EEDC; border:1.5px solid #E1D6B8; border-radius:14px; padding:10px 4px 8px; cursor:pointer; }
+  .hishab-tile:hover { background:#EFE4CB; }
+  .hishab-tile.active { border-color:#2F6B5E; }
+  .hishab-tile-icon { width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+  .hishab-tile-title { font-family:'Fraunces',serif; font-weight:600; font-size:12px; line-height:1.2; }
+  .hishab-tile-value { font-family:'IBM Plex Mono'; font-weight:700; font-size:11px; color:#2F6B5E; }
+  .hishab-tile-sub { font-size:9px; color:#8A7F68; font-weight:600; }
+  .hishab-tile-body { grid-column:1 / -1; background:#FBF6EA; border:1.5px solid #E1D6B8; border-radius:14px; padding:12px 10px 10px; }
   .task-card { background:#FBF6EA; border:1.5px solid #E7DDC7; border-radius:18px; margin-bottom:14px; overflow:hidden; transition:border-color .15s; }
   .task-card-head { width:100%; display:flex; align-items:center; gap:14px; padding:16px; background:none; border:none; cursor:pointer; text-align:right; }
   .task-card-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -310,6 +320,11 @@
   .dtt-root.dark .stat-box { background:#25302A; }
   .dtt-root.dark .stat-num { color:#E7E0CC; }
   .dtt-root.dark .stat-label { color:#8FA294; }
+  .dtt-root.dark .hishab-tile { background:#1F2A22; border-color:#31402F; }
+  .dtt-root.dark .hishab-tile:hover { background:#25302A; }
+  .dtt-root.dark .hishab-tile-title { color:#E7E0CC; }
+  .dtt-root.dark .hishab-tile-sub { color:#8FA294; }
+  .dtt-root.dark .hishab-tile-body { background:#1F2A22; border-color:#31402F; }
   .dtt-root.dark .modal-box { background:#1F2A22; }
   .dtt-root.dark .modal-header { color:#E7E0CC; }
   .dtt-root.dark .modal-box-page > .modal-header { background:#1F2A22; border-bottom-color:#33422F; }
@@ -765,8 +780,8 @@ const OFFICE_TRANSPORT_TYPES = [
   { key: "transport", label: "শুধু ট্রান্সপোর্ট" },
 ];
 const HABIT_LIST = [
-  { key: "lustControl", label: "নিজের নিয়ন্ত্রণ (Lust Control)" },
-  { key: "sadaqah", label: "সদকা/দান (ছোট হলেও)" },
+  { key: "lustControl", label: "নিজের নিয়ন্ত্রণ (Lust Control)", shortLabel: "নিয়ন্ত্রণ", icon: "shield" },
+  { key: "sadaqah", label: "সদকা/দান (ছোট হলেও)", shortLabel: "সদকা", icon: "volunteer_activism" },
 ];
 const HABIT_CATEGORIES = [
   { key: "study", emoji: "📚", label: "পড়ালেখা" },
@@ -844,14 +859,14 @@ const WORKOUT_PLANS = [
 ];
 
 const PLAN_SECTIONS = [
-  { key: "jobApps", label: "চাকরির আবেদন" },
-  { key: "paternalContacts", label: "বাবার দিকের আত্মীয়দের সাথে যোগাযোগ" },
-  { key: "maternalContacts", label: "মায়ের দিকের আত্মীয়দের সাথে যোগাযোগ" },
-  { key: "friendsContacted", label: "বন্ধুদের সাথে যোগাযোগ" },
-  { key: "selfPurchases", label: "এই মাসে নিজের জন্য কী কিনেছি" },
-  { key: "familyPurchases", label: "পরিবারের কারো জন্য কিছু কিনেছি কিনা" },
-  { key: "declutterItems", label: "অপ্রয়োজনীয় বিষয়/জিনিস পরিষ্কার (Declutter)" },
-  { key: "places", label: "ঘোরাঘুরি" },
+  { key: "jobApps", label: "চাকরির আবেদন", shortLabel: "চাকরির আবেদন", icon: "work" },
+  { key: "paternalContacts", label: "বাবার দিকের আত্মীয়দের সাথে যোগাযোগ", shortLabel: "বাবার আত্মীয়", icon: "family_restroom" },
+  { key: "maternalContacts", label: "মায়ের দিকের আত্মীয়দের সাথে যোগাযোগ", shortLabel: "মায়ের আত্মীয়", icon: "diversity_1" },
+  { key: "friendsContacted", label: "বন্ধুদের সাথে যোগাযোগ", shortLabel: "বন্ধু যোগাযোগ", icon: "groups" },
+  { key: "selfPurchases", label: "এই মাসে নিজের জন্য কী কিনেছি", shortLabel: "নিজের কেনাকাটা", icon: "shopping_bag" },
+  { key: "familyPurchases", label: "পরিবারের কারো জন্য কিছু কিনেছি কিনা", shortLabel: "পরিবারের কেনাকাটা", icon: "redeem" },
+  { key: "declutterItems", label: "অপ্রয়োজনীয় বিষয়/জিনিস পরিষ্কার (Declutter)", shortLabel: "ডিক্লাটার", icon: "delete_sweep" },
+  { key: "places", label: "ঘোরাঘুরি", shortLabel: "ঘোরাঘুরি", icon: "luggage" },
 ];
 
 /* ---------------- helpers ---------------- */
@@ -3508,7 +3523,7 @@ function NoteModal({ onClose }) {
   const [pinMsg, setPinMsg] = useState("");
   const [loadError, setLoadError] = useState("");
 
-  const [screen, setScreen] = useState("categories"); // "categories" | "list" | "edit" | "note"
+  const [screen, setScreen] = useState("categories"); // "categories" | "list" | "view" | "edit" | "note"
   const [activeCategory, setActiveCategory] = useState(null); // "gmail" | "fb" | "contacts" | "importantNote"
   const [activeId, setActiveId] = useState(null);
   const [blurred, setBlurred] = useState(true);
@@ -3516,6 +3531,7 @@ function NoteModal({ onClose }) {
   const [copiedField, setCopiedField] = useState(null);
   const [copiedRow, setCopiedRow] = useState(null);
   const [copiedNote, setCopiedNote] = useState(false);
+  const [noteEditing, setNoteEditing] = useState(false); // "note" screen: false = read-only view, true = editing
 
   // gmail/fb/other entry draft
   const [nameDraft, setNameDraft] = useState("");
@@ -3663,6 +3679,7 @@ function NoteModal({ onClose }) {
     if (key === "importantNote") {
       setNoteDraft(data.importantNote || "");
       setBlurred(!!(data.importantNote || "").trim());
+      setNoteEditing(false);
       setScreen("note");
     } else {
       setScreen("list");
@@ -3690,7 +3707,7 @@ function NoteModal({ onClose }) {
     }
     setVisiblePass({});
     setBlurred(true);
-    setScreen("edit");
+    setScreen("view");
   };
 
   const addNumberField = () => setNumbersDraft(list => [...list, { id: genId(), value: "" }]);
@@ -3758,7 +3775,7 @@ function NoteModal({ onClose }) {
       const nextList = activeId ? data[activeCategory].map(x => x.id === activeId ? entry : x) : [entry, ...data[activeCategory]];
       persistData({ ...data, [activeCategory]: nextList }, pin, salt, encrypted);
     }
-    setScreen("list");
+    setScreen(activeId ? "view" : "list");
   };
 
   const deleteEntry = (id) => {
@@ -3769,7 +3786,7 @@ function NoteModal({ onClose }) {
 
   const saveNote = () => {
     persistData({ ...data, importantNote: noteDraft }, pin, salt, encrypted);
-    setScreen("categories");
+    setNoteEditing(false);
   };
 
   if (loading) {
@@ -3808,9 +3825,14 @@ function NoteModal({ onClose }) {
   const catMeta = CATEGORIES.find(c => c.key === activeCategory);
   const headerTitle = screen === "categories" ? "প্রাইভেসি নোট"
     : screen === "list" ? (catMeta ? catMeta.label : "প্রাইভেসি নোট")
+    : screen === "view" ? (catMeta ? catMeta.label : "দেখুন")
     : screen === "note" ? "গুরুত্বপূর্ণ নোট"
     : (activeId ? "এডিট করুন" : "নতুন যোগ করুন");
-  const headerBack = screen === "list" ? backToCategories : screen === "edit" ? (() => setScreen("list")) : screen === "note" ? backToCategories : null;
+  const headerBack = screen === "list" ? backToCategories
+    : screen === "view" ? (() => setScreen("list"))
+    : screen === "edit" ? (() => setScreen(activeId ? "view" : "list"))
+    : screen === "note" ? backToCategories
+    : null;
 
   return (
     <Modal onClose={onClose} width={520} fullPage>
@@ -3933,6 +3955,42 @@ function NoteModal({ onClose }) {
         </>
       )}
 
+      {screen === "view" && activeCategory === "contacts" && (
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 6, background: blurred ? "#B5651D" : "#F1E9D6", color: blurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => setBlurred(b => !b)}
+            >
+              <Icon name={blurred ? "visibility_off" : "lock_open"} size={14} /> {blurred ? "ব্লার চালু আছে — দেখতে ট্যাপ করুন" : "প্রাইভেসি ব্লার"}
+            </button>
+          </div>
+          <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
+            <div className="field" style={{ marginBottom: 10 }}>
+              <label>কন্টাক্ট নাম</label>
+              <div style={{ fontSize: 15, fontWeight: 600, userSelect: "text" }}>{contactNameDraft || "নামহীন"}</div>
+            </div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#8A7F68", display: "block", marginBottom: 6 }}>ফোন নাম্বারসমূহ</label>
+            {numbersDraft.filter(n => (n.value || "").trim()).length === 0 ? (
+              <div className="empty-note" style={{ padding: "4px 0 10px" }}>কোনো নাম্বার নেই</div>
+            ) : numbersDraft.filter(n => (n.value || "").trim()).map(n => (
+              <div key={n.id} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
+                <div style={{ flex: 1, border: "1.5px solid #E1D6B8", background: "#FFFDF7", borderRadius: 8, padding: "6px 8px", fontSize: 13, userSelect: "text" }}>{n.value}</div>
+                <button className="icon-btn ghost" onClick={() => copyField(n.id, "num", n.value)} title="কপি করুন">
+                  <Icon name={copiedField === (n.id + ":num") ? "check" : "content_copy"} size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen("list")}>ফিরে যান</button>
+            <button className="btn-primary" style={{ flex: 1, justifyContent: "center", display: "flex", alignItems: "center", gap: 6 }} onClick={() => setScreen("edit")}>
+              <Icon name="edit" size={15} /> এডিট করুন
+            </button>
+          </div>
+        </>
+      )}
+
       {screen === "edit" && activeCategory === "contacts" && (
         <>
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
@@ -3969,8 +4027,56 @@ function NoteModal({ onClose }) {
             </button>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen("list")}>বাতিল করুন</button>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen(activeId ? "view" : "list")}>বাতিল করুন</button>
             <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveEntry}>সংরক্ষণ করুন</button>
+          </div>
+        </>
+      )}
+
+      {screen === "view" && (activeCategory === "gmail" || activeCategory === "fb" || activeCategory === "other") && (
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 6, background: blurred ? "#B5651D" : "#F1E9D6", color: blurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => setBlurred(b => !b)}
+            >
+              <Icon name={blurred ? "visibility_off" : "lock_open"} size={14} /> {blurred ? "ব্লার চালু আছে — দেখতে ট্যাপ করুন" : "প্রাইভেসি ব্লার"}
+            </button>
+          </div>
+          <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
+            {activeCategory === "other" && (
+              <div className="field" style={{ marginBottom: 10 }}>
+                <label>সাইটের নাম</label>
+                <div style={{ fontSize: 15, fontWeight: 600, userSelect: "text" }}>{siteDraft || "নামহীন সাইট"}</div>
+              </div>
+            )}
+            <div className="field" style={{ marginBottom: 10 }}>
+              <label>{activeCategory === "other" ? "ইউজারনেম/ইমেইল" : "অ্যাকাউন্ট নাম"}</label>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <div style={{ flex: 1, fontSize: 14, userSelect: "text", overflowWrap: "anywhere" }}>{nameDraft || "—"}</div>
+                <button className="icon-btn ghost" onClick={() => copyField("name", "name", nameDraft)} title="কপি করুন">
+                  <Icon name={copiedField === "name:name" ? "check" : "content_copy"} size={15} />
+                </button>
+              </div>
+            </div>
+            <div className="field" style={{ marginBottom: 10 }}>
+              <label>পাসওয়ার্ড</label>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <div style={{ flex: 1, fontSize: 14, userSelect: "text", overflowWrap: "anywhere" }}>{visiblePass.pass ? (passDraft || "—") : (passDraft ? "••••••••" : "—")}</div>
+                <button className="icon-btn ghost" onClick={() => setVisiblePass(v => ({ ...v, pass: !v.pass }))} title="দেখান/লুকান">
+                  <Icon name={visiblePass.pass ? "visibility_off" : "visibility"} size={15} />
+                </button>
+                <button className="icon-btn ghost" onClick={() => copyField("pass", "pass", passDraft)} title="কপি করুন">
+                  <Icon name={copiedField === "pass:pass" ? "check" : "content_copy"} size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen("list")}>ফিরে যান</button>
+            <button className="btn-primary" style={{ flex: 1, justifyContent: "center", display: "flex", alignItems: "center", gap: 6 }} onClick={() => setScreen("edit")}>
+              <Icon name="edit" size={15} /> এডিট করুন
+            </button>
           </div>
         </>
       )}
@@ -4021,7 +4127,7 @@ function NoteModal({ onClose }) {
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen("list")}>বাতিল করুন</button>
+            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => setScreen(activeId ? "view" : "list")}>বাতিল করুন</button>
             <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveEntry}>সংরক্ষণ করুন</button>
           </div>
         </>
@@ -4033,7 +4139,7 @@ function NoteModal({ onClose }) {
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
             <button
               style={{ display: "flex", alignItems: "center", gap: 6, background: copiedNote ? "#123A34" : "#F1E9D6", color: copiedNote ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
-              onClick={() => copyText(noteDraft, () => { setCopiedNote(true); setTimeout(() => setCopiedNote(false), 1200); })}
+              onClick={() => copyText(noteEditing ? noteDraft : data.importantNote, () => { setCopiedNote(true); setTimeout(() => setCopiedNote(false), 1200); })}
             >
               <Icon name={copiedNote ? "check" : "content_copy"} size={14} /> {copiedNote ? "কপি হয়েছে" : "কপি করুন"}
             </button>
@@ -4045,18 +4151,37 @@ function NoteModal({ onClose }) {
             </button>
           </div>
           <div style={blurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => blurred && setBlurred(false)}>
-            <textarea
-              className="field-full"
-              style={{ minHeight: 260 }}
-              value={noteDraft}
-              onChange={e => setNoteDraft(e.target.value)}
-              placeholder="এখানে গুরুত্বপূর্ণ যেকোনো তথ্য লিখে রাখুন..."
-              autoFocus
-            />
+            {noteEditing ? (
+              <textarea
+                className="field-full"
+                style={{ minHeight: 260 }}
+                value={noteDraft}
+                onChange={e => setNoteDraft(e.target.value)}
+                placeholder="এখানে গুরুত্বপূর্ণ যেকোনো তথ্য লিখে রাখুন..."
+                autoFocus
+              />
+            ) : (
+              (data.importantNote || "").trim() ? (
+                <div className="field-full" style={{ minHeight: 260, whiteSpace: "pre-wrap", userSelect: "text", cursor: "text" }}>{data.importantNote}</div>
+              ) : (
+                <div className="empty-note" style={{ textAlign: "center", padding: "24px 0" }}>এখনো কিছু লেখা হয়নি। এডিট করতে নিচের বাটনে চাপুন।</div>
+              )
+            )}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={backToCategories}>ফিরে যান</button>
-            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveNote}>সংরক্ষণ করুন</button>
+            {noteEditing ? (
+              <>
+                <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => { setNoteDraft(data.importantNote || ""); setNoteEditing(false); }}>বাতিল করুন</button>
+                <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={saveNote}>সংরক্ষণ করুন</button>
+              </>
+            ) : (
+              <>
+                <button className="btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={backToCategories}>ফিরে যান</button>
+                <button className="btn-primary" style={{ flex: 1, justifyContent: "center", display: "flex", alignItems: "center", gap: 6 }} onClick={() => { setNoteDraft(data.importantNote || ""); setNoteEditing(true); }}>
+                  <Icon name="edit" size={15} /> এডিট করুন
+                </button>
+              </>
+            )}
           </div>
         </>
       )}
@@ -4632,6 +4757,7 @@ function DailyLifeManagement() {
   const [customTasks, setCustomTasks] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const prevExpandedRef = useRef(null);
+  const diaryTextareaRef = useRef(null);
   useEffect(() => {
     if (expanded !== "prayer") setPrayerSubOpen(null);
     if (expanded !== "study") setStudySubOpen(null);
@@ -4640,9 +4766,9 @@ function DailyLifeManagement() {
       setQuranSubOpen(null);
       setRevisionSubOpen(null);
     } else if (prevExpandedRef.current !== "quran") {
-      // কুরআন কার্ড প্রথমবার খোলার সাথে সাথে সরাসরি আজকের রিভিশন রুটিন দেখাও
-      setQuranSubOpen("revision");
-      setRevisionSubOpen("routine");
+      // কুরআন কার্ড খোলার সাথে সাথে ৪টা অপশনের মেনু দেখাও (অটো-রুটিন বন্ধ)
+      setQuranSubOpen(null);
+      setRevisionSubOpen(null);
     } else if (quranSubOpen !== "revision") {
       setRevisionSubOpen(null);
     }
@@ -4690,6 +4816,11 @@ function DailyLifeManagement() {
   const [pedometerError, setPedometerError] = useState("");
   const pedometerDateRef = useRef(null);
   const [diaryBlurred, setDiaryBlurred] = useState(false);
+  const [diaryEditorOpen, setDiaryEditorOpen] = useState(false);
+
+  useEffect(() => {
+    setDiaryEditorOpen(false);
+  }, [date]);
 
   useEffect(() => {
     if (restSecondsLeft <= 0) return;
@@ -5417,8 +5548,8 @@ function DailyLifeManagement() {
   const sleepAutoDone = computeSleepAuto(day);
   const habitFixedDone = [sleepAutoDone.earlyRising, sleepAutoDone.earlySleeping, day.habit.meditation, walkingDone, day.habit.lustControl, waterDone, day.habit.sadaqah].filter(Boolean).length + (day.habit.noScreenCount ? 1 : 0) + (day.habit.ghorGochano ? 1 : 0) + noTextYesCount;
   const simpleHabitItems = [
-    ...HABIT_LIST.map(h => ({ id: h.key, label: h.label, done: !!day.habit[h.key], isCustom: false })),
-    ...day.habit.custom.map(h => ({ id: h.id, label: h.name, done: h.done, isCustom: true, category: h.category || "other" })),
+    ...HABIT_LIST.map(h => ({ id: h.key, label: h.label, shortLabel: h.shortLabel || h.label, icon: h.icon, done: !!day.habit[h.key], isCustom: false })),
+    ...day.habit.custom.map(h => ({ id: h.id, label: h.name, shortLabel: h.name, done: h.done, isCustom: true, category: h.category || "other" })),
   ];
   const pendingHabitItems = simpleHabitItems.filter(x => !x.done);
   const completedHabitItems = simpleHabitItems.filter(x => x.done);
@@ -5547,15 +5678,15 @@ function DailyLifeManagement() {
           {date !== todayStr() && <button className="today-btn" onClick={() => setDate(todayStr())}>আজ</button>}
         </div>
         <div className="icon-toolbar">
-          <button onClick={() => setShowCalendar(true)} title="ক্যালেন্ডার"><Icon name="calendar_month" size={13} /></button>
-          <button onClick={() => setShowTodo(true)} title="টু ডু"><Icon name="checklist" size={13} /></button>
-          <button onClick={() => setShowNote(true)} title="প্রাইভেসি নোট"><Icon name="sticky_note_2" size={13} /></button>
-          <button onClick={() => setShowPointsGraph(true)} title="পয়েন্ট গ্রাফ"><Icon name="bar_chart" size={13} /></button>
-          <button onClick={exportBackup} title="ব্যাকআপ ডাউনলোড"><Icon name="download" size={13} /></button>
-          <button onClick={() => setShowAchievements(true)} title="অ্যাচিভমেন্ট"><Icon name="emoji_events" size={13} /></button>
-          <button onClick={() => setShowDiarySearch(true)} title="ডায়েরি সার্চ"><Icon name="search" size={13} /></button>
-          <button onClick={() => setShowWeeklyReview(true)} title="সাপ্তাহিক রিভিউ"><Icon name="rate_review" size={13} /></button>
-          <button onClick={() => setShowSettings(true)} title="সেটিংস"><Icon name="settings" size={13} /></button>
+          <button onClick={() => setShowCalendar(true)} title="ক্যালেন্ডার"><Icon name="calendar_month" size={11} /></button>
+          <button onClick={() => setShowTodo(true)} title="টু ডু"><Icon name="checklist" size={11} /></button>
+          <button onClick={() => setShowNote(true)} title="প্রাইভেসি নোট"><Icon name="sticky_note_2" size={11} /></button>
+          <button onClick={() => setShowPointsGraph(true)} title="পয়েন্ট গ্রাফ"><Icon name="bar_chart" size={11} /></button>
+          <button onClick={exportBackup} title="ব্যাকআপ ডাউনলোড"><Icon name="download" size={11} /></button>
+          <button onClick={() => setShowAchievements(true)} title="অ্যাচিভমেন্ট"><Icon name="emoji_events" size={11} /></button>
+          <button onClick={() => setShowDiarySearch(true)} title="ডায়েরি সার্চ"><Icon name="search" size={11} /></button>
+          <button onClick={() => setShowWeeklyReview(true)} title="সাপ্তাহিক রিভিউ"><Icon name="rate_review" size={11} /></button>
+          <button onClick={() => setShowSettings(true)} title="সেটিংস"><Icon name="settings" size={11} /></button>
         </div>
         <div style={{ textAlign: "center", fontSize: 11.5, color: "#8A7F68", marginTop: -6, marginBottom: 6 }}>{hijriDateLabel(new Date(date + "T00:00:00"), hijriOffsetDays)}</div>
         <div className="subblock hadith-box" style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
@@ -5657,24 +5788,31 @@ function DailyLifeManagement() {
         </div>
 
         <Card id="prayer" hidden={hiddenCards.includes("prayer")} iconName="wb_sunny" title="নামাজ" subtitle="৫ ওয়াক্ত ফরজ ও নফল" accent="#123A34" badge={prayersDone + "/৫" + (naflCount ? " + নফল" : "")} points={prayerPoints} streak={taskStreaks.prayer} notDone={day.taskNotDone.prayer} onToggleNotDone={() => toggleTaskNotDone("prayer")} expanded={expanded === "prayer"} onToggle={toggle}>
-          <button className="pdf-btn" style={{ marginBottom: 10 }} onClick={() => setShowQazaTracker(true)}>
-            <Icon name="update" size={16} /> কাযা নামাজ ট্র্যাকার{PRAYER_ORDER.reduce((s, p) => s + (qazaCounts[p] || 0), 0) > 0 ? " (মোট " + PRAYER_ORDER.reduce((s, p) => s + (qazaCounts[p] || 0), 0) + " টা আদায়)" : ""}
-          </button>
           {!prayerSubOpen ? (
-            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
-              <div onClick={() => setPrayerSubOpen("farz")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: "1px solid #E7DDC7" }}>
-                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>ফরজ নামাজ</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{prayersDone}/৫</span>
-                  <Icon name="chevron_left" size={18} color="#8A7F68" />
-                </span>
-              </div>
-              <div onClick={() => setPrayerSubOpen("nafl")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer" }}>
-                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>নফল নামাজ</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{naflCount ? naflCount + " টা" : ""}</span>
-                  <Icon name="chevron_left" size={18} color="#8A7F68" />
-                </span>
+            <div className="subblock" style={{ padding: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                {[
+                  { key: "farz", icon: "mosque", shortLabel: "ফরজ", fullLabel: "ফরজ নামাজ", sub: prayersDone + "/৫", action: () => setPrayerSubOpen("farz") },
+                  { key: "nafl", icon: "nights_stay", shortLabel: "নফল", fullLabel: "নফল নামাজ", sub: naflCount ? naflCount + " টা" : "", action: () => setPrayerSubOpen("nafl") },
+                  { key: "qaza", icon: "update", shortLabel: "কাজা", fullLabel: "কাযা নামাজ ট্র্যাকার", sub: PRAYER_ORDER.reduce((s, p) => s + (qazaCounts[p] || 0), 0) > 0 ? PRAYER_ORDER.reduce((s, p) => s + (qazaCounts[p] || 0), 0) + " টা" : "", action: () => setShowQazaTracker(true) },
+                ].map(item => (
+                  <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                    <button
+                      onClick={item.action}
+                      title={item.fullLabel}
+                      style={{
+                        width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                        background: darkMode ? "#1F2A22" : "#FBF6EA",
+                      }}
+                    >
+                      <Icon name={item.icon} size={22} color="#123A34" />
+                    </button>
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
+                    {item.sub && <span style={{ fontSize: 9.5, fontWeight: 600, color: "#123A34", fontFamily: "'IBM Plex Mono'" }}>{item.sub}</span>}
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -5723,17 +5861,29 @@ function DailyLifeManagement() {
 
         <Card id="zikir" hidden={hiddenCards.includes("zikir")} iconName="self_improvement" title="যিকির" subtitle="দৈনিক যিকির-আযকার" accent="#8A4A5C" badge={zikirBadge} points={zikirPoints} streak={taskStreaks.zikir} notDone={day.taskNotDone.zikir} onToggleNotDone={() => toggleTaskNotDone("zikir")} expanded={expanded === "zikir"} onToggle={toggle}>
           {!zikirSubOpen ? (
-            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
-              <div onClick={() => setZikirSubOpen("tasbih")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: "1px solid #E7DDC7" }}>
-                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>৩ তসবিহ</span>
-                <Icon name="chevron_left" size={18} color="#8A7F68" />
-              </div>
-              <div onClick={() => setZikirSubOpen("custom")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer" }}>
-                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>অন্য কোনো যিকির</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{day.zikir.custom.length ? day.zikir.custom.length + " টা" : ""}</span>
-                  <Icon name="chevron_left" size={18} color="#8A7F68" />
-                </span>
+            <div className="subblock" style={{ padding: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                {[
+                  { key: "tasbih", icon: "front_hand", shortLabel: "৩ তসবিহ", fullLabel: "৩ তসবিহ", sub: "" },
+                  { key: "custom", icon: "auto_awesome", shortLabel: "অন্য যিকির", fullLabel: "অন্য কোনো যিকির", sub: day.zikir.custom.length ? day.zikir.custom.length + " টা" : "" },
+                ].map(item => (
+                  <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                    <button
+                      onClick={() => setZikirSubOpen(item.key)}
+                      title={item.fullLabel}
+                      style={{
+                        width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                        background: darkMode ? "#1F2A22" : "#FBF6EA",
+                      }}
+                    >
+                      <Icon name={item.icon} size={22} color="#8A4A5C" />
+                    </button>
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
+                    {item.sub && <span style={{ fontSize: 9.5, fontWeight: 600, color: "#8A4A5C", fontFamily: "'IBM Plex Mono'" }}>{item.sub}</span>}
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -5779,21 +5929,31 @@ function DailyLifeManagement() {
 
         <Card id="quran" hidden={hiddenCards.includes("quran")} iconName="menu_book" title="কুরআন" subtitle="তিলাওয়াত, রিভিশন ও আমলি সূরা" accent="#8A6A2F" badge={quranBadge} points={quranPoints} streak={taskStreaks.quran} notDone={day.taskNotDone.quran} onToggleNotDone={() => toggleTaskNotDone("quran")} expanded={expanded === "quran"} onToggle={toggle}>
           {!quranSubOpen ? (
-            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
-              {[
-                { key: "reading", label: "কুরআন তিলাওয়াত" },
-                { key: "revision", label: "কুরআন রিভিশন (মুরাজাআ)" },
-                { key: "amoli", label: "আমলি সূরা" },
-              ].map((item, i, arr) => (
-                <div
-                  key={item.key}
-                  onClick={() => setQuranSubOpen(item.key)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
-                >
-                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
-                  <Icon name="chevron_left" size={18} color="#8A7F68" />
-                </div>
-              ))}
+            <div className="subblock" style={{ padding: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                {[
+                  { key: "reading", icon: "auto_stories", shortLabel: "তিলাওয়াত", fullLabel: "কুরআন তিলাওয়াত", action: () => setQuranSubOpen("reading") },
+                  { key: "revision", icon: "history_edu", shortLabel: "রিভিশন", fullLabel: "কুরআন রিভিশন (মুরাজাআ)", action: () => setQuranSubOpen("revision") },
+                  { key: "amoli", icon: "auto_awesome", shortLabel: "আমলি সূরা", fullLabel: "আমলি সূরা", action: () => setQuranSubOpen("amoli") },
+                  { key: "routine", icon: "event_note", shortLabel: "আজকের রুটিন", fullLabel: "রিভিশন রুটিন (আজকের প্ল্যান)", action: () => { setQuranSubOpen("revision"); setRevisionSubOpen("routine"); } },
+                ].map(item => (
+                  <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                    <button
+                      onClick={item.action}
+                      title={item.fullLabel}
+                      style={{
+                        width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                        background: darkMode ? "#1F2A22" : "#FBF6EA",
+                      }}
+                    >
+                      <Icon name={item.icon} size={22} color="#8A6A2F" />
+                    </button>
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="subblock">
@@ -5956,25 +6116,31 @@ function DailyLifeManagement() {
               : "স্টাডি প্রমোটার শুরু করুন" + (day.study.pomodoroCount > 0 ? " (আজ " + day.study.pomodoroCount + "টা সেশন)" : "")}
           </button>
           {!studySubOpen ? (
-            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
-              {[
-                { key: "subjects", icon: "auto_stories", label: "আজকের সাবজেক্ট" },
-                { key: "studied", icon: "edit_note", label: "পড়াশোনা করেছি (ফ্রি টেক্সট)" },
-                { key: "lectures", icon: "headphones", label: "লেকচার শুনেছি" },
-                { key: "routine", icon: "calendar_view_week", label: "সাপ্তাহিক রুটিন" },
-              ].map((item, i, arr) => (
-                <div
-                  key={item.key}
-                  onClick={() => setStudySubOpen(item.key)}
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
-                >
-                  <div style={{ width: 32, height: 32, borderRadius: 10, background: "#5C7A6B22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Icon name={item.icon} size={18} color="#5C7A6B" />
+            <div className="subblock" style={{ padding: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                {[
+                  { key: "subjects", icon: "auto_stories", shortLabel: "সাবজেক্ট", fullLabel: "আজকের সাবজেক্ট" },
+                  { key: "studied", icon: "edit_note", shortLabel: "পড়াশোনা", fullLabel: "পড়াশোনা করেছি (ফ্রি টেক্সট)" },
+                  { key: "lectures", icon: "headphones", shortLabel: "লেকচার", fullLabel: "লেকচার শুনেছি" },
+                  { key: "routine", icon: "calendar_view_week", shortLabel: "রুটিন", fullLabel: "সাপ্তাহিক রুটিন" },
+                ].map(item => (
+                  <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                    <button
+                      onClick={() => setStudySubOpen(item.key)}
+                      title={item.fullLabel}
+                      style={{
+                        width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                        background: darkMode ? "#1F2A22" : "#FBF6EA",
+                      }}
+                    >
+                      <Icon name={item.icon} size={22} color="#5C7A6B" />
+                    </button>
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
                   </div>
-                  <span style={{ flex: 1, fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
-                  <Icon name="chevron_left" size={18} color="#8A7F68" />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
             <div className="subblock">
@@ -6049,17 +6215,37 @@ function DailyLifeManagement() {
           )}
           <div className="section-label">ওয়ার্কআউট প্ল্যান বেছে নিন</div>
           {!exercisePlan ? (
-            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
-              {WORKOUT_PLANS.map((p, i) => (
-                <div
-                  key={p.key}
-                  onClick={() => setExercisePlan(p.key)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < WORKOUT_PLANS.length - 1 ? "1px solid #E7DDC7" : "none" }}
-                >
-                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{p.label}</span>
-                  <Icon name="chevron_left" size={18} color="#8A7F68" />
-                </div>
-              ))}
+            <div className="subblock" style={{ padding: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                {WORKOUT_PLANS.map(p => {
+                  const meta = {
+                    all: { icon: "apps", shortLabel: "সব ব্যায়াম" },
+                    weightLoss: { icon: "local_fire_department", shortLabel: "ওজন কমানো" },
+                    beginnerFullBody: { icon: "accessibility_new", shortLabel: "বিগেনার" },
+                    hiit: { icon: "bolt", shortLabel: "HIIT" },
+                    lowerBody: { icon: "directions_walk", shortLabel: "লোয়ার বডি" },
+                    upperBody: { icon: "fitness_center", shortLabel: "আপার বডি" },
+                    core: { icon: "self_improvement", shortLabel: "কোর" },
+                  }[p.key] || { icon: "fitness_center", shortLabel: p.label };
+                  return (
+                    <div key={p.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                      <button
+                        onClick={() => setExercisePlan(p.key)}
+                        title={p.label}
+                        style={{
+                          width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                          background: darkMode ? "#1F2A22" : "#FBF6EA",
+                        }}
+                      >
+                        <Icon name={meta.icon} size={22} color="#B5651D" />
+                      </button>
+                      <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{meta.shortLabel}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <>
@@ -6128,34 +6314,18 @@ function DailyLifeManagement() {
             <div className="subblock" style={{ padding: 12 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
                 {[
-                  { key: "meditation", icon: "self_improvement", label: "মেডিটেশন ১০ মিনিট", done: !!day.habit.meditation },
-                  { key: "walking", icon: "directions_walk", label: "হাঁটা", done: (day.habit.walkingSteps || 0) > 0 },
-                  { key: "water", icon: "water_drop", label: "পানি ট্র্যাকার", done: (day.habit.waterGlasses || 0) > 0 },
-                  { key: "noScreen", icon: "phonelink_off", label: "নো-স্ক্রিন টাইম", done: (day.habit.noScreenCount || 0) > 0 },
-                  { key: "ghorGochano", icon: "cleaning_services", label: "ঘর গোছানো", done: (day.habit.ghorGochano || 0) > 0 },
-                  { key: "sleep", icon: "bedtime", label: "ঘুম ট্র্যাকার", done: day.habit.sleepSessions.length > 0 },
-                  { key: "weight", icon: "monitor_weight", label: "ওজন ট্র্যাকার", done: !!day.habit.weight },
-                  { key: "noText", icon: "block", label: "নো টেক্সট ফার্স্ট", done: noTextPeople.length > 0 && noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") },
+                  { key: "meditation", icon: "self_improvement", label: "মেডিটেশন ১০ মিনিট", shortLabel: "মেডিটেশন", done: !!day.habit.meditation },
+                  { key: "walking", icon: "directions_walk", label: "হাঁটা", shortLabel: "হাঁটা", done: (day.habit.walkingSteps || 0) > 0 },
+                  { key: "water", icon: "water_drop", label: "পানি ট্র্যাকার", shortLabel: "পানি", done: (day.habit.waterGlasses || 0) > 0 },
+                  { key: "noScreen", icon: "phonelink_off", label: "নো-স্ক্রিন টাইম", shortLabel: "নো-স্ক্রিন", done: (day.habit.noScreenCount || 0) > 0 },
+                  { key: "ghorGochano", icon: "cleaning_services", label: "ঘর গোছানো", shortLabel: "ঘর গোছানো", done: (day.habit.ghorGochano || 0) > 0 },
+                  { key: "sleep", icon: "bedtime", label: "ঘুম ট্র্যাকার", shortLabel: "ঘুম", done: day.habit.sleepSessions.length > 0 },
+                  { key: "weight", icon: "monitor_weight", label: "ওজন ট্র্যাকার", shortLabel: "ওজন", done: !!day.habit.weight },
+                  { key: "noText", icon: "block", label: "নো টেক্সট ফার্স্ট", shortLabel: "নো টেক্সট", done: noTextPeople.length > 0 && noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") },
                 ].map(item => (
-                  <button
-                    key={item.key}
-                    onClick={() => setHabitSubOpen(item.key)}
-                    title={item.label}
-                    style={{
-                      width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
-                      background: item.done ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
-                    }}
-                  >
-                    <Icon name={item.icon} size={22} color={item.done ? "#FBF6EA" : "#6B7A4F"} />
-                  </button>
-                ))}
-
-                {simpleHabitItems.map(item => (
-                  <div key={(item.isCustom ? "c" : "f") + item.id} style={{ position: "relative" }}>
+                  <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
                     <button
-                      onClick={() => item.isCustom ? toggleCustomHabit(item.id) : toggleHabit(item.id)}
+                      onClick={() => setHabitSubOpen(item.key)}
                       title={item.label}
                       style={{
                         width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
@@ -6164,40 +6334,64 @@ function DailyLifeManagement() {
                         background: item.done ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
                       }}
                     >
-                      {item.isCustom ? (
-                        <span style={{ fontSize: 22 }}>{HABIT_CATEGORIES.find(c => c.key === item.category)?.emoji}</span>
-                      ) : (
-                        <Icon name="task_alt" size={22} color={item.done ? "#FBF6EA" : "#6B7A4F"} />
-                      )}
+                      <Icon name={item.icon} size={22} color={item.done ? "#FBF6EA" : "#6B7A4F"} />
                     </button>
-                    {item.isCustom && (
-                      <button
-                        onClick={() => removeCustomHabit(item.id)}
-                        title="মুছে ফেলুন"
-                        style={{
-                          position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%",
-                          border: "none", background: "#A14545", color: "#FBF6EA", padding: 0,
-                          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-                        }}
-                      >
-                        <Icon name="close" size={12} color="#FBF6EA" />
-                      </button>
-                    )}
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
                   </div>
                 ))}
 
-                <button
-                  onClick={() => setShowAddHabitInput(v => !v)}
-                  title="নতুন অভ্যাস যোগ করুন"
-                  style={{
-                    width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "1.5px dashed " + (darkMode ? "#31402F" : "#C6BB9C"),
-                    background: darkMode ? "#1F2A22" : "#FBF6EA",
-                  }}
-                >
-                  <Icon name="add" size={22} color="#6B7A4F" />
-                </button>
+                {simpleHabitItems.map(item => (
+                  <div key={(item.isCustom ? "c" : "f") + item.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                    <div style={{ position: "relative" }}>
+                      <button
+                        onClick={() => item.isCustom ? toggleCustomHabit(item.id) : toggleHabit(item.id)}
+                        title={item.label}
+                        style={{
+                          width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                          background: item.done ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                        }}
+                      >
+                        {item.isCustom ? (
+                          <span style={{ fontSize: 22 }}>{HABIT_CATEGORIES.find(c => c.key === item.category)?.emoji}</span>
+                        ) : (
+                          <Icon name={item.icon || "task_alt"} size={22} color={item.done ? "#FBF6EA" : "#6B7A4F"} />
+                        )}
+                      </button>
+                      {item.isCustom && (
+                        <button
+                          onClick={() => removeCustomHabit(item.id)}
+                          title="মুছে ফেলুন"
+                          style={{
+                            position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%",
+                            border: "none", background: "#A14545", color: "#FBF6EA", padding: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                          }}
+                        >
+                          <Icon name="close" size={12} color="#FBF6EA" />
+                        </button>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
+                  </div>
+                ))}
+
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                  <button
+                    onClick={() => setShowAddHabitInput(v => !v)}
+                    title="নতুন অভ্যাস যোগ করুন"
+                    style={{
+                      width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      border: "1.5px dashed " + (darkMode ? "#31402F" : "#C6BB9C"),
+                      background: darkMode ? "#1F2A22" : "#FBF6EA",
+                    }}
+                  >
+                    <Icon name="add" size={22} color="#6B7A4F" />
+                  </button>
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>নতুন</span>
+                </div>
               </div>
 
               {showAddHabitInput && (
@@ -6508,21 +6702,32 @@ function DailyLifeManagement() {
         </Card>
 
         <Card id="diary" hidden={hiddenCards.includes("diary")} iconName="edit_note" title="নোটস / ডায়েরি" subtitle="দৈনিক জার্নাল" accent="#4C6B8A" badge={diaryBadge} streak={taskStreaks.diary} expanded={expanded === "diary"} onToggle={toggle}>
-          <div style={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
-            <button
-              style={{ display: "flex", alignItems: "center", gap: 6, background: "#123A34", color: "#FBF6EA", border: "none", borderRadius: 999, padding: "6px 13px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
-              onClick={() => openDiaryReader(date)}
-              title="আজকের এন্ট্রি রিডিং মোডে খুলুন"
-            >
-              <Icon name="auto_stories" size={14} /> রিডিং মোড
-            </button>
-            <button
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", background: "#F1E9D6", color: "#6B5A3A", border: "none", cursor: "pointer", flexShrink: 0 }}
-              onClick={() => setShowDiaryBrowser(true)}
-              title="পুরোনো ডায়েরি ব্রাউজ করুন"
-            >
-              <Icon name="menu_book" size={15} />
-            </button>
+          <div className="subblock" style={{ padding: 12, marginBottom: 4 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+              {[
+                { key: "reading", icon: "auto_stories", shortLabel: "রিডিং মোড", fullLabel: "আজকের এন্ট্রি রিডিং মোডে খুলুন", action: () => openDiaryReader(date) },
+                { key: "browse", icon: "menu_book", shortLabel: "ব্রাউজ করুন", fullLabel: "পুরোনো ডায়েরি ব্রাউজ করুন", action: () => setShowDiaryBrowser(true) },
+                { key: "write", icon: "edit_note", shortLabel: "লিখুন", fullLabel: "ডায়েরি লিখুন", action: () => { setDiaryEditorOpen(o => { const next = !o; if (next) { setDiaryBlurred(false); setTimeout(() => { diaryTextareaRef.current?.focus(); diaryTextareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 0); } return next; }); } },
+              ].map(item => (
+                <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
+                  <button
+                    onClick={item.action}
+                    title={item.fullLabel}
+                    style={{
+                      width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
+                      background: darkMode ? "#1F2A22" : "#FBF6EA",
+                    }}
+                  >
+                    <Icon name={item.icon} size={22} color="#4C6B8A" />
+                  </button>
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}>
             <button
               style={{ display: "flex", alignItems: "center", gap: 6, background: diaryBlurred ? "#4C6B8A" : "#F1E9D6", color: diaryBlurred ? "#FBF6EA" : "#6B5A3A", border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
               onClick={() => setDiaryBlurred(b => !b)}
@@ -6530,38 +6735,32 @@ function DailyLifeManagement() {
               <Icon name={diaryBlurred ? "visibility_off" : "lock_open"} size={14} /> {diaryBlurred ? "ব্লার চালু আছে — দেখতে ট্যাপ করুন" : "প্রাইভেসি ব্লার"}
             </button>
           </div>
-          <div style={diaryBlurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => diaryBlurred && setDiaryBlurred(false)}>
-            <textarea
-              className="field-full"
-              style={{ minHeight: 260 }}
-              value={day.diary.notes}
-              onChange={e => setDiary("notes", e.target.value)}
-              placeholder="আজকের দিনটা কেমন গেল, মনে যা আসছে সব লিখে ফেলুন..."
-            />
-            {day.diary.lastEditTime && <div className="diary-timestamp">শেষ আপডেট: {new Date(day.diary.lastEditTime).toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" })}</div>}
-          </div>
+          {diaryEditorOpen ? (
+            <div style={diaryBlurred ? { filter: "blur(7px)", userSelect: "none", transition: "filter .15s" } : { transition: "filter .15s" }} onClick={() => diaryBlurred && setDiaryBlurred(false)}>
+              <textarea
+                ref={diaryTextareaRef}
+                className="field-full"
+                style={{ minHeight: 260 }}
+                value={day.diary.notes}
+                onChange={e => setDiary("notes", e.target.value)}
+                placeholder="আজকের দিনটা কেমন গেল, মনে যা আসছে সব লিখে ফেলুন..."
+              />
+              {day.diary.lastEditTime && <div className="diary-timestamp">শেষ আপডেট: {new Date(day.diary.lastEditTime).toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" })}</div>}
+            </div>
+          ) : null}
         </Card>
 
         <Card id="accounts" hidden={hiddenCards.includes("accounts")} iconName="account_balance_wallet" title="হিসাব" subtitle="মাসিক আয়-ব্যয় ও সঞ্চয়" accent="#2F6B5E" badge={accountsBadge} points={accountsPoints} streak={taskStreaks.accounts} expanded={expanded === "accounts"} onToggle={(id) => { toggle(id); if (expanded !== "accounts") refreshMonthExpense(date); }}>
-          <div className="section-label">{new Date(date + "T00:00:00").toLocaleDateString("bn-BD", { month: "long", year: "numeric" })} — মাসিক তথ্য</div>
-          <div className="subblock">
-            <button
-              onClick={() => setMonthlyInfoExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="payments" size={18} color="#2F6B5E" />
-              </div>
-              <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>মাসিক তথ্য</div>
-                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>আয় · সঞ্চয় · অতিরিক্ত আয়</div>
-              </div>
-              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(incomeNum + extraNum)}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>মোট আয়</div></span>
-              <Icon name={monthlyInfoExpanded ? "expand_less" : "expand_more"} size={20} />
+          <div className="section-label">{new Date(date + "T00:00:00").toLocaleDateString("bn-BD", { month: "long", year: "numeric" })} — হিসাব ওভারভিউ</div>
+          <div className="hishab-grid">
+            <button className={"hishab-tile" + (monthlyInfoExpanded ? " active" : "")} onClick={() => setMonthlyInfoExpanded(v => !v)}>
+              <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="payments" size={15} color="#2F6B5E" /></div>
+              <div className="hishab-tile-title">মাসিক তথ্য</div>
+              <div className="hishab-tile-value">৳{fmtMoney(incomeNum + extraNum)}</div>
+              <div className="hishab-tile-sub">মোট আয়</div>
             </button>
-
             {monthlyInfoExpanded && (
-              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+              <div className="hishab-tile-body">
                 <div className="field-row">
                   <div className="field"><label>এই মাসের মোট আয়</label><input type="number" min="0" value={monthData.income} onChange={e => setMonthField("income", e.target.value)} placeholder="যেমন ৩০০০০" /></div>
                   <div className="field"><label>মাসিক সঞ্চয়</label><input type="number" min="0" value={monthData.savings} onChange={e => setMonthField("savings", e.target.value)} placeholder="যেমন ৫০০০" /></div>
@@ -6572,27 +6771,15 @@ function DailyLifeManagement() {
                 </div>
               </div>
             )}
-          </div>
 
-          <div className="section-label">আজকের খরচ</div>
-          <div className="subblock">
-            <button
-              onClick={() => setOwnExpenseExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="person" size={18} color="#2F6B5E" />
-              </div>
-              <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>নিজের খরচ</div>
-                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>ট্রান্সপোর্ট · খাবার · গ্যাজেট · দান · প্রয়োজনীয় · মেরামত · অপ্রয়োজনীয়</div>
-              </div>
-              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(OWN_EXPENSE_KEYS.reduce((s, k) => s + (monthExpense.totals?.[k] || 0), 0))}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>এই মাস</div></span>
-              <Icon name={ownExpenseExpanded ? "expand_less" : "expand_more"} size={20} />
+            <button className={"hishab-tile" + (ownExpenseExpanded ? " active" : "")} onClick={() => setOwnExpenseExpanded(v => !v)}>
+              <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="person" size={15} color="#2F6B5E" /></div>
+              <div className="hishab-tile-title">নিজের খরচ</div>
+              <div className="hishab-tile-value">৳{fmtMoney(OWN_EXPENSE_KEYS.reduce((s, k) => s + (monthExpense.totals?.[k] || 0), 0))}</div>
+              <div className="hishab-tile-sub">এই মাস</div>
             </button>
-
             {ownExpenseExpanded && (
-              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+              <div className="hishab-tile-body">
                 {OWN_EXPENSE_CATEGORIES.map(c => (
                   <div className="field-row" key={c.key} style={{ marginBottom: 10, alignItems: "center" }}>
                     <div className="field" style={{ flex: "0 0 auto" }}>
@@ -6605,23 +6792,14 @@ function DailyLifeManagement() {
               </div>
             )}
 
-            <button
-              onClick={() => setFriendsFamilyExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer", marginTop: 10 }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="groups" size={18} color="#2F6B5E" />
-              </div>
-              <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>বন্ধু ও পরিবার</div>
-                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>ভাই · বোন · পারিবারিক প্রয়োজন · ভাগ্নে · আত্মীয়স্বজন · বন্ধুবান্ধব</div>
-              </div>
-              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(FRIENDS_FAMILY_KEYS.reduce((s, k) => s + (monthExpense.totals?.[k] || 0), 0))}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>এই মাস</div></span>
-              <Icon name={friendsFamilyExpanded ? "expand_less" : "expand_more"} size={20} />
+            <button className={"hishab-tile" + (friendsFamilyExpanded ? " active" : "")} onClick={() => setFriendsFamilyExpanded(v => !v)}>
+              <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="groups" size={15} color="#2F6B5E" /></div>
+              <div className="hishab-tile-title">বন্ধু ও পরিবার</div>
+              <div className="hishab-tile-value">৳{fmtMoney(FRIENDS_FAMILY_KEYS.reduce((s, k) => s + (monthExpense.totals?.[k] || 0), 0))}</div>
+              <div className="hishab-tile-sub">এই মাস</div>
             </button>
-
             {friendsFamilyExpanded && (
-              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+              <div className="hishab-tile-body">
                 {FRIENDS_FAMILY_CATEGORIES.map(c => (
                   <div className="field-row" key={c.key} style={{ marginBottom: 10, alignItems: "center" }}>
                     <div className="field" style={{ flex: "0 0 auto" }}>
@@ -6634,23 +6812,14 @@ function DailyLifeManagement() {
               </div>
             )}
 
-            <button
-              onClick={() => setOfficeExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer", marginTop: 10 }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="business_center" size={18} color="#2F6B5E" />
-              </div>
-              <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>অফিস</div>
-                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>খাবার · ট্রান্সপোর্ট · অন্যান্য</div>
-              </div>
-              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(monthExpense.office?.grand || 0)}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>এই মাস</div></span>
-              <Icon name={officeExpanded ? "expand_less" : "expand_more"} size={20} />
+            <button className={"hishab-tile" + (officeExpanded ? " active" : "")} onClick={() => setOfficeExpanded(v => !v)}>
+              <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="business_center" size={15} color="#2F6B5E" /></div>
+              <div className="hishab-tile-title">অফিস</div>
+              <div className="hishab-tile-value">৳{fmtMoney(monthExpense.office?.grand || 0)}</div>
+              <div className="hishab-tile-sub">এই মাস</div>
             </button>
-
             {officeExpanded && (
-              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+              <div className="hishab-tile-body">
                 <div className="field-row" style={{ marginBottom: 10, marginTop: 8, alignItems: "center" }}>
                   <div className="field" style={{ flex: "0 0 auto" }}>
                     <span style={{ fontWeight: 600, fontSize: 13.5 }}>খাবার</span>
@@ -6704,104 +6873,34 @@ function DailyLifeManagement() {
                 </div>
               </div>
             )}
-          </div>
 
-          {(todayExpenseEntries.length > 0 || officeTodayTotal > 0) && (
-            <>
-              <div className="section-label">আজকের খরচের তালিকা</div>
-              <div className="subblock">
-                {todayExpenseEntries.map(c => (
-                  <div className="nafl-item" key={"log-" + c.key}>
-                    <span className="n-name">{c.label}</span>
-                    <span className="n-rakahs">৳{fmtMoney(day.accounts[c.key])}</span>
-                    <button className="icon-btn ghost" onClick={() => setAccountExpense(c.key, "")}><Icon name="close" size={15} /></button>
-                  </div>
-                ))}
-                {officeTodayMeal > 0 && (
-                  <div className="nafl-item" key="log-office-meal">
-                    <span className="n-name">অফিস · খাবার</span>
-                    <span className="n-rakahs">৳{fmtMoney(officeTodayMeal)}</span>
-                    <button className="icon-btn ghost" onClick={() => setOfficeMeal("")}><Icon name="close" size={15} /></button>
-                  </div>
-                )}
-                {(officeToday.transport || []).map(t => (
-                  <div className="nafl-item" key={"log-office-t-" + t.id}>
-                    <span className="n-name">অফিস · {OFFICE_TRANSPORT_TYPES.find(x => x.key === t.type)?.label || t.type}</span>
-                    <span className="n-rakahs">৳{fmtMoney(t.amount)}</span>
-                    <button className="icon-btn ghost" onClick={() => removeOfficeTransport(t.id)}><Icon name="close" size={15} /></button>
-                  </div>
-                ))}
-                {(officeToday.others || []).map(o => (
-                  <div className="nafl-item" key={"log-office-o-" + o.id}>
-                    <span className="n-name">অফিস · {o.name}</span>
-                    <span className="n-rakahs">৳{fmtMoney(o.amount)}</span>
-                    <button className="icon-btn ghost" onClick={() => removeOfficeOther(o.id)}><Icon name="close" size={15} /></button>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          <div className="section-label">খরচের বিভাজন (এই মাস)</div>
-          <div className="subblock">
-            <button
-              onClick={() => setPieChartExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="pie_chart" size={18} color="#2F6B5E" />
-              </div>
-              <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>খরচের বিভাজন</div>
-                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>ক্যাটাগরি অনুযায়ী পাইচার্ট</div>
-              </div>
-              <Icon name={pieChartExpanded ? "expand_less" : "expand_more"} size={20} />
+            <button className={"hishab-tile" + (pieChartExpanded ? " active" : "")} onClick={() => setPieChartExpanded(v => !v)}>
+              <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="pie_chart" size={15} color="#2F6B5E" /></div>
+              <div className="hishab-tile-title">খরচের বিভাজন</div>
+              <div className="hishab-tile-sub">ক্যাটাগরি অনুযায়ী পাইচার্ট</div>
             </button>
-
             {pieChartExpanded && (
-              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+              <div className="hishab-tile-body">
                 <CategoryPieChart totals={monthExpense.totals} categories={ACCOUNT_CATEGORIES} />
               </div>
             )}
-          </div>
 
-          {isLastDayOfMonth(date) && (
-            <div className="subblock">
-              <button
-                onClick={openMonthlyExpenseReport}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
-              >
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Icon name="request_quote" size={18} color="#2F6B5E" />
-                </div>
-                <div style={{ flex: 1, textAlign: "left" }}>
-                  <div style={{ fontWeight: 600, fontSize: 13.5 }}>এই মাসের খরচের বিবরণী (PDF)</div>
-                  <div style={{ fontSize: 10.5, color: "#8A7F68" }}>তারিখ অনুযায়ী টেবিল আকারে, মাস শেষে দেখা যায়</div>
-                </div>
-                <Icon name="chevron_left" size={18} color="#C6BB9C" />
+            {isLastDayOfMonth(date) && (
+              <button className="hishab-tile" onClick={openMonthlyExpenseReport}>
+                <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="request_quote" size={15} color="#2F6B5E" /></div>
+                <div className="hishab-tile-title">খরচের বিবরণী</div>
+                <div className="hishab-tile-sub">PDF · মাস শেষে</div>
               </button>
-            </div>
-          )}
+            )}
 
-          <div className="section-label">ধার/দেনা</div>
-          <div className="subblock">
-            <button
-              onClick={() => setDebtExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="handshake" size={18} color="#2F6B5E" />
-              </div>
-              <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>ধার/দেনা</div>
-                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>{debts.filter(d => !d.settled).length > 0 ? debts.filter(d => !d.settled).length + "টি বকেয়া" : "কোনো বকেয়া নেই"}</div>
-              </div>
-              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(debts.filter(d => !d.settled).reduce((s, d) => s + (d.direction === "owed_to_me" ? (parseFloat(d.amount) || 0) : -(parseFloat(d.amount) || 0)), 0))}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>নিট</div></span>
-              <Icon name={debtExpanded ? "expand_less" : "expand_more"} size={20} />
+            <button className={"hishab-tile" + (debtExpanded ? " active" : "")} onClick={() => setDebtExpanded(v => !v)}>
+              <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="handshake" size={15} color="#2F6B5E" /></div>
+              <div className="hishab-tile-title">ধার/দেনা</div>
+              <div className="hishab-tile-value">৳{fmtMoney(debts.filter(d => !d.settled).reduce((s, d) => s + (d.direction === "owed_to_me" ? (parseFloat(d.amount) || 0) : -(parseFloat(d.amount) || 0)), 0))}</div>
+              <div className="hishab-tile-sub">{debts.filter(d => !d.settled).length > 0 ? debts.filter(d => !d.settled).length + "টি বকেয়া" : "কোনো বকেয়া নেই"}</div>
             </button>
-
             {debtExpanded && (
-              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+              <div className="hishab-tile-body">
                 <div className="field-row">
                   <div className="field"><label>নাম</label><input value={debtDraft.name} onChange={e => setDebtDraft({ ...debtDraft, name: e.target.value })} placeholder="যেমন রাহাত" /></div>
                   <div className="field"><label>টাকা</label><input type="number" min="0" value={debtDraft.amount} onChange={e => setDebtDraft({ ...debtDraft, amount: e.target.value })} placeholder="৳" /></div>
@@ -6848,27 +6947,15 @@ function DailyLifeManagement() {
                 )}
               </div>
             )}
-          </div>
 
-          <div className="section-label">এই মাসের সারাংশ</div>
-          <div className="subblock">
-            <button
-              onClick={() => setMonthSummaryExpanded(v => !v)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#F5EEDC", border: "1.5px solid #E1D6B8", borderRadius: 12, padding: "10px 12px", cursor: "pointer" }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2F6B5E22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="summarize" size={18} color="#2F6B5E" />
-              </div>
-              <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>এই মাসের সারাংশ</div>
-                <div style={{ fontSize: 10.5, color: "#8A7F68" }}>আয় · খরচ · সঞ্চয় · দান</div>
-              </div>
-              <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: monthBudgetLow ? "#A14545" : "#2F6B5E", whiteSpace: "nowrap" }}>৳{fmtMoney(monthRemaining)}<div style={{ fontSize: 9.5, color: "#8A7F68", fontWeight: 600, fontFamily: "'Inter'" }}>বাকি আছে</div></span>
-              <Icon name={monthSummaryExpanded ? "expand_less" : "expand_more"} size={20} />
+            <button className={"hishab-tile" + (monthSummaryExpanded ? " active" : "")} onClick={() => setMonthSummaryExpanded(v => !v)}>
+              <div className="hishab-tile-icon" style={{ background: "#2F6B5E22" }}><Icon name="summarize" size={15} color="#2F6B5E" /></div>
+              <div className="hishab-tile-title">এই মাসের সারাংশ</div>
+              <div className="hishab-tile-value" style={{ color: monthBudgetLow ? "#A14545" : "#2F6B5E" }}>৳{fmtMoney(monthRemaining)}</div>
+              <div className="hishab-tile-sub">বাকি আছে</div>
             </button>
-
             {monthSummaryExpanded && (
-              <div style={{ padding: "10px 4px 2px", marginTop: 4, borderTop: "1px dashed #E1D6B8" }}>
+              <div className="hishab-tile-body">
                 <div className="stats-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
                   <div className="stat-box"><div className="stat-num">৳{fmtMoney(incomeNum + extraNum)}</div><div className="stat-label">মোট আয়</div></div>
                   <div className="stat-box"><div className="stat-num">{monthLoading ? "..." : "৳" + fmtMoney(monthExpense.grand)}</div><div className="stat-label">মোট খরচ (এই মাস)</div></div>
@@ -6882,27 +6969,46 @@ function DailyLifeManagement() {
               </div>
             )}
           </div>
+
+          {(todayExpenseEntries.length > 0 || officeTodayTotal > 0) && (
+            <>
+              <div className="section-label">আজকের খরচের তালিকা</div>
+              <div className="subblock">
+                {todayExpenseEntries.map(c => (
+                  <div className="nafl-item" key={"log-" + c.key}>
+                    <span className="n-name">{c.label}</span>
+                    <span className="n-rakahs">৳{fmtMoney(day.accounts[c.key])}</span>
+                    <button className="icon-btn ghost" onClick={() => setAccountExpense(c.key, "")}><Icon name="close" size={15} /></button>
+                  </div>
+                ))}
+                {officeTodayMeal > 0 && (
+                  <div className="nafl-item" key="log-office-meal">
+                    <span className="n-name">অফিস · খাবার</span>
+                    <span className="n-rakahs">৳{fmtMoney(officeTodayMeal)}</span>
+                    <button className="icon-btn ghost" onClick={() => setOfficeMeal("")}><Icon name="close" size={15} /></button>
+                  </div>
+                )}
+                {(officeToday.transport || []).map(t => (
+                  <div className="nafl-item" key={"log-office-t-" + t.id}>
+                    <span className="n-name">অফিস · {OFFICE_TRANSPORT_TYPES.find(x => x.key === t.type)?.label || t.type}</span>
+                    <span className="n-rakahs">৳{fmtMoney(t.amount)}</span>
+                    <button className="icon-btn ghost" onClick={() => removeOfficeTransport(t.id)}><Icon name="close" size={15} /></button>
+                  </div>
+                ))}
+                {(officeToday.others || []).map(o => (
+                  <div className="nafl-item" key={"log-office-o-" + o.id}>
+                    <span className="n-name">অফিস · {o.name}</span>
+                    <span className="n-rakahs">৳{fmtMoney(o.amount)}</span>
+                    <button className="icon-btn ghost" onClick={() => removeOfficeOther(o.id)}><Icon name="close" size={15} /></button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </Card>
 
         <Card id="plan" hidden={hiddenCards.includes("plan")} iconName="flag" title="মাসিক প্ল্যান" subtitle="এই মাসের লক্ষ্য ও অগ্রগতি" accent="#4A6FA5" badge={planBadge} expanded={expanded === "plan"} onToggle={toggle}>
           <div className="section-label">{new Date(date + "T00:00:00").toLocaleDateString("bn-BD", { month: "long", year: "numeric" })}</div>
-
-          <div className="subblock">
-            <div className="field">
-              <label>এই মাসে কত টাকা সঞ্চয় হয়েছে <span style={{ fontWeight: 400, color: "#8A7F68" }}>(হিসাব সেকশন থেকে অটো-সিঙ্ক)</span></label>
-              <input type="number" min="0" value={monthData.savings} readOnly disabled style={{ background: "#F1E9D6", color: "#6B7A4F", fontWeight: 700 }} placeholder="যেমন ৫০০০" />
-            </div>
-            {monthData.income ? (
-              <div style={{ marginTop: 4 }}>
-                <div className="progress-bar-track" style={{ background: "#EFE6D2" }}>
-                  <div className="progress-bar-fill" style={{ width: Math.min(100, Math.max(0, (parseFloat(monthData.savings || 0) / (parseFloat(monthData.income) + (parseFloat(monthData.extra) || 0))) * 100)) + "%", background: "linear-gradient(90deg,#4A6FA5,#7B9CC9)" }}></div>
-                </div>
-                <div style={{ fontSize: 11, color: "#8A7F68", marginTop: 4, textAlign: "right" }}>
-                  আয়ের {Math.round(Math.min(100, Math.max(0, (parseFloat(monthData.savings || 0) / (parseFloat(monthData.income) + (parseFloat(monthData.extra) || 0))) * 100)))}% সঞ্চয় হয়েছে
-                </div>
-              </div>
-            ) : null}
-          </div>
 
           <div className="subblock">
             <div className="field-row" style={{ alignItems: "center", marginBottom: 4 }}>
@@ -6915,19 +7021,19 @@ function DailyLifeManagement() {
           </div>
 
           {!planSubOpen ? (
-            <div className="subblock" style={{ padding: 0, overflow: "hidden" }}>
-              {PLAN_SECTIONS.map((item, i) => (
-                <div
-                  key={item.key}
-                  onClick={() => setPlanSubOpen(item.key)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < PLAN_SECTIONS.length - 1 ? "1px solid #E7DDC7" : "none" }}
-                >
-                  <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 11.5, color: "#8A7F68", fontFamily: "'IBM Plex Mono'" }}>{monthPlan[item.key].length ? monthPlan[item.key].length + " টা" : ""}</span>
-                    <Icon name="chevron_left" size={18} color="#8A7F68" />
-                  </span>
-                </div>
+            <div className="hishab-grid">
+              <div className="hishab-tile" style={{ cursor: "default" }}>
+                <div className="hishab-tile-icon" style={{ background: "#4A6FA522" }}><Icon name="savings" size={15} color="#4A6FA5" /></div>
+                <div className="hishab-tile-title">মাসিক সঞ্চয়</div>
+                <div className="hishab-tile-value">৳{fmtMoney(monthData.savings)}</div>
+                <div className="hishab-tile-sub">অটো-সিঙ্ক (হিসাব থেকে)</div>
+              </div>
+              {PLAN_SECTIONS.map(item => (
+                <button key={item.key} className="hishab-tile" onClick={() => setPlanSubOpen(item.key)}>
+                  <div className="hishab-tile-icon" style={{ background: "#4A6FA522" }}><Icon name={item.icon} size={15} color="#4A6FA5" /></div>
+                  <div className="hishab-tile-title">{item.shortLabel}</div>
+                  <div className="hishab-tile-sub">{monthPlan[item.key].length ? monthPlan[item.key].length + " টা" : "যোগ করুন"}</div>
+                </button>
               ))}
             </div>
           ) : (
