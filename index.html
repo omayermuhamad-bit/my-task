@@ -177,6 +177,11 @@
   .amoli-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid #EFE6D2; }
   .amoli-row:last-child { border-bottom:none; }
   .amoli-check { width:26px; height:26px; border-radius:8px; border:2px solid #C6BB9C; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .yn-big-wrap { display:flex; align-items:center; gap:16px; justify-content:center; padding:6px 0; }
+  .yn-big-col { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .yn-big-btn { width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; border:2px solid; flex-shrink:0; transition:transform .12s ease, background .15s; }
+  .yn-big-btn:active { transform:scale(0.93); }
+  .yn-big-label { font-size:12px; font-weight:700; }
 
   .ex-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid #EFE6D2; gap:10px; }
   .ex-row:last-child { border-bottom:none; }
@@ -946,7 +951,6 @@ const OFFICE_TRANSPORT_TYPES = [
   { key: "transport", label: "শুধু ট্রান্সপোর্ট" },
 ];
 const HABIT_LIST = [
-  { key: "lustControl", label: "নিজের নিয়ন্ত্রণ (Lust Control)", shortLabel: "নিয়ন্ত্রণ", icon: "shield" },
   { key: "sadaqah", label: "সদকা/দান (ছোট হলেও)", shortLabel: "সদকা", icon: "volunteer_activism" },
 ];
 const HABIT_CATEGORIES = [
@@ -1323,7 +1327,7 @@ function emptyDay() {
     },
     zikir: { durud: null, istegfar: null, tasbihFatemi: null, eveDurud: null, eveIstegfar: null, eveTasbihFatemi: null, custom: [], masnun: {} },
     accounts: { transport: "", meal: "", gadget: "", brother: "", sister: "", familyNeed: "", nephew: "", relative: "", friends: "", donate: "", necessity: "", repair: "", unimportant: "", office: { meal: "", transport: [], others: [] } },
-    habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: false, walkingSteps: "", lustControl: false, noTextFirst: false, noTextStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
+    habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: null, walkingSteps: "", lustControl: null, noTextFirst: false, noTextStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
     quran: {
       reading: { pages: "", surah: "" },
       revision: { fix: { pages: "", surah: "" }, memorize: { pages: "", surah: "" } },
@@ -1363,6 +1367,9 @@ function mergeDay(loaded) {
       }
       const h = { ...base.habit, ...(loaded?.habit || {}), custom: Array.isArray(loaded?.habit?.custom) ? loaded.habit.custom : [], noTextStatus: { ...legacyNoTextStatus, ...(loaded?.habit?.noTextStatus || {}) }, unticks: { ...(loaded?.habit?.unticks || {}) } };
       delete h.noTextPersons;
+      // migrate legacy boolean meditation/lustControl (true/false) to the new tri-state yes/no/null
+      if (h.meditation === true) h.meditation = "yes"; else if (h.meditation === false) h.meditation = null;
+      if (h.lustControl === true) h.lustControl = "yes"; else if (h.lustControl === false) h.lustControl = null;
       if (Array.isArray(loaded?.habit?.sleepSessions)) {
         h.sleepSessions = loaded.habit.sleepSessions;
       } else if (loaded?.habit?.sleepTime && loaded?.habit?.wakeTime) {
@@ -1416,7 +1423,7 @@ function goalsUnfinished(day) {
   if (!studyDone) goals.push("পড়াশোনা");
   if (!Object.values(day.exercise.checklist).some(v => v) && !(parseFloat(day.exercise.quickSessionMinutes) > 0)) goals.push("ব্যায়াম");
   const sleepAuto = computeSleepAuto(day);
-  const habitDone = sleepAuto.earlyRising || sleepAuto.earlySleeping || day.habit.noScreenCount || day.habit.meditation || day.habit.walkingSteps || day.habit.lustControl || (day.habit.waterGlasses > 0) || (day.habit.ghorGochano > 0);
+  const habitDone = sleepAuto.earlyRising || sleepAuto.earlySleeping || day.habit.noScreenCount || day.habit.meditation === "yes" || day.habit.walkingSteps || day.habit.lustControl === "yes" || (day.habit.waterGlasses > 0) || (day.habit.ghorGochano > 0);
   if (!habitDone) goals.push("অভ্যাস");
   return goals;
 }
@@ -1434,7 +1441,7 @@ function dayCompletionScore(day, contacts, noTextPeople) {
   const waterOk = (day.habit.waterGlasses || 0) >= 8;
   const noTextOk = (noTextPeople && noTextPeople.length > 0) ? noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") : false;
   const sleepAutoScore = computeSleepAuto(day);
-  const fixedHabits = [sleepAutoScore.earlyRising, sleepAutoScore.earlySleeping, day.habit.meditation, walkOk, day.habit.lustControl, waterOk, noTextOk, day.habit.sadaqah, !!day.habit.noScreenCount, !!day.habit.ghorGochano];
+  const fixedHabits = [sleepAutoScore.earlyRising, sleepAutoScore.earlySleeping, day.habit.meditation === "yes", walkOk, day.habit.lustControl === "yes", waterOk, noTextOk, day.habit.sadaqah, !!day.habit.noScreenCount, !!day.habit.ghorGochano];
   ratios.push(fixedHabits.filter(Boolean).length / fixedHabits.length);
   ratios.push(day.diary.notes ? 1 : ([day.diary.accomplished, day.diary.events, day.diary.thoughts].filter(Boolean).length / 3));
   ratios.push(Object.values(day.accounts).some(v => v) ? 1 : 0);
@@ -1469,7 +1476,7 @@ function isTaskFullyDone(taskId, day, contacts, noTextPeople) {
       const waterOk = (day.habit.waterGlasses || 0) >= 8;
       const noTextOk = (noTextPeople && noTextPeople.length > 0) ? noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") : false;
       const sleepAutoTask = computeSleepAuto(day);
-      const fixed = [sleepAutoTask.earlyRising, sleepAutoTask.earlySleeping, day.habit.meditation, walkOk, day.habit.lustControl, waterOk, noTextOk, day.habit.sadaqah].every(Boolean);
+      const fixed = [sleepAutoTask.earlyRising, sleepAutoTask.earlySleeping, day.habit.meditation === "yes", walkOk, day.habit.lustControl === "yes", waterOk, noTextOk, day.habit.sadaqah].every(Boolean);
       return fixed && !!day.habit.noScreenCount && !!day.habit.ghorGochano;
     }
     case "diary": return !!(day.diary.notes || (day.diary.accomplished && day.diary.events && day.diary.thoughts));
@@ -2190,7 +2197,7 @@ function pointsHabit(rec) {
   if (!rec || !rec.habit) return 0;
   const h = rec.habit;
   let pts = 0;
-  if (h.meditation) pts += 2.4;
+  if (h.meditation === "yes") pts += 2.4; else if (h.meditation === "no") pts -= 2.4;
   const water = parseFloat(h.waterGlasses) || 0;
   if (water >= 4) pts += 2.4 + Math.floor((water - 4) / 2) * 1.2;
   pts += (parseInt(h.noScreenCount) || 0) * 1.2;
@@ -2207,7 +2214,7 @@ function pointsHabit(rec) {
   if (sleepAutoPts.earlyRising) pts += 1.2;
   if (sleepAutoPts.earlySleeping) pts += 1.2;
   Object.values(h.noTextStatus || {}).forEach(status => { if (status === "yes") pts += 1.2; else if (status === "no") pts -= 1.2; });
-  if (h.lustControl) pts += 2.4;
+  if (h.lustControl === "yes") pts += 2.4; else if (h.lustControl === "no") pts -= 2.4;
   pts += (parseInt(h.ghorGochano) || 0) * 1.2;
   pts -= (parseInt(h.ghorGochanoMiss) || 0) * 1.2;
   pts -= habitUntickCount(rec) * 0.6;
@@ -4627,7 +4634,8 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
 
       <div className="pr-section">
         <h3>অভ্যাস</h3>
-        <div className="pr-row"><b>মেডিটেশন ১০ মিনিট:</b> {day.habit.meditation ? "হয়েছে ✓" : "হয়নি"}</div>
+        <div className="pr-row"><b>মেডিটেশন ১০ মিনিট:</b> {day.habit.meditation === "yes" ? "হয়েছে ✓" : day.habit.meditation === "no" ? "হয়নি ✕" : "রেকর্ড নেই"}</div>
+        <div className="pr-row"><b>নিজের নিয়ন্ত্রণ (Lust Control):</b> {day.habit.lustControl === "yes" ? "হয়েছে ✓" : day.habit.lustControl === "no" ? "হয়নি ✕" : "রেকর্ড নেই"}</div>
         <div className="pr-row"><b>হাঁটা:</b> {day.habit.walkingSteps ? day.habit.walkingSteps + " স্টেপ" : "—"}</div>
         {(() => { const sa = computeSleepAuto(day); return (
           <>
@@ -5642,6 +5650,9 @@ function DailyLifeManagement() {
   const removeCustomZikir = (id) => { if (!window.confirm("এই যিকিরটি মুছে ফেলতে চান?")) return; updateDay(prev => ({ ...prev, zikir: { ...prev.zikir, custom: prev.zikir.custom.filter(z => z.id !== id) } })); };
   const toggleMasnunDua = (key) => updateDay(prev => ({ ...prev, zikir: { ...prev.zikir, masnun: { ...prev.zikir.masnun, [key]: !prev.zikir.masnun[key] } } }));
   const toggleHabit = (key) => updateDay(prev => ({ ...prev, habit: { ...prev.habit, [key]: !prev.habit[key] } }));
+  const setHabitStatus = (key, status) => updateDay(prev => ({
+    ...prev, habit: { ...prev.habit, [key]: prev.habit[key] === status ? null : status },
+  }));
   const saveNoTextPeople = async (list) => {
     setNoTextPeople(list);
     try { await storage.set("noTextPeople", JSON.stringify(list)); } catch (e) { console.error(e); }
@@ -5800,7 +5811,7 @@ function DailyLifeManagement() {
       setPedometerActive(false);
     }
   }, [date]);
-  const completeMeditation = () => updateDay(prev => ({ ...prev, habit: { ...prev.habit, meditation: true } }));
+  const completeMeditation = () => updateDay(prev => ({ ...prev, habit: { ...prev.habit, meditation: "yes" } }));
   const addCustomHabit = (name, category) => {
     if (!name.trim()) return;
     updateDay(prev => ({ ...prev, habit: { ...prev.habit, custom: [...prev.habit.custom, { id: Date.now(), name: name.trim(), done: false, category: category || "other" }] } }));
@@ -6000,7 +6011,7 @@ function DailyLifeManagement() {
   const waterDone = (day.habit.waterGlasses || 0) >= 8;
   const noTextYesCount = Object.values(day.habit.noTextStatus || {}).filter(s => s === "yes").length;
   const sleepAutoDone = computeSleepAuto(day);
-  const habitFixedDone = [sleepAutoDone.earlyRising, sleepAutoDone.earlySleeping, day.habit.meditation, walkingDone, day.habit.lustControl, waterDone, day.habit.sadaqah].filter(Boolean).length + (day.habit.noScreenCount ? 1 : 0) + (day.habit.ghorGochano ? 1 : 0) + noTextYesCount;
+  const habitFixedDone = [sleepAutoDone.earlyRising, sleepAutoDone.earlySleeping, day.habit.meditation === "yes", walkingDone, day.habit.lustControl === "yes", waterDone, day.habit.sadaqah].filter(Boolean).length + (day.habit.noScreenCount ? 1 : 0) + (day.habit.ghorGochano ? 1 : 0) + noTextYesCount;
   const simpleHabitItems = [
     ...HABIT_LIST.map(h => ({ id: h.key, label: h.label, shortLabel: h.shortLabel || h.label, icon: h.icon, done: !!day.habit[h.key], isCustom: false })),
     ...day.habit.custom.map(h => ({ id: h.id, label: h.name, shortLabel: h.name, done: h.done, isCustom: true, category: h.category || "other" })),
@@ -6067,6 +6078,15 @@ function DailyLifeManagement() {
   const zikirPoints = pointsZikir(day);
   const quranPoints = pointsQuran(day);
   const surahRevisionPlan = computeSurahRevisionPlan(date, surahStatus);
+  const quranTodayReadingDone = surahRevisionPlan.items.length > 0 && surahRevisionPlan.items.every(s => !!day.quran.revisionDone[s.number]);
+  const toggleTodayReadingAllDone = () => {
+    const makeDone = !quranTodayReadingDone;
+    updateDay(prev => {
+      const rd = { ...prev.quran.revisionDone };
+      surahRevisionPlan.items.forEach(s => { rd[s.number] = makeDone; });
+      return { ...prev, quran: { ...prev.quran, revisionDone: rd } };
+    });
+  };
   // আগের দিনগুলোর রিভিশন রুটিনের সূরা যেগুলো "শেষ হয়েছে" মার্ক করা হয়নি, সেগুলো আজও বাকি হিসেবে দেখানো হবে
   const todayRevisionSurahNumbers = surahRevisionPlan.items.map(s => s.number);
   const pendingRevisionSurahsMap = getCarriedOverItems(
@@ -6429,16 +6449,32 @@ function DailyLifeManagement() {
         <Card id="quran" hidden={hiddenCards.includes("quran")} iconName="menu_book" title="কুরআন" subtitle="তিলাওয়াত, রিভিশন ও আমলি সূরা" accent="#8A6A2F" badge={quranBadge} points={quranPoints} streak={taskStreaks.quran} notDone={day.taskNotDone.quran} onToggleNotDone={() => toggleTaskNotDone("quran")} expanded={expanded === "quran"} onToggle={toggle}>
           <div
             onClick={() => { setQuranSubOpen("revision"); setRevisionSubOpen("routine"); }}
-            style={{ cursor: "pointer", width: "100%", background: surahRevisionPlan.dayType === "B" ? "#A14545" : "#8A6A2F", color: "#FBF6EA", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}
+            style={{ cursor: "pointer", width: "100%", background: surahRevisionPlan.items.length === 0 ? "#8A6A2F" : (quranTodayReadingDone ? "#2F6B5E" : "#A14545"), color: "#FBF6EA", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: surahRevisionPlan.items.length > 0 ? 10 : 0, flexWrap: "wrap", gap: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Icon name="auto_stories" size={20} />
                 <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 16 }}>আজকের পড়া</span>
               </div>
-              <span style={{ fontSize: 11.5, fontWeight: 700, background: "rgba(255,255,255,0.18)", padding: "3px 10px", borderRadius: 999 }}>
-                {surahRevisionPlan.dayType === "B" ? "🔴 Bad" : "🟤 Normal"} · {surahRevisionPlan.target} পৃষ্ঠা
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, background: "rgba(255,255,255,0.18)", padding: "3px 10px", borderRadius: 999 }}>
+                  {surahRevisionPlan.dayType === "B" ? "🔴 Bad" : "🟤 Normal"} · {surahRevisionPlan.target} পৃষ্ঠা
+                </span>
+                {surahRevisionPlan.items.length > 0 && (
+                  <div
+                    onClick={(e) => { e.stopPropagation(); toggleTodayReadingAllDone(); }}
+                    title={quranTodayReadingDone ? "আনটিক করুন" : "সম্পন্ন হিসেবে টিক দিন"}
+                    style={{
+                      width: 28, height: 28, borderRadius: 8, flexShrink: 0, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: quranTodayReadingDone ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.18)",
+                      border: "1.5px solid rgba(255,255,255,0.7)",
+                    }}
+                  >
+                    <Icon name="check" size={17} color={quranTodayReadingDone ? "#2F6B5E" : "#FBF6EA"} />
+                  </div>
+                )}
+              </div>
             </div>
             {surahRevisionPlan.items.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -6919,7 +6955,8 @@ function DailyLifeManagement() {
             <div className="subblock" style={{ padding: 12 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
                 {[
-                  { key: "meditation", icon: "self_improvement", label: "মেডিটেশন ১০ মিনিট", shortLabel: "মেডিটেশন", done: !!day.habit.meditation },
+                  { key: "meditation", icon: "self_improvement", label: "মেডিটেশন ১০ মিনিট", shortLabel: "মেডিটেশন", done: day.habit.meditation === "yes", bad: day.habit.meditation === "no" },
+                  { key: "lustControl", icon: "shield", label: "নিজের নিয়ন্ত্রণ (Lust Control)", shortLabel: "নিয়ন্ত্রণ", done: day.habit.lustControl === "yes", bad: day.habit.lustControl === "no" },
                   { key: "walking", icon: "directions_walk", label: "হাঁটা", shortLabel: "হাঁটা", done: (day.habit.walkingSteps || 0) > 0 },
                   { key: "water", icon: "water_drop", label: "পানি ট্র্যাকার", shortLabel: "পানি", done: (day.habit.waterGlasses || 0) > 0 },
                   { key: "noScreen", icon: "phonelink_off", label: "নো-স্ক্রিন টাইম", shortLabel: "নো-স্ক্রিন", done: (day.habit.noScreenCount || 0) > 0 },
@@ -6935,11 +6972,11 @@ function DailyLifeManagement() {
                       style={{
                         width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
-                        background: item.done ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                        border: "1.5px solid " + (item.bad ? "#A14545" : (darkMode ? "#31402F" : "#E7DDC7")),
+                        background: item.done ? "#6B7A4F" : item.bad ? "#A14545" : (darkMode ? "#1F2A22" : "#FBF6EA"),
                       }}
                     >
-                      <Icon name={item.icon} size={22} color={item.done ? "#FBF6EA" : "#6B7A4F"} />
+                      <Icon name={item.bad ? "close" : item.icon} size={22} color={(item.done || item.bad) ? "#FBF6EA" : "#6B7A4F"} />
                     </button>
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
                   </div>
@@ -7018,19 +7055,79 @@ function DailyLifeManagement() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setHabitSubOpen(null)}>
                 <Icon name="arrow_back" size={18} color="#6B7A4F" />
                 <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#6B7A4F" }}>
-                  {{ meditation: "মেডিটেশন ১০ মিনিট", walking: "হাঁটা", water: "পানি ট্র্যাকার", noScreen: "নো-স্ক্রিন টাইম", ghorGochano: "ঘর গোছানো", sleep: "ঘুম ট্র্যাকার", weight: "ওজন ট্র্যাকার", noText: "নো টেক্সট ফার্স্ট" }[habitSubOpen]}
+                  {{ meditation: "মেডিটেশন ১০ মিনিট", lustControl: "নিজের নিয়ন্ত্রণ (Lust Control)", walking: "হাঁটা", water: "পানি ট্র্যাকার", noScreen: "নো-স্ক্রিন টাইম", ghorGochano: "ঘর গোছানো", sleep: "ঘুম ট্র্যাকার", weight: "ওজন ট্র্যাকার", noText: "নো টেক্সট ফার্স্ট" }[habitSubOpen]}
                 </span>
               </div>
 
               {habitSubOpen === "meditation" && (
-                <div className="amoli-row">
-                  <span style={{ fontWeight: 600, fontSize: 14 }}>মেডিটেশন ১০ মিনিট</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="amoli-row" style={{ flexDirection: "column", gap: 12, alignItems: "stretch" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>মেডিটেশন ১০ মিনিট</span>
                     <button className="med-timer-btn" onClick={() => setShowMeditationTimer(true)}><Icon name="timer" size={14} /> Start</button>
-                    <div className="amoli-check" style={day.habit.meditation ? { background: "#6B7A4F", borderColor: "#6B7A4F" } : {}} onClick={() => toggleHabit("meditation")}>
-                      {day.habit.meditation ? <Icon name="check" size={16} color="#FBF6EA" /> : null}
+                  </div>
+                  <div className="yn-big-wrap">
+                    <div className="yn-big-col">
+                      <div
+                        className="yn-big-btn"
+                        style={{
+                          borderColor: day.habit.meditation === "yes" ? "#6B7A4F" : (darkMode ? "#31402F" : "#E7DDC7"),
+                          background: day.habit.meditation === "yes" ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                        }}
+                        onClick={() => setHabitStatus("meditation", "yes")}
+                      >
+                        <Icon name="check" size={32} color={day.habit.meditation === "yes" ? "#FBF6EA" : "#6B7A4F"} />
+                      </div>
+                      <span className="yn-big-label" style={{ color: "#6B7A4F" }}>হ্যাঁ</span>
+                    </div>
+                    <div className="yn-big-col">
+                      <div
+                        className="yn-big-btn"
+                        style={{
+                          borderColor: day.habit.meditation === "no" ? "#A14545" : (darkMode ? "#31402F" : "#E7DDC7"),
+                          background: day.habit.meditation === "no" ? "#A14545" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                        }}
+                        onClick={() => setHabitStatus("meditation", "no")}
+                      >
+                        <Icon name="close" size={32} color={day.habit.meditation === "no" ? "#FBF6EA" : "#A14545"} />
+                      </div>
+                      <span className="yn-big-label" style={{ color: "#A14545" }}>না</span>
                     </div>
                     <UntickControl count={(day.habit.unticks || {}).meditation} onInc={() => adjustUntick("meditation", 1)} onDec={() => adjustUntick("meditation", -1)} />
+                  </div>
+                </div>
+              )}
+
+              {habitSubOpen === "lustControl" && (
+                <div className="amoli-row" style={{ flexDirection: "column", gap: 12, alignItems: "stretch" }}>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>নিজের নিয়ন্ত্রণ (Lust Control)</span>
+                  <div className="yn-big-wrap">
+                    <div className="yn-big-col">
+                      <div
+                        className="yn-big-btn"
+                        style={{
+                          borderColor: day.habit.lustControl === "yes" ? "#6B7A4F" : (darkMode ? "#31402F" : "#E7DDC7"),
+                          background: day.habit.lustControl === "yes" ? "#6B7A4F" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                        }}
+                        onClick={() => setHabitStatus("lustControl", "yes")}
+                      >
+                        <Icon name="check" size={32} color={day.habit.lustControl === "yes" ? "#FBF6EA" : "#6B7A4F"} />
+                      </div>
+                      <span className="yn-big-label" style={{ color: "#6B7A4F" }}>হ্যাঁ</span>
+                    </div>
+                    <div className="yn-big-col">
+                      <div
+                        className="yn-big-btn"
+                        style={{
+                          borderColor: day.habit.lustControl === "no" ? "#A14545" : (darkMode ? "#31402F" : "#E7DDC7"),
+                          background: day.habit.lustControl === "no" ? "#A14545" : (darkMode ? "#1F2A22" : "#FBF6EA"),
+                        }}
+                        onClick={() => setHabitStatus("lustControl", "no")}
+                      >
+                        <Icon name="close" size={32} color={day.habit.lustControl === "no" ? "#FBF6EA" : "#A14545"} />
+                      </div>
+                      <span className="yn-big-label" style={{ color: "#A14545" }}>না</span>
+                    </div>
+                    <UntickControl count={(day.habit.unticks || {}).lustControl} onInc={() => adjustUntick("lustControl", 1)} onDec={() => adjustUntick("lustControl", -1)} />
                   </div>
                 </div>
               )}
