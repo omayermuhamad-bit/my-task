@@ -717,46 +717,84 @@ const SURAH_STATUS_META = {
   B: { label: "Bad", color: "#A14545", bg: "#F5DCDC" },
 };
 const SURAH_STATUS_CYCLE = ["N", "G", "B"];
-// সূরা-সংখ্যা না গুনে পৃষ্ঠা-সংখ্যা গুনে প্ল্যান করা হয়, যাতে প্রতিদিনের রিভিশনের বোঝা (পৃষ্ঠা হিসেবে) সমান/ব্যালান্সড থাকে —
-// নাহলে কোনোদিন ২টা ছোট সূরা (২-৩ পৃষ্ঠা) আবার কোনোদিন ২টা বড় সূরা (৯-১০ পৃষ্ঠা) পড়ে গিয়ে রুটিন এলোমেলো হয়ে যেত।
-// সপ্তাহে ৫ দিন (শনি-বৃহস্পতি) নিয়মিত রুটিন, আর ২ দিন (শুক্র, রবি) আলাদা — Bad কমিয়ে Good-এ বেশি সময় দেওয়া।
-// প্রতিদিন একটাই পারা ধরে রুটিন বানানো হয় (পারা মিক্স হয়না) — পারাগুলো ঘুরে ঘুরে আসে, যাতে সবগুলো পারা কভার হয়।
-const SURAH_REVISION_WEEKDAY_TARGET = { B: 2, N: 5, G: 0 };  // শনি, সোম, মঙ্গল, বুধ, বৃহস্পতি
-const SURAH_REVISION_SPECIAL_TARGET = { B: 1, N: 0, G: 10 }; // শুক্র, রবি
-const SPECIAL_REVISION_WEEKDAYS = [0, 5]; // 0 = রবিবার, 5 = শুক্রবার
-const ALL_PARAS = Array.from(new Set(PREVIOUS_SURAHS.map(s => s.para))).sort((a, b) => a - b);
+// প্রতিদিন শুধু একটাই ক্যাটাগরি অ্যাক্টিভ থাকে — Bad (৩ পৃষ্ঠা) নয়তো Normal (৫ পৃষ্ঠা), দুটো একসাথে মিক্স হয়না।
+// দিন পার হওয়ার সাথে সাথে ক্যাটাগরি পাল্টে পাল্টে আসে (একদিন Normal তো তার পরের দিন Bad)।
+// সূরাগুলো পৃষ্ঠা-সংখ্যা ধরে একটানা (নাম্বার অনুযায়ী) পড়া হয় — কোনো সূরা যদি সেদিনের টার্গেট পৃষ্ঠার চেয়ে বড় হয়,
+// তাহলে সেদিন যতটুকু ধরে ততটুকু পড়ে বাকিটা ঠিক এই ক্যাটাগরি যেদিন আবার আসবে সেদিন থেকে চালিয়ে যাওয়া হয় — সূরা ভাগ হয়ে চলে।
+const QURAN_DAY_TARGET = { B: 3, N: 5 };
+function getQuranStatusSequence(status, statusMap) {
+  return PREVIOUS_SURAHS
+    .filter(s => ((statusMap && statusMap[s.number]) || s.status) === status)
+    .slice()
+    .sort((a, b) => a.number - b.number);
+}
 function computeSurahRevisionPlan(dateStr, statusMap) {
   const dayIndex = Math.floor(new Date(dateStr + "T00:00:00").getTime() / 86400000);
-  const weekday = new Date(dateStr + "T00:00:00").getDay();
-  const pageTarget = SPECIAL_REVISION_WEEKDAYS.includes(weekday) ? SURAH_REVISION_SPECIAL_TARGET : SURAH_REVISION_WEEKDAY_TARGET;
-  const todayPara = ALL_PARAS[dayIndex % ALL_PARAS.length];
-  const paraSurahs = PREVIOUS_SURAHS.filter(s => s.para === todayPara);
-  const byStatus = { B: [], N: [], G: [] };
-  paraSurahs.forEach(s => {
-    const st = (statusMap && statusMap[s.number]) || s.status;
-    (byStatus[st] || byStatus.N).push(s);
-  });
-  const pickByPages = (list, target) => {
-    if (!list.length || target <= 0) return [];
-    const n = list.length;
-    const start = dayIndex % n;
-    const result = [];
-    let pageSum = 0;
-    let i = 0;
-    while (pageSum < target && i < n) {
-      const surah = list[(start + i) % n];
-      result.push(surah);
-      pageSum += surah.pages;
-      i++;
+  const dayType = dayIndex % 2 === 0 ? "N" : "B"; // প্রতিদিন পাল্টে পাল্টে আসে
+  const target = QURAN_DAY_TARGET[dayType];
+  const seq = getQuranStatusSequence(dayType, statusMap);
+  const totalPages = seq.reduce((sum, s) => sum + s.pages, 0);
+  const items = [];
+  if (seq.length && totalPages > 0 && target > 0) {
+    // এই ক্যাটাগরির দিন এর আগে কতবার এসেছে তা গুনে পৃষ্ঠার কার্সর বের করা হয় — এভাবেই বাকি পৃষ্ঠা পরের বার থেকে চালিয়ে যাওয়া সম্ভব হয়, আলাদা করে "কতদূর পড়া হয়েছে" সংরক্ষণ না করেই।
+    const priorOccurrences = Math.floor(dayIndex / 2);
+    let cursor = (priorOccurrences * target) % totalPages;
+    let remaining = target;
+    let guard = 0;
+    while (remaining > 0 && guard < seq.length * 3 + 2) {
+      guard++;
+      const pos = cursor % totalPages;
+      let acc = 0, idx = 0;
+      for (; idx < seq.length; idx++) {
+        if (pos < acc + seq[idx].pages) break;
+        acc += seq[idx].pages;
+      }
+      const surah = seq[idx];
+      const pageOffset = pos - acc; // 0-indexed page within this surah
+      const pagesLeft = surah.pages - pageOffset;
+      const take = Math.min(remaining, pagesLeft);
+      items.push({ ...surah, fromPage: pageOffset + 1, toPage: pageOffset + take, pagesToday: take });
+      remaining -= take;
+      cursor += take;
     }
-    return result;
-  };
-  return {
-    para: todayPara,
-    B: pickByPages(byStatus.B, pageTarget.B),
-    N: pickByPages(byStatus.N, pageTarget.N),
-    G: pickByPages(byStatus.G, pageTarget.G),
-  };
+  }
+  return { dayType, target, items };
+}
+
+// ---- রুটিনের টপিক/সূরা "শেষ হয়েছে কিনা" ট্র্যাক করে, শেষ না হলে পরের দিন বাকি হিসেবে দেখানোর জন্য হেল্পার ----
+function addDaysStr(dateStr, delta) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + delta);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function getDayRecordSync(dateStr) {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_PREFIX + "day:" + dateStr);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+// এই তারিখের আগের কোনো রুটিন-ব্যাকলগ আর টানা হবে না — পুরোনো সব "বাকি" এখানে রিসেট, এখান থেকে নতুন করে ট্র্যাকিং শুরু
+const CARRY_OVER_RESET_DATE = "2026-08-01";
+// currentDateStr এর আগের `windowDays` দিন স্ক্যান করে দেখে কোন কোন রুটিন-আইটেম "শেষ" মার্ক হয়নি —
+// সেগুলোকে "বাকি" (pending) হিসেবে ফেরত দেয়, যাতে সেগুলো আজকের লিস্টেও দেখানো যায় (হারিয়ে না যায়)।
+// CARRY_OVER_RESET_DATE এর আগের কোনো দিন এখানে বিবেচনা করা হয় না (পুরোনো ব্যাকলগ রিসেট করা আছে)।
+function getCarriedOverItems(currentDateStr, extractRoutineItems, getDoneMap, windowDays) {
+  const pending = {};
+  const n = windowDays || 21;
+  for (let i = n; i >= 1; i--) {
+    const ds = addDaysStr(currentDateStr, -i);
+    if (ds < CARRY_OVER_RESET_DATE) continue;
+    let routineItems = [];
+    try { routineItems = extractRoutineItems(ds) || []; } catch (e) { routineItems = []; }
+    let doneMap = {};
+    try { doneMap = getDoneMap(ds) || {}; } catch (e) { doneMap = {}; }
+    routineItems.forEach(key => {
+      if (doneMap[key]) delete pending[key];
+      else if (!(key in pending)) pending[key] = ds;
+    });
+    Object.keys(pending).forEach(key => { if (doneMap[key]) delete pending[key]; });
+  }
+  return pending;
 }
 const ZIKIR_LIST = [
   { key: "durud", label: "দুরুদ শরীফ" },
@@ -764,6 +802,80 @@ const ZIKIR_LIST = [
   { key: "tasbihFatemi", label: "তাসবিহে ফাতেমী" },
 ];
 const ZIKIR_COUNT_OPTIONS = [100, 200];
+const MASNUN_DUA_LIST = [
+  {
+    key: "onishtoAshray",
+    label: "অনিষ্ট থেকে আশ্রয়ের দোয়া",
+    arabic: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+    uccharon: "আ'ঊযু বি কালিমাতিল্লাহিত-তাম্মাতি মিন শার্রি মা খালাক।",
+    ortho: "আমি আল্লাহর পরিপূর্ণ বাণীসমূহের আশ্রয় প্রার্থনা করছি, তিনি যা সৃষ্টি করেছেন তার সকল অনিষ্ট থেকে।",
+    fojilat: "যে ব্যক্তি কোনো নতুন স্থানে নেমে এই দোয়াটি পড়বে, সে সেই স্থান ত্যাগ করা পর্যন্ত আল্লাহর ইচ্ছায় কোনো কিছু তার ক্ষতি করতে পারবে না। (সহীহ মুসলিম)",
+    niyom: "নতুন কোনো স্থানে পৌঁছালে ১ বার।",
+  },
+  {
+    key: "sakalSondhaNirapotta",
+    label: "সকাল-সন্ধ্যার নিরাপত্তার দোয়া",
+    arabic: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+    uccharon: "বিসমিল্লাহিল্লাযী লা ইয়াদুররু মা'আসমিহি শাইউন ফিল আরদি ওয়া লা ফিস সামা', ওয়া হুয়াস-সামীউল আলীম।",
+    ortho: "আল্লাহর নামে, যার নামের সঙ্গে পৃথিবী ও আকাশের কোনো কিছুই ক্ষতি করতে পারে না। তিনি সর্বশ্রোতা, সর্বজ্ঞ।",
+    fojilat: "সকাল ও সন্ধ্যায় ৩ বার পড়লে আকস্মিক বিপদ থেকে আল্লাহর হেফাজত লাভ হয়। (সুনানে আবু দাউদ)",
+    niyom: "সকাল ৩ বার, সন্ধ্যা ৩ বার।",
+  },
+  {
+    key: "jahannamMukti",
+    label: "জাহান্নাম থেকে মুক্তির দোয়া",
+    arabic: "اللَّهُمَّ أَجِرْنِي مِنَ النَّارِ",
+    uccharon: "আল্লাহুম্মা আজিরনী মিনান-নার।",
+    ortho: "হে আল্লাহ! আমাকে জাহান্নামের আগুন থেকে রক্ষা করুন।",
+    fojilat: "ফজর ও মাগরিবের পর ৭ বার পড়ার ফজিলত হাদিসে এসেছে।",
+    niyom: "ফজরের পর ৭ বার, মাগরিবের পর ৭ বার।",
+  },
+  {
+    key: "varyAmolerZikir",
+    label: "ভারী আমলের যিকির",
+    arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ",
+    uccharon: "সুবহানাল্লাহি ওয়া বিহামদিহি, সুবহানাল্লাহিল আযীম।",
+    ortho: "আল্লাহ পবিত্র, সকল প্রশংসা তাঁর। মহান আল্লাহ পবিত্র, সকল প্রশংসা তাঁর।",
+    fojilat: "এটি আল্লাহর কাছে অত্যন্ত প্রিয়, জিহ্বায় হালকা এবং মীযানে ভারী। (সহীহ বুখারী)",
+    niyom: "নির্দিষ্ট সংখ্যা নেই। 'সুবহানাল্লাহি ওয়া বিহামদিহি' অংশটি প্রতিদিন ১০০ বার পড়ার বিশেষ ফজিলত রয়েছে।",
+  },
+  {
+    key: "shotrurOnishto",
+    label: "শত্রুর অনিষ্ট থেকে আশ্রয়ের দোয়া",
+    arabic: "اللَّهُمَّ إِنَّا نَجْعَلُكَ فِي نُحُورِهِمْ، وَنَعُوذُ بِكَ مِنْ شُرُورِهِمْ",
+    uccharon: "আল্লাহুম্মা ইন্না নাজ'আলুকা ফি নুহূরিহিম, ওয়া না'ঊযু বিকা মিন শুরূরিহিম।",
+    ortho: "হে আল্লাহ! আমরা তাদের মোকাবিলায় আপনাকেই যথেষ্ট মনে করি এবং তাদের অনিষ্ট থেকে আপনার আশ্রয় চাই।",
+    fojilat: "শত্রু বা অত্যাচারীর ভয়ে নবী ﷺ এই দোয়া পড়তেন।",
+    niyom: "প্রয়োজনমতো, নির্দিষ্ট সংখ্যা নেই।",
+  },
+  {
+    key: "tawakkul",
+    label: "তাওয়াক্কুলের দোয়া",
+    arabic: "حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+    uccharon: "হাসবিয়াল্লাহু লা ইলাহা ইল্লা হু, আলাইহি তাওয়াক্কালতু, ওয়া হুয়া রব্বুল আরশিল আযীম।",
+    ortho: "আমার জন্য আল্লাহই যথেষ্ট। আমি তাঁরই ওপর ভরসা করেছি। তিনিই মহান আরশের রব।",
+    fojilat: "কুরআনের আয়াত (সূরা আত-তাওবাহ ৯:১২৯)। সকাল-সন্ধ্যায় ৭ বার পড়ার ফজিলত একটি বর্ণনায় এসেছে।",
+    niyom: "সকাল ৭ বার, সন্ধ্যা ৭ বার।",
+  },
+  {
+    key: "akosmikMrittuBipod",
+    label: "আকস্মিক মৃত্যু ও বিপদ থেকে আশ্রয়ের দোয়া",
+    arabic: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَدْمِ، وَأَعُوذُ بِكَ مِنَ التَّرَدِّي، وَأَعُوذُ بِكَ مِنَ الْغَرَقِ وَالْحَرَقِ وَالْهَرَمِ، وَأَعُوذُ بِكَ أَنْ يَتَخَبَّطَنِي الشَّيْطَانُ عِنْدَ الْمَوْتِ، وَأَعُوذُ بِكَ أَنْ أَمُوتَ فِي سَبِيلِكَ مُدْبِرًا، وَأَعُوذُ بِكَ أَنْ أَمُوتَ لَدِيغًا",
+    uccharon: "আল্লাহুম্মা ইন্নী আ'ঊযু বিকা মিনাল-হাদমি, ওয়া আ'ঊযু বিকা মিনাত-তারাদ্দী, ওয়া আ'ঊযু বিকা মিনাল-গারাকি ওয়াল-হারাকি ওয়াল-হারামি, ওয়া আ'ঊযু বিকা আই ইয়াতাখাব্বাতানিশ-শাইতানু ইনদাল-মাউতি, ওয়া আ'ঊযু বিকা আন আমূতা ফী সাবীলিকা মুদবিরান, ওয়া আ'ঊযু বিকা আন আমূতা লাদীগান।",
+    ortho: "হে আল্লাহ! আমি আপনার কাছে আশ্রয় চাই ধ্বংসস্তূপে চাপা পড়া, পড়ে যাওয়া, ডুবে যাওয়া, আগুনে পুড়ে যাওয়া ও বার্ধক্যের অসহায়ত্ব থেকে; এবং আশ্রয় চাই মৃত্যুর সময় শয়তানের ধোঁকা থেকে, আল্লাহর পথে পলায়নরত অবস্থায় মৃত্যু থেকে, এবং বিষাক্ত প্রাণীর দংশনে মৃত্যু থেকে।",
+    fojilat: "এটি নবী ﷺ-এর শেখানো সহিহ দোয়াগুলোর একটি।",
+    niyom: "সকাল-সন্ধ্যায় ১ বার, নির্দিষ্ট সংখ্যা নেই।",
+  },
+  {
+    key: "robbiTawakkulHefajot",
+    label: "রব্বি তাওয়াক্কুল ও হেফাজতের দোয়া",
+    arabic: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، عَلَيْكَ تَوَكَّلْتُ، وَأَنْتَ رَبُّ الْعَرْشِ الْعَظِيمِ، مَا شَاءَ اللَّهُ كَانَ، وَمَا لَمْ يَشَأْ لَمْ يَكُنْ، لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ، أَعْلَمُ أَنَّ اللَّهَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، وَأَنَّ اللَّهَ قَدْ أَحَاطَ بِكُلِّ شَيْءٍ عِلْمًا، اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ كُلِّ دَابَّةٍ أَنْتَ آخِذٌ بِنَاصِيَتِهَا، إِنَّ رَبِّي عَلَى صِرَاطٍ مُسْتَقِيمٍ",
+    uccharon: "আল্লাহুম্মা আন্তা রব্বী লা ইলাহা ইল্লা আন্তা, আলাইকা তাওয়াক্কালতু, ওয়া আন্তা রব্বুল আরশিল আযীম, মা শা'আল্লাহু কান, ওয়া মা লাম ইয়াশা লাম ইয়াকুন, লা হাওলা ওয়ালা কুওয়াতা ইল্লা বিল্লাহ, আ'লামু আন্নাল্লাহা আলা কুল্লি শাইয়িন কাদীর, ওয়া আন্নাল্লাহা কাদ আহাতা বিকুল্লি শাইয়িন ইলমা, আল্লাহুম্মা ইন্নী আ'ঊযু বিকা মিন শার্রি নাফসী, ওয়া মিন শার্রি কুল্লি দাব্বাতিন আন্তা আখিযুম বিনাসিয়াতিহা, ইন্না রব্বী আলা সিরাতিম মুস্তাকীম।",
+    ortho: "হে আল্লাহ! আপনিই আমার রব। আপনি ছাড়া কোনো উপাস্য নেই। আমি আপনারই ওপর ভরসা করেছি। আপনিই মহান আরশের রব। আল্লাহ যা চান তাই হয়, আর যা চান না তা হয় না। আল্লাহর সাহায্য ছাড়া কোনো শক্তি ও সামর্থ্য নেই। আমি জানি, আল্লাহ সবকিছুর ওপর ক্ষমতাবান এবং তাঁর জ্ঞান সবকিছুকে পরিবেষ্টন করে আছে। হে আল্লাহ! আমি আমার নফসের অনিষ্ট থেকে এবং প্রত্যেক প্রাণীর অনিষ্ট থেকে আপনার আশ্রয় চাই, যার কপালের ঝুঁটি আপনার হাতে। নিশ্চয়ই আমার রব সরল পথের ওপর আছেন।",
+    fojilat: "এই দোয়াটি সকাল-সন্ধ্যার মাসনুন যিকিরগুলোর মধ্যে উল্লেখিত। এতে আল্লাহর ওপর তাওয়াক্কুল, সর্বশক্তিমত্তার স্বীকৃতি এবং সকল অনিষ্ট থেকে আশ্রয় প্রার্থনা করা হয়। এটি হিসনুল মুসলিমেও অন্তর্ভুক্ত।",
+    niyom: "সকালে ১ বার, সন্ধ্যায় ১ বার। এটি নিয়মিত সকাল-সন্ধ্যার আমল হিসেবে পড়া উত্তম।",
+  },
+];
 const ACCOUNT_CATEGORIES = [
   { key: "transport", label: "ট্রান্সপোর্ট" },
   { key: "meal", label: "খাবার" },
@@ -805,7 +917,75 @@ const SUBJECT_LIST = [
   "Bangladesh Affairs", "International Affairs", "General Science", "Geography",
   "ICT", "Mathematics", "Mental Ability", "Ethics & Good Governance",
 ];
-// Index = Date.getDay() -> 0:রবি, 1:সোম, 2:মঙ্গল, 3:বুধ, 4:বৃহস্পতি, 5:শুক্র(ছুটি), 6:শনি
+const SUBJECT_TOTAL_LECTURES = {
+  "Bangla Grammar": 44,
+  "Bangla History": null,
+  "English Grammar": 37,
+  "English History": 20,
+  "Bangladesh Affairs": 25,
+  "International Affairs": 26,
+  "General Science": 26,
+  "Geography": 15,
+  "ICT": 22,
+  "Mathematics": 21,
+  "Mental Ability": 14,
+  "Ethics & Good Governance": 10,
+};
+// প্রতিটা সাবজেক্টের প্রতি সেশনে (রুটিনে যেদিন আসে) কয়টা লেকচার এগোবে — মোট লেকচার সংখ্যা ও সপ্তাহে কতবার আসে তার
+// ভিত্তিতে সব সাবজেক্ট মোটামুটি একই সময়ে (~১০-১৩ সপ্তাহ) শেষ হয় এভাবে ঠিক করা হয়েছে।
+const SUBJECT_LECTURES_PER_SESSION = {
+  "Bangla Grammar": 2,        // ৪৪টা, সপ্তাহে ২ বার -> ~১১ সপ্তাহ
+  "Bangla History": 1,        // মোট এখনো দেওয়া হয়নি
+  "English Grammar": 2,       // ৩৭টা, সপ্তাহে ২ বার -> ~৯-১০ সপ্তাহ
+  "English History": 2,       // ২০টা, সপ্তাহে ১ বার -> ~১০ সপ্তাহ
+  "Bangladesh Affairs": 1,    // ২৫টা, সপ্তাহে ২ বার -> ~১২-১৩ সপ্তাহ
+  "International Affairs": 2, // ২৬টা, সপ্তাহে ১ বার -> ~১৩ সপ্তাহ
+  "General Science": 1,       // ২৬টা, সপ্তাহে ২ বার -> ~১৩ সপ্তাহ
+  "Geography": 1,             // ১৫টা, সপ্তাহে ১ বার -> ~১৫ সপ্তাহ
+  "ICT": 2,                   // ২২টা, সপ্তাহে ১ বার -> ~১১ সপ্তাহ
+  "Mathematics": 1,           // ২১টা, সপ্তাহে ২ বার -> ~১০-১১ সপ্তাহ
+  "Mental Ability": 1,        // ১৪টা, সপ্তাহে ২ বার -> ~৭ সপ্তাহ
+  "Ethics & Good Governance": 1, // ১০টা, সপ্তাহে ১ বার -> ~১০ সপ্তাহ
+};
+// যেদিন থেকে লেকচার-ভিত্তিক রুটিন গণনা শুরু হবে
+const LECTURE_ROUTINE_START_DATE = "2026-08-05";
+function countSubjectOccurrencesUpto(subject, dateStr) {
+  if (dateStr < LECTURE_ROUTINE_START_DATE) return 0;
+  let count = 0;
+  let d = new Date(LECTURE_ROUTINE_START_DATE + "T00:00:00");
+  const end = new Date(dateStr + "T00:00:00");
+  while (d <= end) {
+    const wd = d.getDay();
+    if (DAY_SUBJECTS[wd] && DAY_SUBJECTS[wd].subjects.includes(subject)) count++;
+    d.setDate(d.getDate() + 1);
+  }
+  return count;
+}
+function getLectureRangeForSubject(subject, dateStr) {
+  const total = SUBJECT_TOTAL_LECTURES[subject];
+  const pace = SUBJECT_LECTURES_PER_SESSION[subject] || 1;
+  const occurrenceIndex = countSubjectOccurrencesUpto(subject, dateStr);
+  if (occurrenceIndex === 0) return null;
+  const lectureStart = (occurrenceIndex - 1) * pace + 1;
+  if (total != null && lectureStart > total) return { complete: true };
+  let lectureEnd = lectureStart + pace - 1;
+  if (total != null && lectureEnd > total) lectureEnd = total;
+  return { start: lectureStart, end: lectureEnd, complete: false };
+}
+function formatLectureRange(subject, dateStr) {
+  const r = getLectureRangeForSubject(subject, dateStr);
+  if (!r) return "";
+  if (r.complete) return "কমপ্লিট ✓";
+  return r.start === r.end ? ("লেকচার " + r.start) : ("লেকচার " + r.start + "-" + r.end);
+}
+function nextOccurrenceDate(fromDateStr, weekdayIndex) {
+  let d = new Date(fromDateStr + "T00:00:00");
+  for (let i = 0; i < 7; i++) {
+    if (d.getDay() === weekdayIndex) return d.toISOString().slice(0, 10);
+    d.setDate(d.getDate() + 1);
+  }
+  return fromDateStr;
+}
 const DAY_SUBJECTS = [
   { label: "রবি", subjects: ["English Grammar", "Mental Ability", "English History"] },
   { label: "সোম", subjects: ["General Science", "Bangladesh Affairs", "International Affairs"] },
@@ -1003,6 +1183,14 @@ async function getMonthRaw(mk) {
   try { const res = await storage.get("month:" + mk); return res ? JSON.parse(res.value) : null; }
   catch (e) { return null; }
 }
+async function addDeclutterCompletionForMonth(mk, dateStr) {
+  const existing = await getMonthPlanRaw(mk);
+  const base = existing ? { ...emptyMonthPlan(), ...existing } : emptyMonthPlan();
+  const list = Array.isArray(base.declutterItems) ? base.declutterItems : [];
+  const updated = { ...base, declutterItems: [...list, { id: Date.now() + "_" + Math.random().toString(36).slice(2, 6), item: "মাসিক ডিক্লাটার (To-Do থেকে সম্পন্ন)", date: dateStr }] };
+  try { await storage.set("monthplan:" + mk, JSON.stringify(updated)); } catch (e) { console.error(e); }
+  return updated;
+}
 async function computeMonthExpense(dateStr) {
   const [y, m] = dateStr.split("-").map(Number);
   const daysInM = new Date(y, m, 0).getDate();
@@ -1090,15 +1278,16 @@ function emptyDay() {
       Fajr: { status: null, sunnah: false }, Dhuhr: { status: null, sunnah: false, sunnah2: false, sunnah4: false }, Asr: { status: null, sunnah: false },
       Maghrib: { status: null, sunnah: false }, Isha: { status: null, sunnah: false, witr: false }, nafl: [],
     },
-    zikir: { durud: null, istegfar: null, tasbihFatemi: null, custom: [] },
+    zikir: { durud: null, istegfar: null, tasbihFatemi: null, custom: [], masnun: {} },
     accounts: { transport: "", meal: "", gadget: "", brother: "", sister: "", familyNeed: "", nephew: "", relative: "", friends: "", donate: "", necessity: "", repair: "", unimportant: "", office: { meal: "", transport: [], others: [] } },
     habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: false, walkingSteps: "", lustControl: false, noTextFirst: false, noTextStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
     quran: {
       reading: { pages: "", surah: "" },
       revision: { fix: { pages: "", surah: "" }, memorize: { pages: "", surah: "" } },
       amoli: { Mulk: false, Yasin: false, Waqiah: false, Kahf: false },
+      revisionDone: {},
     },
-    study: { studied: { topics: "", hours: "", topicName: "" }, lectures: { count: "", hours: "", lectureName: "" }, pomodoroCount: 0, promoterMinutes: 0, subjects: {} },
+    study: { studied: { topics: "", hours: "", topicName: "" }, lectures: { count: "", hours: "", lectureName: "" }, pomodoroCount: 0, promoterMinutes: 0, subjects: {}, subjectsDone: {} },
     exercise: { checklist: { squat: "", pushup: "", gluteBridge: "", superman: "", plank: "", jumpingJack: "", highKnees: "", armCircle: "", lunge: "", wallSit: "", calfRaise: "", pikePushup: "", tricepDip: "", sidePlank: "", crunch: "", legRaise: "", russianTwist: "", mountainClimber: "", burpee: "" }, mindfulness: { walk: false, yoga: false, breathing: false }, quickSessionMinutes: 0 },
     texting: { log: {}, reflection: "", quickNote: "" },
     diary: { notes: "", accomplished: "", events: "", thoughts: "", reflection: "", gratitude: ["", "", ""], moodNote: "", lastEditTime: null },
@@ -1114,7 +1303,7 @@ function mergeDay(loaded) {
   return {
     mood: loaded?.mood || null,
     prayers: { ...mergedPrayers, nafl: Array.isArray(loaded?.prayers?.nafl) ? loaded.prayers.nafl : [] },
-    zikir: { ...base.zikir, ...(loaded?.zikir || {}), custom: Array.isArray(loaded?.zikir?.custom) ? loaded.zikir.custom : [] },
+    zikir: { ...base.zikir, ...(loaded?.zikir || {}), custom: Array.isArray(loaded?.zikir?.custom) ? loaded.zikir.custom : [], masnun: { ...(loaded?.zikir?.masnun || {}) } },
     accounts: {
       ...base.accounts,
       ...(loaded?.accounts || {}),
@@ -1154,6 +1343,7 @@ function mergeDay(loaded) {
         };
       })(),
       amoli: { ...base.quran.amoli, ...(loaded?.quran?.amoli || {}) },
+      revisionDone: { ...(loaded?.quran?.revisionDone || {}) },
     },
     study: {
       studied: { ...base.study.studied, ...(loaded?.study?.studied || {}) },
@@ -1161,6 +1351,7 @@ function mergeDay(loaded) {
       pomodoroCount: (loaded?.study?.pomodoroCount) || 0,
       promoterMinutes: (loaded?.study?.promoterMinutes) || 0,
       subjects: { ...(loaded?.study?.subjects || {}) },
+      subjectsDone: { ...(loaded?.study?.subjectsDone || {}) },
     },
     exercise: { ...base.exercise, ...(loaded?.exercise || {}), checklist: { ...base.exercise.checklist, ...(loaded?.exercise?.checklist || {}) }, mindfulness: { ...base.exercise.mindfulness, ...(loaded?.exercise?.mindfulness || {}) }, quickSessionMinutes: (loaded?.exercise?.quickSessionMinutes) || 0 },
     texting: { log: { ...(loaded?.texting?.log || {}) }, reflection: loaded?.texting?.reflection || "", quickNote: loaded?.texting?.quickNote || "" },
@@ -1173,7 +1364,7 @@ function goalsUnfinished(day) {
   const goals = [];
   const prayersDone = PRAYER_ORDER.filter(p => day.prayers[p]?.status).length;
   if (prayersDone < 5) goals.push("নামাজ");
-  if (!day.zikir.durud && !day.zikir.istegfar && !day.zikir.tasbihFatemi && !(day.zikir.custom && day.zikir.custom.length > 0)) goals.push("যিকির");
+  if (!day.zikir.durud && !day.zikir.istegfar && !day.zikir.tasbihFatemi && !(day.zikir.custom && day.zikir.custom.length > 0)) goals.push("যিকির ও দুয়া");
   const q = day.quran;
   const quranDone = q.reading.pages || q.reading.surah || q.revision.fix.pages || q.revision.fix.surah || q.revision.memorize.pages || q.revision.memorize.surah || q.amoli.Mulk || q.amoli.Yasin || q.amoli.Waqiah || q.amoli.Kahf;
   if (!quranDone) goals.push("কুরআন");
@@ -1807,7 +1998,7 @@ function CategoryPieChart({ totals, categories }) {
   );
 }
 
-const TASK_LABELS = { prayer: "নামাজ", zikir: "যিকির", quran: "কুরআন", study: "পড়াশোনা", exercise: "ব্যায়াম", habit: "অভ্যাস", diary: "ডায়েরি", accounts: "হিসাব", texting: "সেলফ-ডিসিপ্লিন" };
+const TASK_LABELS = { prayer: "নামাজ", zikir: "যিকির ও দুয়া", quran: "কুরআন", study: "পড়াশোনা", exercise: "ব্যায়াম", habit: "অভ্যাস", diary: "ডায়েরি", accounts: "হিসাব", texting: "সেলফ-ডিসিপ্লিন" };
 const TASK_ICON_NAMES = { prayer: "wb_sunny", zikir: "self_improvement", quran: "menu_book", study: "school", exercise: "fitness_center", habit: "task_alt", diary: "edit_note", accounts: "account_balance_wallet", texting: "chat_bubble" };
 const BADGE_TIERS = [
   { min: 100, emoji: "💎", label: "প্লাটিনাম" },
@@ -1917,6 +2108,7 @@ function pointsZikir(rec) {
   let pts = 0;
   ["durud", "istegfar", "tasbihFatemi"].forEach(k => { pts += ((parseFloat(rec.zikir[k]) || 0) / 100) * 2.3; });
   (rec.zikir.custom || []).forEach(z => { pts += ((parseFloat(z.count) || 0) / 100) * 2.3; });
+  pts += Object.values(rec.zikir.masnun || {}).filter(Boolean).length * 0.3;
   return pts;
 }
 function pointsQuran(rec) {
@@ -2001,7 +2193,7 @@ function pointsOverall(rec) {
 const POINT_METRICS = [
   { key: "overall", label: "সার্বিক (মোট পয়েন্ট)", color: "#123A34", extract: pointsOverall },
   { key: "prayer", label: "নামাজ", color: "#123A34", extract: pointsPrayer },
-  { key: "zikir", label: "যিকির", color: "#8A4A5C", extract: pointsZikir },
+  { key: "zikir", label: "যিকির ও দুয়া", color: "#8A4A5C", extract: pointsZikir },
   { key: "quran", label: "কুরআন", color: "#8A6A2F", extract: pointsQuran },
   { key: "study", label: "পড়াশোনা", color: "#5C7A6B", extract: pointsStudy },
   { key: "exercise", label: "ব্যায়াম", color: "#B5651D", extract: pointsExercise },
@@ -3068,7 +3260,7 @@ function importBackup(file, onDone) {
   reader.onerror = () => onDone(false);
   reader.readAsText(file);
 }
-const SUMMARY_CARD_LABELS = { prayer: "নামাজ", zikir: "যিকির", quran: "কুরআন", study: "পড়াশোনা", exercise: "ব্যায়াম", habit: "অভ্যাস", texting: "শান্তি", diary: "ডায়েরি", accounts: "হিসাব", plan: "মাসিক প্ল্যান" };
+const SUMMARY_CARD_LABELS = { prayer: "নামাজ", zikir: "যিকির ও দুয়া", quran: "কুরআন", study: "পড়াশোনা", exercise: "ব্যায়াম", habit: "অভ্যাস", texting: "শান্তি", diary: "ডায়েরি", accounts: "হিসাব", plan: "মাসিক প্ল্যান" };
 function SettingsModal({ darkMode, onToggleDark, reminderSettings, onReminderChange, appPin, onSetPin, prayerCoords, onSetPrayerCoords, bills, onAddBill, onDeleteBill, cardOrder, hiddenCards, onMoveCard, onToggleCardHidden, onShowAllCards, customTasks, onAddCustomTask, onDeleteCustomTask, onAddCustomItem, onDeleteCustomItem, onClose }) {
   const [billDraft, setBillDraft] = useState({ name: "", amount: "", dayOfMonth: "" });
   const fileInputRef = useRef(null);
@@ -4230,12 +4422,15 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
       </div>
 
       <div className="pr-section">
-        <h3>যিকির</h3>
+        <h3>যিকির ও দুয়া</h3>
         {ZIKIR_LIST.map(z => (
           <div className="pr-row" key={z.key}><b>{z.label}:</b> {day.zikir[z.key] ? day.zikir[z.key] + " বার" : "হয়নি"}</div>
         ))}
         {day.zikir.custom.map(z => (
           <div className="pr-row" key={z.id}><b>{z.name}:</b> {z.count ? z.count + " বার" : "হয়েছে"}</div>
+        ))}
+        {MASNUN_DUA_LIST.map(z => (
+          <div className="pr-row" key={z.key}><b>{z.label}:</b> {(day.zikir.masnun || {})[z.key] ? "হয়েছে" : "হয়নি"}</div>
         ))}
       </div>
 
@@ -4343,10 +4538,12 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
   );
 }
 
-function PrintReport({ day, date, monthData, monthExpense, monthPlan, noTextPeople }) {
+function PrintReport({ day, date, monthData, monthExpense, monthPlan, noTextPeople, mode }) {
   return (
     <div className="print-area">
-      <ReportContent day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} />
+      {mode === "diary"
+        ? <DiaryOnlyContent day={day} date={date} />
+        : <ReportContent day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} />}
     </div>
   );
 }
@@ -4376,8 +4573,23 @@ function DiaryOnlyContent({ day, date }) {
     </div>
   );
 }
-function ReportModal({ day, date, monthData, monthExpense, monthPlan, noTextPeople, onClose }) {
-  const [viewMode, setViewMode] = useState("full");
+function ReportModal({ day, date, monthData, monthExpense, monthPlan, noTextPeople, onClose, printMode, onPrintModeChange }) {
+  const viewMode = printMode;
+  const setViewMode = onPrintModeChange;
+  const downloadPdf = () => {
+    const prevTitle = document.title;
+    document.title = (viewMode === "diary" ? "Diary " : "Daily Report ") + date;
+    let restored = false;
+    const restore = () => {
+      if (restored) return;
+      restored = true;
+      document.title = prevTitle;
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    window.print();
+    setTimeout(restore, 3000);
+  };
   return (
     <Modal onClose={onClose} width={480}>
       <div className="modal-header">
@@ -4393,7 +4605,7 @@ function ReportModal({ day, date, monthData, monthExpense, monthPlan, noTextPeop
         ? <ReportContent day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} />
         : <DiaryOnlyContent day={day} date={date} />}
       <div className="modal-actions" style={{ justifyContent: "flex-end", marginTop: 18 }}>
-        <button className="btn-primary" style={{ background: "#123A34" }} onClick={() => window.print()}>
+        <button className="btn-primary" style={{ background: "#123A34" }} onClick={downloadPdf}>
           <Icon name="picture_as_pdf" size={15} /> PDF হিসেবে ডাউনলোড
         </button>
       </div>
@@ -4527,6 +4739,7 @@ function DailyLifeManagement() {
   const [prayerSubOpen, setPrayerSubOpen] = useState(null);
   const [studySubOpen, setStudySubOpen] = useState(null);
   const [zikirSubOpen, setZikirSubOpen] = useState(null);
+  const [masnunDuaOpen, setMasnunDuaOpen] = useState(null);
   const [quranSubOpen, setQuranSubOpen] = useState(null);
   const [revisionSubOpen, setRevisionSubOpen] = useState(null);
   const [planSubOpen, setPlanSubOpen] = useState(null);
@@ -4772,7 +4985,7 @@ function DailyLifeManagement() {
   useEffect(() => {
     if (expanded !== "prayer") setPrayerSubOpen(null);
     if (expanded !== "study") setStudySubOpen(null);
-    if (expanded !== "zikir") setZikirSubOpen(null);
+    if (expanded !== "zikir") { setZikirSubOpen(null); setMasnunDuaOpen(null); }
     if (expanded !== "quran") {
       setQuranSubOpen(null);
       setRevisionSubOpen(null);
@@ -4968,6 +5181,7 @@ function DailyLifeManagement() {
   const [noTextPersonName, setNoTextPersonName] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [reportPrintMode, setReportPrintMode] = useState("full");
   const [showMonthlyExpenseReport, setShowMonthlyExpenseReport] = useState(false);
   const [monthlyExpenseDetail, setMonthlyExpenseDetail] = useState(null);
   const [monthlyExpenseLoading, setMonthlyExpenseLoading] = useState(false);
@@ -5057,12 +5271,25 @@ function DailyLifeManagement() {
       try { const r = await storage.get("bills"); setBills(r ? JSON.parse(r.value) : []); }
       catch (e) { setBills([]); }
       try {
-        const r = await storage.get("todos");
-        const list = r ? JSON.parse(r.value) : [];
+        let list = [];
+        try {
+          const r = await storage.get("todos");
+          list = r ? JSON.parse(r.value) : [];
+        } catch (e) { list = []; }
         const cutoff = Date.now() - TODO_AUTO_DELETE_DAYS * 86400000;
-        const cleaned = list.filter(t => !(t.done && t.completedAt && t.completedAt < cutoff));
+        let cleaned = list.filter(t => !(t.done && t.completedAt && t.completedAt < cutoff));
+        const currentMk = monthKeyOf(todayStr());
+        const hasDeclutterTodo = cleaned.some(t => t.declutterMonthKey === currentMk);
+        if (!hasDeclutterTodo) {
+          cleaned = [...cleaned, {
+            id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+            text: "এই মাসের ডিক্লাটার (অপ্রয়োজনীয় জিনিস পরিষ্কার) করুন",
+            done: false, createdAt: Date.now(), completedAt: null, dueDate: null,
+            declutterMonthKey: currentMk, declutterLogged: false,
+          }];
+        }
         setTodos(cleaned);
-        if (cleaned.length !== list.length) storage.set("todos", JSON.stringify(cleaned)).catch(() => {});
+        storage.set("todos", JSON.stringify(cleaned)).catch(() => {});
       } catch (e) { setTodos([]); }
     })();
     // eslint-disable-next-line
@@ -5097,7 +5324,22 @@ function DailyLifeManagement() {
     if (!text.trim()) return;
     saveTodos([...todos, { id: Date.now() + "_" + Math.random().toString(36).slice(2, 6), text: text.trim(), done: false, createdAt: Date.now(), completedAt: null, dueDate: dueDate || null }]);
   };
-  const toggleTodo = (id) => saveTodos(todos.map(t => t.id === id ? { ...t, done: !t.done, completedAt: !t.done ? Date.now() : null } : t));
+  const toggleTodo = (id) => {
+    const target = todos.find(t => t.id === id);
+    if (!target) return;
+    const willBeDone = !target.done;
+    saveTodos(todos.map(t => t.id === id ? {
+      ...t,
+      done: willBeDone,
+      completedAt: willBeDone ? Date.now() : null,
+      declutterLogged: willBeDone && t.declutterMonthKey ? true : t.declutterLogged,
+    } : t));
+    if (willBeDone && target.declutterMonthKey && !target.declutterLogged) {
+      addDeclutterCompletionForMonth(target.declutterMonthKey, todayStr()).then(updatedPlan => {
+        if (target.declutterMonthKey === monthKeyOf(date)) setMonthPlan(updatedPlan);
+      });
+    }
+  };
   const deleteTodo = (id) => saveTodos(todos.filter(t => t.id !== id));
 
   useEffect(() => { (async () => { const loaded = await getDayRaw(date); setDay(mergeDay(loaded)); setOpenContact(null); setContactStreaks({}); })(); }, [date]);
@@ -5205,6 +5447,7 @@ function DailyLifeManagement() {
     updateDay(prev => ({ ...prev, zikir: { ...prev.zikir, custom: [...prev.zikir.custom, { id: Date.now(), name: name.trim(), count: count || "" }] } }));
   };
   const removeCustomZikir = (id) => { if (!window.confirm("এই যিকিরটি মুছে ফেলতে চান?")) return; updateDay(prev => ({ ...prev, zikir: { ...prev.zikir, custom: prev.zikir.custom.filter(z => z.id !== id) } })); };
+  const toggleMasnunDua = (key) => updateDay(prev => ({ ...prev, zikir: { ...prev.zikir, masnun: { ...prev.zikir.masnun, [key]: !prev.zikir.masnun[key] } } }));
   const toggleHabit = (key) => updateDay(prev => ({ ...prev, habit: { ...prev.habit, [key]: !prev.habit[key] } }));
   const saveNoTextPeople = async (list) => {
     setNoTextPeople(list);
@@ -5384,6 +5627,8 @@ function DailyLifeManagement() {
 
   const setStudy = (kind, field, value) => updateDay(prev => ({ ...prev, study: { ...prev.study, [kind]: { ...prev.study[kind], [field]: value } } }));
   const setStudySubjectHours = (subject, value) => updateDay(prev => ({ ...prev, study: { ...prev.study, subjects: { ...prev.study.subjects, [subject]: value } } }));
+  const setStudySubjectDone = (subject, done) => updateDay(prev => ({ ...prev, study: { ...prev.study, subjectsDone: { ...prev.study.subjectsDone, [subject]: done } } }));
+  const setQuranRevisionDone = (surahNumber, done) => updateDay(prev => ({ ...prev, quran: { ...prev.quran, revisionDone: { ...prev.quran.revisionDone, [surahNumber]: done } } }));
   const completePomodoro = (subject, addedHours, addedMinutes) => updateDay(prev => {
     const nextSubjects = { ...prev.study.subjects };
     if (subject) {
@@ -5551,7 +5796,7 @@ function DailyLifeManagement() {
 
   const prayersDone = PRAYER_ORDER.filter(p => day.prayers[p]?.status).length;
   const naflCount = day.prayers.nafl.length;
-  const zikirDoneCount = [day.zikir.durud, day.zikir.istegfar, day.zikir.tasbihFatemi].filter(Boolean).length + (day.zikir.custom ? day.zikir.custom.length : 0);
+  const zikirDoneCount = [day.zikir.durud, day.zikir.istegfar, day.zikir.tasbihFatemi].filter(Boolean).length + (day.zikir.custom ? day.zikir.custom.length : 0) + Object.values(day.zikir.masnun || {}).filter(Boolean).length;
   const zikirBadge = zikirDoneCount ? zikirDoneCount + "/৩+" : null;
   const walkingDone = (parseFloat(day.habit.walkingSteps) || 0) >= 8000;
   const waterDone = (day.habit.waterGlasses || 0) >= 8;
@@ -5572,6 +5817,18 @@ function DailyLifeManagement() {
   const routineDayIndex = new Date(date + "T00:00:00").getDay();
   const routineToday = DAY_SUBJECTS[routineDayIndex];
   const todaySubjects = routineToday ? routineToday.subjects : [];
+  // আগের দিনগুলোর রুটিন সাবজেক্ট যেগুলো "শেষ হয়েছে" মার্ক করা হয়নি, সেগুলো আজও দেখানো হবে (হারিয়ে যাবে না)
+  const pendingStudySubjectsMap = getCarriedOverItems(
+    date,
+    (ds) => { const wd = new Date(ds + "T00:00:00").getDay(); return (DAY_SUBJECTS[wd] && DAY_SUBJECTS[wd].subjects) || []; },
+    (ds) => { const rec = getDayRecordSync(ds); return (rec && rec.study && rec.study.subjectsDone) || {}; },
+    21
+  );
+  const carriedStudySubjects = Object.keys(pendingStudySubjectsMap).filter(s => !todaySubjects.includes(s));
+  const allStudySubjects = [
+    ...todaySubjects.map(s => ({ subject: s, carried: false })),
+    ...carriedStudySubjects.map(s => ({ subject: s, carried: true, since: pendingStudySubjectsMap[s] })),
+  ];
   const subjectHoursLogged = Object.values(day.study.subjects || {}).some(v => parseFloat(v) > 0);
   const studyBadge = (day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || subjectHoursLogged || (parseFloat(day.study.promoterMinutes) > 0)) ? "লগ হয়েছে" : null;
   const exerciseSetsDone = Object.values(day.exercise.checklist).filter(v => v).length;
@@ -5612,6 +5869,19 @@ function DailyLifeManagement() {
   const zikirPoints = pointsZikir(day);
   const quranPoints = pointsQuran(day);
   const surahRevisionPlan = computeSurahRevisionPlan(date, surahStatus);
+  // আগের দিনগুলোর রিভিশন রুটিনের সূরা যেগুলো "শেষ হয়েছে" মার্ক করা হয়নি, সেগুলো আজও বাকি হিসেবে দেখানো হবে
+  const todayRevisionSurahNumbers = surahRevisionPlan.items.map(s => s.number);
+  const pendingRevisionSurahsMap = getCarriedOverItems(
+    date,
+    (ds) => computeSurahRevisionPlan(ds, surahStatus).items.map(s => s.number),
+    (ds) => { const rec = getDayRecordSync(ds); return (rec && rec.quran && rec.quran.revisionDone) || {}; },
+    21
+  );
+  const carriedRevisionSurahs = Object.keys(pendingRevisionSurahsMap)
+    .map(numStr => parseInt(numStr, 10))
+    .filter(num => !todayRevisionSurahNumbers.includes(num))
+    .map(num => PREVIOUS_SURAHS.find(s => s.number === num))
+    .filter(Boolean);
   const studyPoints = pointsStudy(day);
   const exercisePoints = pointsExercise(day);
   const habitPoints = pointsHabit(day);
@@ -5818,12 +6088,13 @@ function DailyLifeManagement() {
           )}
         </Card>
 
-        <Card id="zikir" hidden={hiddenCards.includes("zikir")} iconName="self_improvement" title="যিকির" subtitle="দৈনিক যিকির-আযকার" accent="#8A4A5C" badge={zikirBadge} points={zikirPoints} streak={taskStreaks.zikir} notDone={day.taskNotDone.zikir} onToggleNotDone={() => toggleTaskNotDone("zikir")} expanded={expanded === "zikir"} onToggle={toggle}>
+        <Card id="zikir" hidden={hiddenCards.includes("zikir")} iconName="self_improvement" title="যিকির ও দুয়া" subtitle="দৈনিক যিকির-আযকার ও মাসনূন দোয়া" accent="#8A4A5C" badge={zikirBadge} points={zikirPoints} streak={taskStreaks.zikir} notDone={day.taskNotDone.zikir} onToggleNotDone={() => toggleTaskNotDone("zikir")} expanded={expanded === "zikir"} onToggle={toggle}>
           {!zikirSubOpen ? (
             <div className="subblock" style={{ padding: 12 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
                 {[
                   { key: "tasbih", icon: "front_hand", shortLabel: "৩ তসবিহ", fullLabel: "৩ তসবিহ", sub: "" },
+                  { key: "masnun", icon: "menu_book", shortLabel: "মাসনূন দোয়া", fullLabel: "মাসনূন দোয়া", sub: Object.values(day.zikir.masnun || {}).filter(Boolean).length ? Object.values(day.zikir.masnun || {}).filter(Boolean).length + " টা" : "" },
                   { key: "custom", icon: "auto_awesome", shortLabel: "অন্য যিকির", fullLabel: "অন্য কোনো যিকির", sub: day.zikir.custom.length ? day.zikir.custom.length + " টা" : "" },
                 ].map(item => (
                   <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
@@ -5849,7 +6120,7 @@ function DailyLifeManagement() {
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setZikirSubOpen(null)}>
                 <Icon name="arrow_back" size={18} color="#8A4A5C" />
-                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#8A4A5C" }}>{zikirSubOpen === "tasbih" ? "৩ তসবিহ" : "অন্য কোনো যিকির"}</span>
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#8A4A5C" }}>{zikirSubOpen === "tasbih" ? "৩ তসবিহ" : zikirSubOpen === "masnun" ? "মাসনূন দোয়া" : "অন্য কোনো যিকির"}</span>
               </div>
               {zikirSubOpen === "tasbih" && (
                 <div className="subblock">
@@ -5861,6 +6132,30 @@ function DailyLifeManagement() {
                           <Chip key={n} active={day.zikir[z.key] === n} color="#8A4A5C" onClick={() => setZikirCount(z.key, n)}>{n} বার</Chip>
                         ))}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {zikirSubOpen === "masnun" && (
+                <div className="subblock">
+                  {MASNUN_DUA_LIST.map(z => (
+                    <div key={z.key} style={{ border: "1px solid " + (darkMode ? "#31402F" : "#E7DDC7"), borderRadius: 12, marginBottom: 8, overflow: "hidden", background: darkMode ? "#1F2A22" : "#FFFDF7" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", cursor: "pointer" }} onClick={() => setMasnunDuaOpen(masnunDuaOpen === z.key ? null : z.key)}>
+                        <Icon name={masnunDuaOpen === z.key ? "expand_less" : "expand_more"} size={18} color="#8A4A5C" />
+                        <span style={{ flex: 1, fontWeight: 600, fontSize: 12.5 }}>{z.label}</span>
+                        <Chip active={!!(day.zikir.masnun || {})[z.key]} color="#8A4A5C" onClick={(e) => { e.stopPropagation(); toggleMasnunDua(z.key); }}>
+                          {(day.zikir.masnun || {})[z.key] ? "হয়েছে ✓" : "করুন"}
+                        </Chip>
+                      </div>
+                      {masnunDuaOpen === z.key && (
+                        <div style={{ padding: "0 12px 14px" }}>
+                          <div dir="rtl" lang="ar" style={{ fontSize: 18, lineHeight: 2, textAlign: "right", marginBottom: 10, fontFamily: "serif", color: darkMode ? "#EFE4CB" : "#2B2A22" }}>{z.arabic}</div>
+                          <div style={{ fontSize: 12, marginBottom: 6, lineHeight: 1.5 }}><b>উচ্চারণ:</b> {z.uccharon}</div>
+                          <div style={{ fontSize: 12, marginBottom: 6, lineHeight: 1.5 }}><b>অর্থ:</b> {z.ortho}</div>
+                          <div style={{ fontSize: 12, marginBottom: 6, lineHeight: 1.5 }}><b>ফজিলত:</b> {z.fojilat}</div>
+                          <div style={{ fontSize: 12, lineHeight: 1.5, color: "#8A7F68" }}><b>পড়ার নিয়ম:</b> {z.niyom}</div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -5993,48 +6288,96 @@ function DailyLifeManagement() {
                     )}
                     {revisionSubOpen === "routine" && (
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#8A6A2F", borderRadius: 12, padding: "10px 14px", marginBottom: 10 }}>
-                          <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, color: "#FBF6EA" }}>আজকের পারা</span>
-                          <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, color: "#F5EEDC" }}>{surahRevisionPlan.para} নং পারা</span>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: surahRevisionPlan.dayType === "B" ? "#A14545" : "#8A6A2F", borderRadius: 12, padding: "10px 14px", marginBottom: 10 }}>
+                          <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, color: "#FBF6EA" }}>আজকের ক্যাটাগরি</span>
+                          <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, color: "#F5EEDC" }}>
+                            {surahRevisionPlan.dayType === "B" ? "🔴 Bad" : "🟤 Normal"} · {surahRevisionPlan.target} পৃষ্ঠা
+                          </span>
                         </div>
                         <div style={{ fontSize: 12, color: "#8A7F68", fontWeight: 600, marginBottom: 12 }}>
-                          আজকের পুরো রিভিশন এই একটাই পারা থেকে — পারা মিক্স হবে না, প্রতিদিন পারা পাল্টে পাল্টে সবগুলো পারা কভার হবে। এর মধ্যে N/G/B অবস্থা অনুযায়ী পৃষ্ঠা সংখ্যা গুনে বাছাই করা হয়েছে, যাতে বোঝা সমান থাকে (Bad সূরা সবচেয়ে বেশি গুরুত্ব পাবে)
+                          প্রতিদিন শুধু একটাই ক্যাটাগরি থাকে — Bad হলে ৩ পৃষ্ঠা, Normal হলে ৫ পৃষ্ঠা। দিন পাল্টে পাল্টে ক্যাটাগরি বদলায়। কোনো সূরা টার্গেটের চেয়ে বড় হলে আজ যতটুকু ধরে ততটুকু পড়ে, বাকিটা এই ক্যাটাগরি পরের বার আসলে সেখান থেকেই চলবে।
                         </div>
-                        {[
-                          { key: "B", label: "🔴 সবচেয়ে জরুরি (Bad)" },
-                          { key: "N", label: "🟤 নিয়মিত (Normal)" },
-                          { key: "G", label: "🟢 মেইনটেন্যান্স (Good)" },
-                        ].map(group => {
-                          const list = surahRevisionPlan[group.key];
-                          const groupPages = list.reduce((sum, s) => sum + s.pages, 0);
-                          return list.length > 0 && (
-                            <div key={group.key} style={{ marginBottom: 14 }}>
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                                <span style={{ fontSize: 12.5, fontWeight: 700, color: SURAH_STATUS_META[group.key].color }}>{group.label}</span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: "#8A7F68" }}>মোট {groupPages} পৃষ্ঠা</span>
-                              </div>
-                              {list.map(s => (
-                                <div
-                                  key={s.number}
-                                  onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
-                                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: 10, background: SURAH_STATUS_META[group.key].bg, marginBottom: 6, cursor: "pointer" }}
-                                >
-                                  <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22" }}>{s.number}. {s.label}</span>
-                                  <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>{s.pages} পৃষ্ঠা</span>
+                        {surahRevisionPlan.items.length > 0 && (
+                          <div style={{ marginBottom: 14 }}>
+                            {surahRevisionPlan.items.map(s => {
+                              const revDone = !!day.quran.revisionDone[s.number];
+                              const partial = s.fromPage > 1 || s.toPage < s.pages;
+                              return (
+                                <div key={s.number} style={{ borderRadius: 10, background: SURAH_STATUS_META[surahRevisionPlan.dayType].bg, marginBottom: 6, padding: "9px 12px" }}>
+                                  <div
+                                    onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pagesToday)); }}
+                                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 6 }}
+                                  >
+                                    <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22" }}>{s.number}. {s.label}</span>
+                                    <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>
+                                      {partial ? (s.fromPage + "–" + s.toPage + " নং পৃষ্ঠা (মোট " + s.pages + ")") : (s.pages + " পৃষ্ঠা")}
+                                    </span>
+                                  </div>
+                                  {partial && (
+                                    <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginBottom: 6 }}>
+                                      {s.fromPage > 1 ? "আগের থেকে চলছে — " : ""}আজ {s.pagesToday} পৃষ্ঠা{s.toPage < s.pages ? ", বাকিটা পরের বার" : ""}
+                                    </div>
+                                  )}
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={(e) => e.stopPropagation()}>
+                                    <span style={{ fontSize: 11, color: "#5C543F", fontWeight: 600 }}>শেষ হয়েছে?</span>
+                                    <button
+                                      onClick={() => setQuranRevisionDone(s.number, true)}
+                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #5C7A6B", cursor: "pointer", background: revDone ? "#5C7A6B" : "transparent", color: revDone ? "#FBF6EA" : "#5C7A6B" }}
+                                    >হ্যাঁ</button>
+                                    <button
+                                      onClick={() => setQuranRevisionDone(s.number, false)}
+                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #B65C4A", cursor: "pointer", background: (!revDone && s.number in day.quran.revisionDone) ? "#B65C4A" : "transparent", color: (!revDone && s.number in day.quran.revisionDone) ? "#FBF6EA" : "#B65C4A" }}
+                                    >না</button>
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          );
-                        })}
-                        {surahRevisionPlan.B.length === 0 && surahRevisionPlan.N.length === 0 && surahRevisionPlan.G.length === 0 && (
-                          <div className="empty-note">{surahRevisionPlan.para} নং পারায় আজকের টার্গেট অনুযায়ী কোনো সূরা পাওয়া যায়নি (এই পারায় হয়তো সেই অবস্থার সূরা নেই)</div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {surahRevisionPlan.items.length === 0 && (
+                          <div className="empty-note">আজকের ক্যাটাগরিতে ({surahRevisionPlan.dayType === "B" ? "Bad" : "Normal"}) কোনো সূরা পাওয়া যায়নি — "আগের সূরা ঠিক করুন" থেকে সূরার অবস্থা সেট করুন</div>
                         )}
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 10, background: "#123A34", marginTop: 4 }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: "#FBF6EA" }}>আজকের মোট রিভিশন</span>
                           <span style={{ fontSize: 13, fontWeight: 700, color: "#E0B868" }}>
-                            {["B", "N", "G"].reduce((sum, k) => sum + surahRevisionPlan[k].reduce((s2, s) => s2 + s.pages, 0), 0)} পৃষ্ঠা
+                            {surahRevisionPlan.items.reduce((sum, s) => sum + s.pagesToday, 0)} পৃষ্ঠা
                           </span>
                         </div>
+                        {carriedRevisionSurahs.length > 0 && (
+                          <div style={{ marginTop: 16 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#B65C4A", marginBottom: 6 }}>
+                              🔺 আগের দিনের বাকি রিভিশন (শেষ হয়নি)
+                            </div>
+                            {carriedRevisionSurahs.map(s => {
+                              const revDone = !!day.quran.revisionDone[s.number];
+                              return (
+                                <div key={s.number} style={{ borderRadius: 10, background: "#F3E3DE", marginBottom: 6, padding: "9px 12px" }}>
+                                  <div
+                                    onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
+                                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 4 }}
+                                  >
+                                    <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22" }}>{s.number}. {s.label}</span>
+                                    <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>{s.pages} পৃষ্ঠা, {s.para} নং পারা</span>
+                                  </div>
+                                  <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginBottom: 6 }}>
+                                    বাকি আছে ({fmtDueDate(pendingRevisionSurahsMap[s.number])} থেকে)
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <span style={{ fontSize: 11, color: "#5C543F", fontWeight: 600 }}>শেষ হয়েছে?</span>
+                                    <button
+                                      onClick={() => setQuranRevisionDone(s.number, true)}
+                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #5C7A6B", cursor: "pointer", background: revDone ? "#5C7A6B" : "transparent", color: revDone ? "#FBF6EA" : "#5C7A6B" }}
+                                    >হ্যাঁ</button>
+                                    <button
+                                      onClick={() => setQuranRevisionDone(s.number, false)}
+                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #B65C4A", cursor: "pointer", background: (!revDone && s.number in day.quran.revisionDone) ? "#B65C4A" : "transparent", color: (!revDone && s.number in day.quran.revisionDone) ? "#FBF6EA" : "#B65C4A" }}
+                                    >না</button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -6110,22 +6453,54 @@ function DailyLifeManagement() {
                 </span>
               </div>
               {studySubOpen === "subjects" && (
-                todaySubjects.length === 0 ? (
+                allStudySubjects.length === 0 ? (
                   <div className="empty-note">আজ ছুটির দিন, রুটিনে কোনো সাবজেক্ট নেই।</div>
                 ) : (
-                  todaySubjects.map(sub => (
-                    <div className="field-row" key={sub} style={{ alignItems: "center", marginBottom: 8 }}>
-                      <div style={{ flex: 1, fontSize: 13.5 }}>{sub}</div>
-                      <div className="field" style={{ maxWidth: 90 }}>
-                        <input type="number" min="0" step="0.5" value={day.study.subjects[sub] || ""} onChange={e => setStudySubjectHours(sub, e.target.value)} placeholder="ঘণ্টা" />
+                  allStudySubjects.map(({ subject: sub, carried, since }) => {
+                    const done = !!day.study.subjectsDone[sub];
+                    const lectureLabel = formatLectureRange(sub, carried ? since : date);
+                    return (
+                      <div key={sub} style={{ marginBottom: 10, padding: "8px 0", borderBottom: "1px solid " + (darkMode ? "#31402F" : "#F0E9D6") }}>
+                        <div className="field-row" style={{ alignItems: "center", marginBottom: 6 }}>
+                          <div style={{ flex: 1, fontSize: 13.5 }}>
+                            {sub}
+                            {lectureLabel && (
+                              <div style={{ fontSize: 10.5, color: "#5C7A6B", fontWeight: 700, marginTop: 2, fontFamily: "'IBM Plex Mono'" }}>
+                                {lectureLabel}
+                              </div>
+                            )}
+                            {carried && (
+                              <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginTop: 2 }}>
+                                বাকি আছে ({fmtDueDate(since)} থেকে)
+                              </div>
+                            )}
+                          </div>
+                          <div className="field" style={{ maxWidth: 90 }}>
+                            <input type="number" min="0" step="0.5" value={day.study.subjects[sub] || ""} onChange={e => setStudySubjectHours(sub, e.target.value)} placeholder="ঘণ্টা" />
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11.5, color: "#8A7F68", fontWeight: 600 }}>সম্পন্ন হয়েছে?</span>
+                          <button
+                            onClick={() => setStudySubjectDone(sub, true)}
+                            style={{ fontSize: 11.5, fontWeight: 700, padding: "4px 12px", borderRadius: 999, border: "1.5px solid #5C7A6B", cursor: "pointer", background: done ? "#5C7A6B" : "transparent", color: done ? "#FBF6EA" : "#5C7A6B" }}
+                          >হ্যাঁ</button>
+                          <button
+                            onClick={() => setStudySubjectDone(sub, false)}
+                            style={{ fontSize: 11.5, fontWeight: 700, padding: "4px 12px", borderRadius: 999, border: "1.5px solid #B65C4A", cursor: "pointer", background: (!done && sub in day.study.subjectsDone) ? "#B65C4A" : "transparent", color: (!done && sub in day.study.subjectsDone) ? "#FBF6EA" : "#B65C4A" }}
+                          >না</button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )
               )}
-              {studySubOpen === "routine" && DAY_SUBJECTS.map(d => (
+              {studySubOpen === "routine" && DAY_SUBJECTS.map((d, idx) => (
                 <div className="pr-row" key={d.label} style={d.label === routineToday.label ? { color: "#5C7A6B", fontWeight: 700 } : {}}>
-                  <b>{d.label}:</b> {d.subjects.length ? d.subjects.join(", ") : "ছুটি"}
+                  <b>{d.label}:</b> {d.subjects.length ? d.subjects.map(s => {
+                    const lbl = formatLectureRange(s, nextOccurrenceDate(date, idx));
+                    return lbl ? (s + " (" + lbl + ")") : s;
+                  }).join(", ") : "ছুটি"}
                 </div>
               ))}
               {studySubOpen === "studied" && (
@@ -7213,10 +7588,10 @@ function DailyLifeManagement() {
           onIncrementSet={incrementSet}
         />
       )}
-      {showReport && <ReportModal day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} onClose={() => setShowReport(false)} />}
+      {showReport && <ReportModal day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} printMode={reportPrintMode} onPrintModeChange={setReportPrintMode} onClose={() => { setShowReport(false); setReportPrintMode("full"); }} />}
       {showMonthlyExpenseReport && <MonthlyExpenseReportModal detail={monthlyExpenseDetail} loading={monthlyExpenseLoading} onClose={() => setShowMonthlyExpenseReport(false)} />}
 
-      <PrintReport day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} />
+      <PrintReport day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} mode={reportPrintMode} />
       <PrintMonthlyExpenseReport detail={monthlyExpenseDetail} />
     </div>
   );
