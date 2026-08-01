@@ -23,6 +23,11 @@
   .dtt-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; flex-wrap:wrap; gap:8px; }
   .dtt-title { font-family:'Fraunces',serif; font-weight:700; font-size:30px; color:#123A34; letter-spacing:-0.01em; }
   .dtt-sub { font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8A7F68; text-transform:uppercase; letter-spacing:0.08em; }
+  .live-clock { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+  .live-clock .lc-time { font-family:'Fraunces',serif; font-weight:700; font-size:19px; color:#123A34; letter-spacing:0.01em; font-variant-numeric:tabular-nums; }
+  .live-clock .lc-date { font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8A7F68; }
+  .dtt-root.dark .live-clock .lc-time { color:#E7E0CC; }
+  .dtt-root.dark .live-clock .lc-date { color:#8FA294; }
   .date-nav { display:flex; align-items:center; gap:10px; background:#FBF6EA; border:1px solid #E7DDC7; border-radius:999px; padding:6px 8px; margin:14px auto 10px; width:fit-content; max-width:100%; }
   .date-nav button { background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:999px; color:#123A34; flex-shrink:0; overflow:hidden; }
   .date-nav button:hover { background:#EFE4CB; }
@@ -259,14 +264,16 @@
 
   @media print {
     body * { visibility:hidden; }
-    .print-area, .print-area * { visibility:visible; }
-    .print-area { display:block !important; position:absolute; left:0; top:0; width:100%; padding:10px 6px; background:#fff; }
     .modal-backdrop { display:none !important; }
-    .print-area-monthly, .print-area-monthly * { visibility:visible; }
-    body.printing-monthly .print-area { display:none !important; visibility:hidden !important; }
+    body.printing-daily .print-area, body.printing-daily .print-area * { visibility:visible; }
+    body.printing-daily .print-area { display:block !important; position:absolute; left:0; top:0; width:100%; padding:10px 6px; background:#fff; }
+    body.printing-monthly .print-area-monthly, body.printing-monthly .print-area-monthly * { visibility:visible; }
     body.printing-monthly .print-area-monthly { display:block !important; position:absolute; left:0; top:0; width:100%; padding:10px 6px; background:#fff; }
+    body.printing-diary-range .print-area-diary-range, body.printing-diary-range .print-area-diary-range * { visibility:visible; }
+    body.printing-diary-range .print-area-diary-range { display:block !important; position:absolute; left:0; top:0; width:100%; padding:10px 6px; background:#fff; }
   }
   .print-area-monthly { display:none; }
+  .print-area-diary-range { display:none; }
   .pr-table { width:100%; border-collapse:collapse; margin-top:6px; }
   .pr-table th, .pr-table td { border:1px solid #C6BB9C; padding:6px 8px; font-size:12.5px; text-align:left; vertical-align:top; }
   .pr-table th { background:#F1E9D6; font-family:'Fraunces',serif; font-weight:600; }
@@ -507,6 +514,28 @@ async function pnDecrypt(payload, pin, saltB64) {
 
 /* ---------------- constants ---------------- */
 const PRAYER_ORDER = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+
+const NAFL_PRAYER_OPTIONS = [
+  { name: "তাহাজ্জুদ", arabic: "صلاة التهجد", rule: "নফল", rakahs: 8 },
+  { name: "বিতর", arabic: "صلاة الوتر", rule: "ওয়াজিব (হানাফি), সুন্নাহ মুয়াক্কাদাহ (অন্যান্য মাযহাব)", rakahs: 3 },
+  { name: "সুন্নাতে রাওয়াতিব", arabic: "السنن الرواتب", rule: "সুন্নাহ", rakahs: 12 },
+  { name: "ইশরাক", arabic: "صلاة الإشراق", rule: "নফল", rakahs: 2 },
+  { name: "দুহা/চাশত", arabic: "صلاة الضحى", rule: "নফল", rakahs: 2 },
+  { name: "আওয়াবীন", arabic: "صلاة الأوابين", rule: "নফল", rakahs: 6 },
+  { name: "তাহিয়্যাতুল মাসজিদ", arabic: "تحية المسجد", rule: "নফল", rakahs: 2 },
+  { name: "তাহিয়্যাতুল ওযু", arabic: "تحية الوضوء", rule: "নফল", rakahs: 2 },
+  { name: "ইস্তিখারা", arabic: "صلاة الاستخارة", rule: "নফল", rakahs: 2 },
+  { name: "হাজত", arabic: "صلاة الحاجة", rule: "নফল", rakahs: 2 },
+  { name: "তাওবা", arabic: "صلاة التوبة", rule: "নফল", rakahs: 2 },
+  { name: "তাসবীহ", arabic: "صلاة التسبيح", rule: "নফল (হাদিসের গ্রহণযোগ্যতা নিয়ে মতভেদ আছে)", rakahs: 4 },
+  { name: "মুতলাক নফল", arabic: "الصلاة المطلقة", rule: "নফল", rakahs: 2 },
+  { name: "সফর থেকে ফিরে ২ রাকাত", arabic: "", rule: "নফল", rakahs: 2 },
+  { name: "কিয়ামুল লাইল", arabic: "قيام الليل", rule: "নফল (তাহাজ্জুদের বিস্তৃত রূপ)", rakahs: 8 },
+  { name: "সূর্যগ্রহণের নামাজ", arabic: "صلاة الكسوف", rule: "সুন্নাহ মুয়াক্কাদাহ", rakahs: 2 },
+  { name: "চন্দ্রগ্রহণের নামাজ", arabic: "صلاة الخسوف", rule: "সুন্নাহ মুয়াক্কাদাহ", rakahs: 2 },
+  { name: "ইস্তিসকা", arabic: "صلاة الاستسقاء", rule: "সুন্নাহ মুয়াক্কাদাহ", rakahs: 2 },
+  { name: "জানাজার নামাজ", arabic: "صلاة الجنازة", rule: "ফরজে কিফায়া", rakahs: 0 },
+];
 
 const HIJRI_MONTHS_BN = ["মুহাররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি", "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান", "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"];
 // Kuwaiti algorithm (তুলনামূলক নির্ভুল, অফলাইনে কাজ করে, স্থানীয় চাঁদ দেখার সাথে ১-২ দিন পার্থক্য হতে পারে)
@@ -797,11 +826,25 @@ function getCarriedOverItems(currentDateStr, extractRoutineItems, getDoneMap, wi
   return pending;
 }
 const ZIKIR_LIST = [
-  { key: "durud", label: "দুরুদ শরীফ" },
-  { key: "istegfar", label: "ইস্তেগফার" },
-  { key: "tasbihFatemi", label: "তাসবিহে ফাতেমী" },
+  { key: "durud", eveKey: "eveDurud", label: "দুরুদ শরীফ" },
+  { key: "istegfar", eveKey: "eveIstegfar", label: "ইস্তেগফার" },
+  { key: "tasbihFatemi", eveKey: "eveTasbihFatemi", label: "তাসবিহে ফাতেমী" },
 ];
 const ZIKIR_COUNT_OPTIONS = [100, 200];
+// "অন্য কোনো যিকির" ট্যাবের জন্য সাজেস্টেড যিকির — যেগুলো দুরুদ/ইস্তেগফার/তাসবিহে ফাতেমী বা মাসনূন দোয়ার তালিকায় নেই,
+// কিন্তু হাদিসে বিশেষভাবে ফজিলতপূর্ণ ও সাধারণত আলাদাভাবে গণনা করে পড়া হয়
+const SUGGESTED_CUSTOM_ZIKIR = [
+  { name: "লা ইলাহা ইল্লাল্লাহ (তাহলীল)", count: 100 },
+  { name: "সুবহানাল্লাহ", count: 33 },
+  { name: "আলহামদুলিল্লাহ", count: 33 },
+  { name: "আল্লাহু আকবার", count: 34 },
+  { name: "লা হাওলা ওয়ালা কুওয়াতা ইল্লা বিল্লাহ", count: 100 },
+  { name: "আয়াতুল কুরসি", count: 1 },
+  { name: "সূরা ইখলাস", count: 3 },
+  { name: "সূরা ফালাক্ব", count: 3 },
+  { name: "সূরা নাস", count: 3 },
+  { name: "সাইয়িদুল ইস্তেগফার", count: 1 },
+];
 const MASNUN_DUA_LIST = [
   {
     key: "onishtoAshray",
@@ -1278,7 +1321,7 @@ function emptyDay() {
       Fajr: { status: null, sunnah: false }, Dhuhr: { status: null, sunnah: false, sunnah2: false, sunnah4: false }, Asr: { status: null, sunnah: false },
       Maghrib: { status: null, sunnah: false }, Isha: { status: null, sunnah: false, witr: false }, nafl: [],
     },
-    zikir: { durud: null, istegfar: null, tasbihFatemi: null, custom: [], masnun: {} },
+    zikir: { durud: null, istegfar: null, tasbihFatemi: null, eveDurud: null, eveIstegfar: null, eveTasbihFatemi: null, custom: [], masnun: {} },
     accounts: { transport: "", meal: "", gadget: "", brother: "", sister: "", familyNeed: "", nephew: "", relative: "", friends: "", donate: "", necessity: "", repair: "", unimportant: "", office: { meal: "", transport: [], others: [] } },
     habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: false, walkingSteps: "", lustControl: false, noTextFirst: false, noTextStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
     quran: {
@@ -1507,9 +1550,9 @@ function Card({ id, iconName, title, subtitle, accent, expanded, onToggle, badge
     </div>
   );
 }
-function Chip({ active, color, onClick, children }) {
+function Chip({ active, color, onClick, children, title }) {
   return (
-    <button className="chip" onClick={onClick}
+    <button className="chip" onClick={onClick} title={title}
       style={active ? { background: color, color: "#FBF6EA", borderColor: color, transform: "scale(1.04)" } : { borderColor: "#DDD0B0", color: "#4A4331" }}>
       {children}
     </button>
@@ -2106,7 +2149,7 @@ function pointsPrayer(rec) {
 function pointsZikir(rec) {
   if (!rec || !rec.zikir) return 0;
   let pts = 0;
-  ["durud", "istegfar", "tasbihFatemi"].forEach(k => { pts += ((parseFloat(rec.zikir[k]) || 0) / 100) * 2.3; });
+  ["durud", "istegfar", "tasbihFatemi", "eveDurud", "eveIstegfar", "eveTasbihFatemi"].forEach(k => { pts += ((parseFloat(rec.zikir[k]) || 0) / 100) * 2.3; });
   (rec.zikir.custom || []).forEach(z => { pts += ((parseFloat(z.count) || 0) / 100) * 2.3; });
   pts += Object.values(rec.zikir.masnun || {}).filter(Boolean).length * 0.3;
   return pts;
@@ -2546,6 +2589,78 @@ function DiaryBrowserModal({ onClose, onSelectDate, onEditDate }) {
   );
 }
 
+function DiaryPdfExportModal({ initialDate, onClose, onExport }) {
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState([]);
+  const [mode, setMode] = useState("single");
+  const [singleDate, setSingleDate] = useState(initialDate);
+  const [fromDate, setFromDate] = useState(initialDate);
+  const [toDate, setToDate] = useState(initialDate);
+
+  useEffect(() => {
+    (async () => {
+      const list = await storage.list("day:");
+      const keys = list.keys.sort();
+      const found = [];
+      for (const k of keys) {
+        const ds = k.slice(4);
+        const rec = await getDayRaw(ds);
+        const display = rec && rec.diary ? composeDiaryDisplay(rec.diary) : null;
+        if (display) found.push({ date: ds, mood: rec.mood, display });
+      }
+      setEntries(found);
+      setLoading(false);
+    })();
+  }, []);
+
+  const selectedEntries = (mode === "single"
+    ? entries.filter(e => e.date === singleDate)
+    : entries.filter(e => e.date >= fromDate && e.date <= toDate)
+  ).sort((a, b) => a.date.localeCompare(b.date));
+
+  const tabBtn = (active) => ({ flex: 1, justifyContent: "center", fontSize: 12.5, padding: "8px 0", ...(active ? { background: "#4C6B8A", color: "#FBF6EA" } : {}) });
+
+  const doExport = () => {
+    if (selectedEntries.length === 0) return;
+    const label = mode === "single" ? prettyDate(singleDate) : (prettyDate(fromDate) + " – " + prettyDate(toDate));
+    onExport(selectedEntries, label);
+  };
+
+  return (
+    <Modal onClose={onClose} width={440}>
+      <div className="modal-header"><Icon name="picture_as_pdf" size={18} color="#4C6B8A" /><span>ডায়েরি/নোটস PDF এক্সপোর্ট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+        <button className="btn-ghost" style={tabBtn(mode === "single")} onClick={() => setMode("single")}>একটি দিন</button>
+        <button className="btn-ghost" style={tabBtn(mode === "range")} onClick={() => setMode("range")}>যতদিন ইচ্ছা (রেঞ্জ)</button>
+      </div>
+      {mode === "single" ? (
+        <div className="field" style={{ marginBottom: 12 }}>
+          <label>তারিখ বেছে নিন</label>
+          <input type="date" value={singleDate} max={todayStr()} onChange={e => setSingleDate(e.target.value)} />
+        </div>
+      ) : (
+        <div className="field-row" style={{ marginBottom: 12 }}>
+          <div className="field"><label>শুরুর তারিখ</label><input type="date" value={fromDate} max={toDate} onChange={e => setFromDate(e.target.value)} /></div>
+          <div className="field"><label>শেষ তারিখ</label><input type="date" value={toDate} min={fromDate} max={todayStr()} onChange={e => setToDate(e.target.value)} /></div>
+        </div>
+      )}
+      {loading ? (
+        <div className="empty-note" style={{ textAlign: "center" }}>লোড হচ্ছে...</div>
+      ) : (
+        <div className="empty-note" style={{ marginBottom: 12 }}>
+          {selectedEntries.length > 0
+            ? selectedEntries.length + "টি এন্ট্রি পাওয়া গেছে — যেসব দিনে লেখা আছে শুধু সেগুলোই PDF-এ যুক্ত হবে"
+            : "এই তারিখ/পরিসরে কোনো ডায়েরি এন্ট্রি নেই"}
+        </div>
+      )}
+      <div className="modal-actions" style={{ justifyContent: "flex-end" }}>
+        <button className="btn-primary" style={{ background: "#4C6B8A", opacity: selectedEntries.length === 0 ? 0.5 : 1 }} disabled={selectedEntries.length === 0} onClick={doExport}>
+          <Icon name="picture_as_pdf" size={15} /> PDF হিসেবে ডাউনলোড
+        </button>
+      </div>
+    </Modal>
+  );
+}
 function composeDiaryDisplay(diary) {
   if (!diary) return null;
   if (diary.notes && diary.notes.trim()) return { type: "notes", text: diary.notes };
@@ -4423,9 +4538,8 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
 
       <div className="pr-section">
         <h3>যিকির ও দুয়া</h3>
-        {ZIKIR_LIST.map(z => (
-          <div className="pr-row" key={z.key}><b>{z.label}:</b> {day.zikir[z.key] ? day.zikir[z.key] + " বার" : "হয়নি"}</div>
-        ))}
+        <div className="pr-row"><b>৩ তসবিহ (সকাল):</b> {ZIKIR_LIST.every(z => day.zikir[z.key]) ? "হয়েছে" : "হয়নি"}</div>
+        <div className="pr-row"><b>৩ তসবিহ (সন্ধ্যা):</b> {ZIKIR_LIST.every(z => day.zikir[z.eveKey]) ? "হয়েছে" : "হয়নি"}</div>
         {day.zikir.custom.map(z => (
           <div className="pr-row" key={z.id}><b>{z.name}:</b> {z.count ? z.count + " বার" : "হয়েছে"}</div>
         ))}
@@ -4579,10 +4693,12 @@ function ReportModal({ day, date, monthData, monthExpense, monthPlan, noTextPeop
   const downloadPdf = () => {
     const prevTitle = document.title;
     document.title = (viewMode === "diary" ? "Diary " : "Daily Report ") + date;
+    document.body.classList.add("printing-daily");
     let restored = false;
     const restore = () => {
       if (restored) return;
       restored = true;
+      document.body.classList.remove("printing-daily");
       document.title = prevTitle;
       window.removeEventListener("afterprint", restore);
     };
@@ -4694,6 +4810,27 @@ function PrintMonthlyExpenseReport({ detail }) {
     </div>
   );
 }
+function PrintDiaryRange({ entries, label }) {
+  return (
+    <div className="print-area-diary-range">
+      <div className="pr-title">ডায়েরি / নোটস</div>
+      <div className="pr-date">{label}</div>
+      {entries.length === 0 && <div className="pr-empty">কোনো এন্ট্রি নেই</div>}
+      {entries.map(e => (
+        <div className="pr-section" key={e.date}>
+          <h3>{prettyDate(e.date)}{e.mood ? " · " + (MOOD_OPTIONS.find(m => m.key === e.mood)?.emoji || "") : ""}</h3>
+          {e.display.type === "notes" ? (
+            <div className="pr-row" style={{ whiteSpace: "pre-wrap" }}>{e.display.text}</div>
+          ) : (
+            e.display.sections.map((s, i) => (
+              <div className="pr-row" key={i}><b>{s.label}:</b> {s.text}</div>
+            ))
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /* ---------------- main app ---------------- */
 function QazaTrackerModal({ qazaCounts, onChange, onClose }) {
@@ -4722,6 +4859,11 @@ function QazaTrackerModal({ qazaCounts, onChange, onClose }) {
 function DailyLifeManagement() {
   const [date, setDate] = useState(todayStr());
   const todayRef = useRef(todayStr());
+  const [nowClock, setNowClock] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNowClock(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
   const [darkMode, setDarkMode] = useState(() => {
     try { return window.localStorage.getItem(STORAGE_PREFIX + "darkMode") === "1"; } catch (e) { return false; }
   });
@@ -5237,6 +5379,30 @@ function DailyLifeManagement() {
   const [showDiaryReader, setShowDiaryReader] = useState(false);
   const [diaryReaderStartDate, setDiaryReaderStartDate] = useState(null);
   const openDiaryReader = (d) => { setDiaryReaderStartDate(d); setShowDiaryReader(true); };
+  const [showDiaryPdfExport, setShowDiaryPdfExport] = useState(false);
+  const [diaryPrintEntries, setDiaryPrintEntries] = useState([]);
+  const [diaryPrintLabel, setDiaryPrintLabel] = useState("");
+  const exportDiaryPdf = (entries, label) => {
+    setDiaryPrintEntries(entries);
+    setDiaryPrintLabel(label);
+    setShowDiaryPdfExport(false);
+    setTimeout(() => {
+      const prevTitle = document.title;
+      document.title = "Diary " + label;
+      document.body.classList.add("printing-diary-range");
+      let restored = false;
+      const restore = () => {
+        if (restored) return;
+        restored = true;
+        document.body.classList.remove("printing-diary-range");
+        document.title = prevTitle;
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
+      window.print();
+      setTimeout(restore, 3000);
+    }, 100);
+  };
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showPomodoro, setShowPomodoro] = useState(false);
   const [showWorkoutPromoter, setShowWorkoutPromoter] = useState(false);
@@ -5442,6 +5608,11 @@ function DailyLifeManagement() {
     ...prev, prayers: { ...prev.prayers, Isha: { ...prev.prayers.Isha, witr: !prev.prayers.Isha?.witr } },
   }));
   const setZikirCount = (key, count) => updateDay(prev => ({ ...prev, zikir: { ...prev.zikir, [key]: prev.zikir[key] === count ? null : count } }));
+  const setTasbihDone = (session, done) => updateDay(prev => {
+    const newZikir = { ...prev.zikir };
+    ZIKIR_LIST.forEach(z => { newZikir[session === "sokal" ? z.key : z.eveKey] = done ? 100 : null; });
+    return { ...prev, zikir: newZikir };
+  });
   const addCustomZikir = (name, count) => {
     if (!name.trim()) return;
     updateDay(prev => ({ ...prev, zikir: { ...prev.zikir, custom: [...prev.zikir.custom, { id: Date.now(), name: name.trim(), count: count || "" }] } }));
@@ -5796,8 +5967,13 @@ function DailyLifeManagement() {
 
   const prayersDone = PRAYER_ORDER.filter(p => day.prayers[p]?.status).length;
   const naflCount = day.prayers.nafl.length;
-  const zikirDoneCount = [day.zikir.durud, day.zikir.istegfar, day.zikir.tasbihFatemi].filter(Boolean).length + (day.zikir.custom ? day.zikir.custom.length : 0) + Object.values(day.zikir.masnun || {}).filter(Boolean).length;
-  const zikirBadge = zikirDoneCount ? zikirDoneCount + "/৩+" : null;
+  const tasbihHour = nowClock.getHours();
+  const tasbihSession = (tasbihHour >= 5 && tasbihHour < 17) ? "sokal" : "sondha";
+  const tasbihEditable = tasbihSession === "sokal" ? (tasbihHour >= 5 && tasbihHour < 12) : (tasbihHour >= 17 && tasbihHour < 22);
+  const tasbihSokalDone = ZIKIR_LIST.every(z => !!day.zikir[z.key]);
+  const tasbihSondhaDone = ZIKIR_LIST.every(z => !!day.zikir[z.eveKey]);
+  const zikirDoneCount = (tasbihSokalDone ? 1 : 0) + (tasbihSondhaDone ? 1 : 0) + (day.zikir.custom ? day.zikir.custom.length : 0) + Object.values(day.zikir.masnun || {}).filter(Boolean).length;
+  const zikirBadge = zikirDoneCount ? zikirDoneCount + "/২+" : null;
   const walkingDone = (parseFloat(day.habit.walkingSteps) || 0) >= 8000;
   const waterDone = (day.habit.waterGlasses || 0) >= 8;
   const noTextYesCount = Object.values(day.habit.noTextStatus || {}).filter(s => s === "yes").length;
@@ -5897,9 +6073,8 @@ function DailyLifeManagement() {
   PRAYER_ORDER.forEach(p => {
     if (!day.prayers[p]?.status) pendingChecklist.push({ key: "prayer_" + p, label: PRAYER_BN[p] + " নামাজ", sectionId: "prayer" });
   });
-  ZIKIR_LIST.forEach(z => {
-    if (!(parseFloat(day.zikir[z.key]) > 0)) pendingChecklist.push({ key: "zikir_" + z.key, label: z.label, sectionId: "zikir" });
-  });
+  if (!tasbihSokalDone) pendingChecklist.push({ key: "zikir_tasbih_sokal", label: "৩ তসবিহ (সকাল)", sectionId: "zikir" });
+  if (!tasbihSondhaDone) pendingChecklist.push({ key: "zikir_tasbih_sondha", label: "৩ তসবিহ (সন্ধ্যা)", sectionId: "zikir" });
   if (!(day.quran.reading.pages || day.quran.reading.surah)) pendingChecklist.push({ key: "quran_reading", label: "কুরআন তিলাওয়াত", sectionId: "quran" });
   if (!(day.quran.revision.fix.pages || day.quran.revision.fix.surah || day.quran.revision.memorize.pages || day.quran.revision.memorize.surah)) pendingChecklist.push({ key: "quran_revision", label: "কুরআন রিভিশন", sectionId: "quran" });
   if (!(day.study.studied.topics || day.study.studied.hours || day.study.studied.topicName)) pendingChecklist.push({ key: "study_studied", label: "পড়াশোনা (স্টাডি)", sectionId: "study" });
@@ -5943,13 +6118,19 @@ function DailyLifeManagement() {
             <div className="dtt-title">দৈনিক জীবন ব্যবস্থাপনা</div>
             <div className="dtt-sub">Daily Life Management</div>
           </div>
-          <button
-            onClick={() => setShowMoodPicker(true)}
-            title="আজকের মন কেমন?"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "50%", border: "1.5px solid #E7DDC7", background: "#FBF6EA", fontSize: 17, cursor: "pointer", flexShrink: 0 }}
-          >
-            {day.mood ? MOOD_OPTIONS.find(m => m.key === day.mood)?.emoji : <Icon name="mood" size={17} color="#8A7F68" />}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="live-clock">
+              <div className="lc-time">{nowClock.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}</div>
+              <div className="lc-date">{nowClock.toLocaleDateString("bn-BD", { weekday: "long", day: "numeric", month: "long" })}</div>
+            </div>
+            <button
+              onClick={() => setShowMoodPicker(true)}
+              title="আজকের মন কেমন?"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "50%", border: "1.5px solid #E7DDC7", background: "#FBF6EA", fontSize: 17, cursor: "pointer", flexShrink: 0 }}
+            >
+              {day.mood ? MOOD_OPTIONS.find(m => m.key === day.mood)?.emoji : <Icon name="mood" size={17} color="#8A7F68" />}
+            </button>
+          </div>
         </div>
 
         <div className="date-nav">
@@ -6077,6 +6258,22 @@ function DailyLifeManagement() {
                   {day.prayers.nafl.map(n => (
                     <div className="nafl-item" key={n.id}><span className="n-name">{n.name}</span><span className="n-rakahs">{n.rakahs} রাকাত</span><button className="icon-btn ghost" onClick={() => removeNafl(n.id)}><Icon name="delete" size={15} /></button></div>
                   ))}
+                  <div className="chip-grid" style={{ marginBottom: 10 }}>
+                    {NAFL_PRAYER_OPTIONS.map(o => {
+                      const isWitr = o.name === "বিতর";
+                      return (
+                        <Chip
+                          key={o.name}
+                          active={isWitr ? !!day.prayers.Isha?.witr : naflName === o.name}
+                          color={isWitr ? "#8A4A5C" : "#6B7A4F"}
+                          onClick={() => { if (isWitr) { toggleWitr(); } else { setNaflName(o.name); setNaflRakahs(String(o.rakahs)); } }}
+                          title={o.rule + (o.arabic ? " · " + o.arabic : "") + (isWitr ? " · এশার 'বিতর পড়েছি' এর সাথে সিঙ্ক করা" : "")}
+                        >
+                          {o.name}
+                        </Chip>
+                      );
+                    })}
+                  </div>
                   <div className="add-row">
                     <input placeholder="নফলের নাম (যেমন তাহাজ্জুদ)" value={naflName} onChange={e => setNaflName(e.target.value)} />
                     <input placeholder="রাকাত" type="number" min="0" style={{ width: 80 }} value={naflRakahs} onChange={e => setNaflRakahs(e.target.value)} />
@@ -6124,16 +6321,20 @@ function DailyLifeManagement() {
               </div>
               {zikirSubOpen === "tasbih" && (
                 <div className="subblock">
-                  {ZIKIR_LIST.map(z => (
-                    <div className="prayer-row" key={z.key} style={{ flexWrap: "wrap" }}>
-                      <div className="p-name" style={{ width: "auto", marginRight: 6 }}>{z.label}</div>
-                      <div className="chip-row">
-                        {ZIKIR_COUNT_OPTIONS.map(n => (
-                          <Chip key={n} active={day.zikir[z.key] === n} color="#8A4A5C" onClick={() => setZikirCount(z.key, n)}>{n} বার</Chip>
-                        ))}
-                      </div>
+                  <div className="prayer-row" style={{ flexWrap: "wrap", justifyContent: "space-between" }}>
+                    <div className="p-name" style={{ width: "auto", marginRight: 6 }}>৩ তসবিহ করেছেন? (সকাল)</div>
+                    <div className="chip-row">
+                      <Chip active={tasbihSokalDone} color="#6B7A4F" onClick={() => setTasbihDone("sokal", true)}>হ্যাঁ</Chip>
+                      <Chip active={!tasbihSokalDone} color="#A14545" onClick={() => setTasbihDone("sokal", false)}>না</Chip>
                     </div>
-                  ))}
+                  </div>
+                  <div className="prayer-row" style={{ flexWrap: "wrap", justifyContent: "space-between", marginTop: 8 }}>
+                    <div className="p-name" style={{ width: "auto", marginRight: 6 }}>৩ তসবিহ করেছেন? (বিকাল/সন্ধ্যা)</div>
+                    <div className="chip-row">
+                      <Chip active={tasbihSondhaDone} color="#6B7A4F" onClick={() => setTasbihDone("sondha", true)}>হ্যাঁ</Chip>
+                      <Chip active={!tasbihSondhaDone} color="#A14545" onClick={() => setTasbihDone("sondha", false)}>না</Chip>
+                    </div>
+                  </div>
                 </div>
               )}
               {zikirSubOpen === "masnun" && (
@@ -6162,6 +6363,28 @@ function DailyLifeManagement() {
               )}
               {zikirSubOpen === "custom" && (
                 <>
+                  {SUGGESTED_CUSTOM_ZIKIR.some(s => !day.zikir.custom.some(z => z.name === s.name)) && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", marginBottom: 6 }}>সাজেস্টেড যিকির (ট্যাপ করে যোগ করুন)</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {SUGGESTED_CUSTOM_ZIKIR.filter(s => !day.zikir.custom.some(z => z.name === s.name)).map(s => (
+                          <button
+                            key={s.name}
+                            onClick={() => addCustomZikir(s.name, s.count)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 4, cursor: "pointer",
+                              border: "1.5px solid " + (darkMode ? "#31402F" : "#E1D6B8"), borderRadius: 999,
+                              background: darkMode ? "#1F2A22" : "#F5EEDC", color: darkMode ? "#EFE4CB" : "#2B2A22",
+                              padding: "5px 10px", fontSize: 11.5, fontWeight: 600,
+                            }}
+                          >
+                            <Icon name="add" size={13} />
+                            {s.name} <span style={{ color: "#8A4A5C", fontFamily: "'IBM Plex Mono'" }}>({s.count})</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {day.zikir.custom.length === 0 && <div className="empty-note">এখনো কোনো কাস্টম যিকির যোগ করা হয়নি</div>}
                   {day.zikir.custom.map(z => (
                     <div className="nafl-item" key={z.id}>
@@ -6182,6 +6405,32 @@ function DailyLifeManagement() {
         </Card>
 
         <Card id="quran" hidden={hiddenCards.includes("quran")} iconName="menu_book" title="কুরআন" subtitle="তিলাওয়াত, রিভিশন ও আমলি সূরা" accent="#8A6A2F" badge={quranBadge} points={quranPoints} streak={taskStreaks.quran} notDone={day.taskNotDone.quran} onToggleNotDone={() => toggleTaskNotDone("quran")} expanded={expanded === "quran"} onToggle={toggle}>
+          <div
+            onClick={() => { setQuranSubOpen("revision"); setRevisionSubOpen("routine"); }}
+            style={{ cursor: "pointer", width: "100%", background: surahRevisionPlan.dayType === "B" ? "#A14545" : "#8A6A2F", color: "#FBF6EA", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: surahRevisionPlan.items.length > 0 ? 10 : 0, flexWrap: "wrap", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon name="auto_stories" size={20} />
+                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 16 }}>আজকের পড়া</span>
+              </div>
+              <span style={{ fontSize: 11.5, fontWeight: 700, background: "rgba(255,255,255,0.18)", padding: "3px 10px", borderRadius: 999 }}>
+                {surahRevisionPlan.dayType === "B" ? "🔴 Bad" : "🟤 Normal"} · {surahRevisionPlan.target} পৃষ্ঠা
+              </span>
+            </div>
+            {surahRevisionPlan.items.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {surahRevisionPlan.items.map(s => (
+                  <div key={s.number} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12.5 }}>
+                    <span style={{ fontWeight: 600 }}>{s.number}. {s.label}{day.quran.revisionDone[s.number] ? " ✓" : ""}</span>
+                    <span style={{ opacity: 0.85, fontWeight: 600 }}>{s.pagesToday} পৃষ্ঠা</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 12, opacity: 0.9 }}>আজকের ক্যাটাগরিতে কোনো সূরা পাওয়া যায়নি — ট্যাপ করে সূরার অবস্থা সেট করুন</div>
+            )}
+          </div>
           {!quranSubOpen ? (
             <div className="subblock" style={{ padding: 12 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
@@ -6326,7 +6575,7 @@ function DailyLifeManagement() {
                                     >হ্যাঁ</button>
                                     <button
                                       onClick={() => setQuranRevisionDone(s.number, false)}
-                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #B65C4A", cursor: "pointer", background: (!revDone && s.number in day.quran.revisionDone) ? "#B65C4A" : "transparent", color: (!revDone && s.number in day.quran.revisionDone) ? "#FBF6EA" : "#B65C4A" }}
+                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #A14545", cursor: "pointer", background: !revDone ? "#A14545" : "transparent", color: !revDone ? "#FBF6EA" : "#A14545" }}
                                     >না</button>
                                   </div>
                                 </div>
@@ -6370,7 +6619,7 @@ function DailyLifeManagement() {
                                     >হ্যাঁ</button>
                                     <button
                                       onClick={() => setQuranRevisionDone(s.number, false)}
-                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #B65C4A", cursor: "pointer", background: (!revDone && s.number in day.quran.revisionDone) ? "#B65C4A" : "transparent", color: (!revDone && s.number in day.quran.revisionDone) ? "#FBF6EA" : "#B65C4A" }}
+                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #A14545", cursor: "pointer", background: !revDone ? "#A14545" : "transparent", color: !revDone ? "#FBF6EA" : "#A14545" }}
                                     >না</button>
                                   </div>
                                 </div>
@@ -6487,7 +6736,7 @@ function DailyLifeManagement() {
                           >হ্যাঁ</button>
                           <button
                             onClick={() => setStudySubjectDone(sub, false)}
-                            style={{ fontSize: 11.5, fontWeight: 700, padding: "4px 12px", borderRadius: 999, border: "1.5px solid #B65C4A", cursor: "pointer", background: (!done && sub in day.study.subjectsDone) ? "#B65C4A" : "transparent", color: (!done && sub in day.study.subjectsDone) ? "#FBF6EA" : "#B65C4A" }}
+                            style={{ fontSize: 11.5, fontWeight: 700, padding: "4px 12px", borderRadius: 999, border: "1.5px solid #A14545", cursor: "pointer", background: !done ? "#A14545" : "transparent", color: !done ? "#FBF6EA" : "#A14545" }}
                           >না</button>
                         </div>
                       </div>
@@ -7042,6 +7291,7 @@ function DailyLifeManagement() {
                 { key: "reading", icon: "auto_stories", shortLabel: "রিডিং মোড", fullLabel: "আজকের এন্ট্রি রিডিং মোডে খুলুন", action: () => openDiaryReader(date) },
                 { key: "browse", icon: "menu_book", shortLabel: "ব্রাউজ করুন", fullLabel: "পুরোনো ডায়েরি ব্রাউজ করুন", action: () => setShowDiaryBrowser(true) },
                 { key: "write", icon: "edit_note", shortLabel: "লিখুন", fullLabel: "ডায়েরি লিখুন", action: () => { setDiaryEditorOpen(o => { const next = !o; if (next) { setDiaryBlurred(false); setTimeout(() => { diaryTextareaRef.current?.focus(); diaryTextareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 0); } return next; }); } },
+                { key: "pdfexport", icon: "picture_as_pdf", shortLabel: "PDF এক্সপোর্ট", fullLabel: "ডায়েরি/নোটস PDF এক্সপোর্ট (একদিন বা যেকোনো কয়েকদিন)", action: () => setShowDiaryPdfExport(true) },
               ].map(item => (
                 <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
                   <button
@@ -7561,6 +7811,7 @@ function DailyLifeManagement() {
       {showDiarySearch && <DiarySearchModal onClose={() => setShowDiarySearch(false)} onSelectDate={(d) => { openDiaryReader(d); setShowDiarySearch(false); }} onEditDate={(d) => { setDate(d); setExpanded("diary"); setShowDiarySearch(false); }} />}
       {showDiaryBrowser && <DiaryBrowserModal onClose={() => setShowDiaryBrowser(false)} onSelectDate={(d) => { openDiaryReader(d); setShowDiaryBrowser(false); }} onEditDate={(d) => { setDate(d); setExpanded("diary"); setShowDiaryBrowser(false); }} />}
       {showDiaryReader && <DiaryReaderModal initialDate={diaryReaderStartDate || date} onClose={() => setShowDiaryReader(false)} />}
+      {showDiaryPdfExport && <DiaryPdfExportModal initialDate={date} onClose={() => setShowDiaryPdfExport(false)} onExport={exportDiaryPdf} />}
 
       {showWeeklyReview && <WeeklyReviewModal date={date} onClose={() => setShowWeeklyReview(false)} />}
       {showPomodoro && (
@@ -7593,6 +7844,7 @@ function DailyLifeManagement() {
 
       <PrintReport day={day} date={date} monthData={monthData} monthExpense={monthExpense} monthPlan={monthPlan} noTextPeople={noTextPeople} mode={reportPrintMode} />
       <PrintMonthlyExpenseReport detail={monthlyExpenseDetail} />
+      <PrintDiaryRange entries={diaryPrintEntries} label={diaryPrintLabel} />
     </div>
   );
 }
