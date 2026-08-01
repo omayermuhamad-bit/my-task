@@ -4509,6 +4509,59 @@ function NoteModal({ onClose }) {
 
 }
 
+/* ---------------- robust PDF/print helper (uses a hidden iframe instead of the old
+   body-visibility CSS trick, which fails to print anything on many mobile browsers
+   / installed-PWA webviews) ---------------- */
+function printHTMLContent(title, innerHTML) {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(
+    '<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8" />' +
+    '<title>' + title + '</title>' +
+    '<style>' +
+    "@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');" +
+    'html,body{margin:0;padding:0;}' +
+    'body{font-family:"Inter",sans-serif;color:#2B2A22;padding:14px;}' +
+    '.pr-title{font-family:"Fraunces",serif;font-weight:700;font-size:22px;color:#123A34;margin-bottom:2px;}' +
+    '.pr-date{font-size:13px;color:#555;margin-bottom:18px;}' +
+    '.pr-section{margin-bottom:16px;page-break-inside:avoid;}' +
+    '.pr-section h3{font-family:"Fraunces",serif;font-size:15px;color:#123A34;border-bottom:1.5px solid #C6BB9C;padding-bottom:4px;margin:0 0 8px;}' +
+    '.pr-row{font-size:13px;margin:3px 0;color:#222;}' +
+    '.pr-row b{color:#000;}' +
+    '.pr-empty{font-size:12.5px;color:#888;font-style:italic;}' +
+    '.pr-table{width:100%;border-collapse:collapse;margin-top:6px;}' +
+    '.pr-table th,.pr-table td{border:1px solid #C6BB9C;padding:6px 8px;font-size:12.5px;text-align:left;vertical-align:top;}' +
+    '.pr-table th{background:#F1E9D6;font-family:"Fraunces",serif;font-weight:600;}' +
+    '.pr-table td.pr-num{text-align:right;white-space:nowrap;font-family:"IBM Plex Mono";}' +
+    '@media print{ body{padding:6px;} }' +
+    '</style></head><body>' + innerHTML + '</body></html>'
+  );
+  doc.close();
+  const cleanup = () => { try { document.body.removeChild(iframe); } catch (e) {} };
+  const doPrint = () => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {}
+    setTimeout(cleanup, 1500);
+  };
+  // give the iframe a moment to lay out (and fonts a moment to load) before printing
+  if (iframe.contentWindow.document.readyState === "complete") {
+    setTimeout(doPrint, 300);
+  } else {
+    iframe.onload = () => setTimeout(doPrint, 300);
+    setTimeout(doPrint, 800); // fallback in case onload doesn't fire
+  }
+}
+
 /* ---------------- reusable report content (used both on-screen and for printing) ---------------- */
 function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPeople }) {
   const statusLabel = Object.fromEntries(PRAYER_STATUS.map(s => [s.key, s.label]));
@@ -4691,20 +4744,10 @@ function ReportModal({ day, date, monthData, monthExpense, monthPlan, noTextPeop
   const viewMode = printMode;
   const setViewMode = onPrintModeChange;
   const downloadPdf = () => {
-    const prevTitle = document.title;
-    document.title = (viewMode === "diary" ? "Diary " : "Daily Report ") + date;
-    document.body.classList.add("printing-daily");
-    let restored = false;
-    const restore = () => {
-      if (restored) return;
-      restored = true;
-      document.body.classList.remove("printing-daily");
-      document.title = prevTitle;
-      window.removeEventListener("afterprint", restore);
-    };
-    window.addEventListener("afterprint", restore);
-    window.print();
-    setTimeout(restore, 3000);
+    const title = (viewMode === "diary" ? "Diary " : "Daily Report ") + date;
+    const el = document.querySelector(".print-area");
+    if (!el) return;
+    printHTMLContent(title, el.innerHTML);
   };
   return (
     <Modal onClose={onClose} width={480}>
@@ -4766,20 +4809,9 @@ function MonthlyExpenseReportModal({ detail, loading, onClose }) {
   const downloadPdf = () => {
     if (!detail) return;
     const fileName = detail.monthNameEn + " " + detail.year + " Expense";
-    const prevTitle = document.title;
-    document.title = fileName;
-    document.body.classList.add("printing-monthly");
-    let restored = false;
-    const restore = () => {
-      if (restored) return;
-      restored = true;
-      document.body.classList.remove("printing-monthly");
-      document.title = prevTitle;
-      window.removeEventListener("afterprint", restore);
-    };
-    window.addEventListener("afterprint", restore);
-    window.print();
-    setTimeout(restore, 3000);
+    const el = document.querySelector(".print-area-monthly");
+    if (!el) return;
+    printHTMLContent(fileName, el.innerHTML);
   };
   return (
     <Modal onClose={onClose} width={560}>
@@ -5386,22 +5418,12 @@ function DailyLifeManagement() {
     setDiaryPrintEntries(entries);
     setDiaryPrintLabel(label);
     setShowDiaryPdfExport(false);
+    // wait for React to commit the new entries/label into .print-area-diary-range before reading it
     setTimeout(() => {
-      const prevTitle = document.title;
-      document.title = "Diary " + label;
-      document.body.classList.add("printing-diary-range");
-      let restored = false;
-      const restore = () => {
-        if (restored) return;
-        restored = true;
-        document.body.classList.remove("printing-diary-range");
-        document.title = prevTitle;
-        window.removeEventListener("afterprint", restore);
-      };
-      window.addEventListener("afterprint", restore);
-      window.print();
-      setTimeout(restore, 3000);
-    }, 100);
+      const el = document.querySelector(".print-area-diary-range");
+      if (!el) return;
+      printHTMLContent("Diary " + label, el.innerHTML);
+    }, 150);
   };
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showPomodoro, setShowPomodoro] = useState(false);
