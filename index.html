@@ -71,6 +71,21 @@
   .set-num { font-family:'Fraunces',serif; font-weight:700; font-size:16px; min-width:22px; text-align:center; }
   .rest-timer-banner { display:flex; align-items:center; gap:8px; background:#123A34; color:#FBF6EA; border-radius:12px; padding:10px 14px; margin-bottom:12px; font-weight:600; font-size:13.5px; }
   .rest-skip-btn { margin-left:auto; background:rgba(255,255,255,0.15); border:none; color:#FBF6EA; border-radius:999px; padding:4px 12px; font-size:11.5px; cursor:pointer; }
+  .review-topbar { position:sticky; top:0; z-index:1600; display:flex; align-items:center; gap:10px; background:#123A34; color:#FBF6EA; padding:12px 16px; margin:-28px -18px 18px; }
+  .review-topbar-icon { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .review-topbar-info { flex:1; min-width:0; }
+  .review-topbar-step { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#B7C9BE; text-transform:uppercase; letter-spacing:0.06em; }
+  .review-topbar-title { font-family:'Fraunces',serif; font-weight:700; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .review-topbar-close { background:rgba(255,255,255,0.14); border:none; color:#FBF6EA; border-radius:999px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .review-topbar-close:hover { background:rgba(255,255,255,0.24); }
+  .review-slide-nav { position:fixed; bottom:0; left:0; right:0; z-index:1600; background:#FBF6EA; border-top:1px solid #E7DDC7; padding:10px 16px calc(10px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:12px; box-shadow:0 -6px 20px rgba(43,42,34,0.08); }
+  .review-slide-btn { display:flex; align-items:center; gap:4px; background:#123A34; color:#FBF6EA; border:none; border-radius:12px; padding:10px 16px; font-weight:600; font-size:13px; cursor:pointer; flex-shrink:0; }
+  .review-slide-btn.secondary { background:#F5EEDC; color:#123A34; }
+  .review-slide-btn:disabled { opacity:0.35; cursor:default; }
+  .review-slide-dots { flex:1; display:flex; align-items:center; justify-content:center; gap:5px; overflow-x:auto; scrollbar-width:none; }
+  .review-slide-dots::-webkit-scrollbar { display:none; }
+  .review-slide-dot { width:7px; height:7px; border-radius:50%; background:#DFD3B4; flex-shrink:0; }
+  .review-slide-dot.active { background:#123A34; width:18px; border-radius:5px; }
   .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:20px; }
   .summary-card { background:#FBF6EA; border:1px solid #EEE5CE; border-radius:12px; padding:8px 3px 6px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; box-shadow:0 1px 2px rgba(43,42,34,0.04), 0 3px 10px rgba(43,42,34,0.05); transition:transform .15s ease, box-shadow .15s ease, border-color .15s; }
   .summary-card:hover { transform:translateY(-1px); box-shadow:0 2px 4px rgba(43,42,34,0.06), 0 6px 16px rgba(43,42,34,0.08); }
@@ -360,6 +375,10 @@
   .dtt-root.dark .cal-btn, .dtt-root.dark .cal-nav-btn { background:#25302A; color:#E0B868; }
   .dtt-root.dark .goal-pill { background:#3A2828; color:#E08A8A; }
   .dtt-root.dark .pdf-btn { background:#1F2A22; border-color:#3A4634; color:#E7E0CC; }
+  .dtt-root.dark .review-slide-nav { background:#1A2420; border-color:#31402F; }
+  .dtt-root.dark .review-slide-btn.secondary { background:#25302A; color:#E7E0CC; }
+  .dtt-root.dark .review-slide-dot { background:#3A4634; }
+  .dtt-root.dark .review-slide-dot.active { background:#E0B868; }
   .dtt-root.dark .mood-widget { background:#1F2A22; border-color:#31402F; box-shadow:0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.35); }
   .dtt-root.dark .mood-btn { background:#25302A; }
   .dtt-root.dark .water-btn { background:#1B241C; border-color:#3A4634; color:#E0B868; }
@@ -945,6 +964,8 @@ const OWN_EXPENSE_KEYS = ["transport", "meal", "gadget", "donate", "necessity", 
 const FRIENDS_FAMILY_KEYS = ["brother", "sister", "familyNeed", "nephew", "relative", "friends"];
 const OWN_EXPENSE_CATEGORIES = ACCOUNT_CATEGORIES.filter(c => OWN_EXPENSE_KEYS.includes(c.key));
 const FRIENDS_FAMILY_CATEGORIES = ACCOUNT_CATEGORIES.filter(c => FRIENDS_FAMILY_KEYS.includes(c.key));
+// এই খাতগুলোতে খরচ করলে (আইটেমের নাম দিলে) সেটা মাসিক প্ল্যানের "পরিবারের কারো জন্য কিছু কিনেছি কিনা" তালিকায় একই তারিখে অটো-সিঙ্ক হবে
+const FAMILY_PURCHASE_SYNC_KEYS = ["brother", "sister", "familyNeed", "nephew", "relative"];
 const OFFICE_TRANSPORT_TYPES = [
   { key: "rickshaw", label: "রিকশা" },
   { key: "metro", label: "মেট্রো" },
@@ -1056,6 +1077,19 @@ const MOOD_OPTIONS = [
   { key: "lonely", emoji: "😞", label: "একাকী" },
   { key: "motivated", emoji: "💪", label: "উদ্যমী" },
 ];
+// স্টেপ বাই স্টেপ ডেইলি রিভিউ ফিচারের জন্য প্রতিটি মূল টাস্ক কার্ডের নাম ও আইকন
+const REVIEW_TASK_META = {
+  prayer: { label: "নামাজ", iconName: "wb_sunny", accent: "#123A34" },
+  zikir: { label: "যিকির ও দুয়া", iconName: "self_improvement", accent: "#8A4A5C" },
+  quran: { label: "কুরআন", iconName: "menu_book", accent: "#8A6A2F" },
+  study: { label: "পড়াশোনা", iconName: "school", accent: "#5C7A6B" },
+  exercise: { label: "ব্যায়াম", iconName: "fitness_center", accent: "#B5651D" },
+  habit: { label: "অভ্যাস", iconName: "task_alt", accent: "#6B7A4F" },
+  texting: { label: "সেলফ-ডিসিপ্লিন ও শান্তি", iconName: "chat_bubble", accent: "#7A5C8A" },
+  diary: { label: "নোটস / ডায়েরি", iconName: "edit_note", accent: "#4C6B8A" },
+  accounts: { label: "হিসাব", iconName: "account_balance_wallet", accent: "#2F6B5E" },
+  plan: { label: "মাসিক প্ল্যান", iconName: "flag", accent: "#4A6FA5" },
+};
 const REST_TIMER_SECONDS = 60;
 const EXERCISE_LIST = [
   // ওয়ার্ম-আপ
@@ -1327,7 +1361,7 @@ function emptyDay() {
     },
     zikir: { durud: null, istegfar: null, tasbihFatemi: null, eveDurud: null, eveIstegfar: null, eveTasbihFatemi: null, custom: [], masnun: {} },
     accounts: { transport: "", meal: "", gadget: "", brother: "", sister: "", familyNeed: "", nephew: "", relative: "", friends: "", donate: "", necessity: "", repair: "", unimportant: "", office: { meal: "", transport: [], others: [] } },
-    habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: null, walkingSteps: "", lustControl: null, noTextFirst: false, noTextStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
+    habit: { earlyRising: false, earlySleeping: false, noScreenCount: "", meditation: null, walkingSteps: "", lustControl: null, noTextFirst: false, noTextStatus: {}, noTalkStatus: {}, waterGlasses: 0, sleepTime: "", wakeTime: "", sleepSessions: [], weight: "", sadaqah: false, ghorGochano: 0, ghorGochanoMiss: 0, custom: [], unticks: {} },
     quran: {
       reading: { pages: "", surah: "" },
       revision: { fix: { pages: "", surah: "" }, memorize: { pages: "", surah: "" } },
@@ -1365,7 +1399,7 @@ function mergeDay(loaded) {
       if (Array.isArray(loaded?.habit?.noTextPersons)) {
         loaded.habit.noTextPersons.forEach(p => { if (p && p.name) legacyNoTextStatus[p.name] = p.status; });
       }
-      const h = { ...base.habit, ...(loaded?.habit || {}), custom: Array.isArray(loaded?.habit?.custom) ? loaded.habit.custom : [], noTextStatus: { ...legacyNoTextStatus, ...(loaded?.habit?.noTextStatus || {}) }, unticks: { ...(loaded?.habit?.unticks || {}) } };
+      const h = { ...base.habit, ...(loaded?.habit || {}), custom: Array.isArray(loaded?.habit?.custom) ? loaded.habit.custom : [], noTextStatus: { ...legacyNoTextStatus, ...(loaded?.habit?.noTextStatus || {}) }, noTalkStatus: { ...(loaded?.habit?.noTalkStatus || {}) }, unticks: { ...(loaded?.habit?.unticks || {}) } };
       delete h.noTextPersons;
       // migrate legacy boolean meditation/lustControl (true/false) to the new tri-state yes/no/null
       if (h.meditation === true) h.meditation = "yes"; else if (h.meditation === false) h.meditation = null;
@@ -2214,6 +2248,7 @@ function pointsHabit(rec) {
   if (sleepAutoPts.earlyRising) pts += 1.2;
   if (sleepAutoPts.earlySleeping) pts += 1.2;
   Object.values(h.noTextStatus || {}).forEach(status => { if (status === "yes") pts += 1.2; else if (status === "no") pts -= 1.2; });
+  Object.values(h.noTalkStatus || {}).forEach(status => { if (status === "yes") pts += 1.2; else if (status === "no") pts -= 1.2; });
   if (h.lustControl === "yes") pts += 2.4; else if (h.lustControl === "no") pts -= 2.4;
   pts += (parseInt(h.ghorGochano) || 0) * 1.2;
   pts -= (parseInt(h.ghorGochanoMiss) || 0) * 1.2;
@@ -3689,6 +3724,8 @@ function SettingsModal({ darkMode, onToggleDark, reminderSettings, onReminderCha
 function QuickExpenseModal({ onClose, onAdd }) {
   const [cat, setCat] = useState(null);
   const [amount, setAmount] = useState("");
+  const [item, setItem] = useState("");
+  const isFamilySync = cat && FAMILY_PURCHASE_SYNC_KEYS.includes(cat);
   return (
     <Modal onClose={onClose} width={360}>
       <div className="modal-header"><Icon name="bolt" size={18} color="#2F6B5E" /><span>দ্রুত খরচ যোগ করুন</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
@@ -3703,8 +3740,15 @@ function QuickExpenseModal({ onClose, onAdd }) {
       </div>
       <div className="modal-q" style={{ marginTop: 12 }}>কত টাকা?</div>
       <input className="modal-input" type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="যেমন ১০০" autoFocus />
+      {isFamilySync && (
+        <>
+          <div className="modal-q" style={{ marginTop: 12 }}>কী কিনেছেন? (ঐচ্ছিক)</div>
+          <input className="modal-input" type="text" value={item} onChange={e => setItem(e.target.value)} placeholder="যেমন জামা, ওষুধ" />
+          <div style={{ fontSize: 10.5, color: "#8A7F68", marginTop: 4 }}>লিখলে এটি "মাসিক প্ল্যান" → "পরিবারের কেনাকাটা"-তে আজকের তারিখেই নিজে থেকে যোগ হয়ে যাবে</div>
+        </>
+      )}
       <div className="modal-actions" style={{ justifyContent: "flex-end" }}>
-        <button className="btn-primary" style={{ background: "#2F6B5E" }} disabled={!cat || !amount} onClick={() => { onAdd(cat, amount); onClose(); }}>যোগ করুন</button>
+        <button className="btn-primary" style={{ background: "#2F6B5E" }} disabled={!cat || !amount} onClick={() => { onAdd(cat, amount, item); onClose(); }}>যোগ করুন</button>
       </div>
     </Modal>
   );
@@ -4652,6 +4696,9 @@ function ReportContent({ day, date, monthData, monthExpense, monthPlan, noTextPe
         {(noTextPeople || []).length > 0 && (
           <div className="pr-row"><b>নো টেক্সট ফার্স্ট:</b> {(noTextPeople || []).map(p => { const st = (day.habit.noTextStatus || {})[p.name]; return p.name + " (" + (st === "yes" ? "হ্যাঁ" : st === "no" ? "না" : "বাকি") + ")"; }).join(", ")}</div>
         )}
+        {(noTextPeople || []).length > 0 && (
+          <div className="pr-row"><b>নো টক ফার্স্ট:</b> {(noTextPeople || []).map(p => { const st = (day.habit.noTalkStatus || {})[p.name]; return p.name + " (" + (st === "yes" ? "হ্যাঁ" : st === "no" ? "না" : "বাকি") + ")"; }).join(", ")}</div>
+        )}
         {day.habit.custom.map(h => (
           <div className="pr-row" key={h.id}><b>{h.name}:</b> {h.done ? "হয়েছে ✓" : "হয়নি"}</div>
         ))}
@@ -5195,6 +5242,7 @@ function DailyLifeManagement() {
   const [officeExpanded, setOfficeExpanded] = useState(false);
   const [ownExpenseExpanded, setOwnExpenseExpanded] = useState(false);
   const [friendsFamilyExpanded, setFriendsFamilyExpanded] = useState(false);
+  const [familyItemDraft, setFamilyItemDraft] = useState({});
   const [monthlyInfoExpanded, setMonthlyInfoExpanded] = useState(false);
   const [debtExpanded, setDebtExpanded] = useState(false);
   const [pieChartExpanded, setPieChartExpanded] = useState(false);
@@ -5576,11 +5624,15 @@ function DailyLifeManagement() {
       if (noTextPeople.length > 0) {
         results.noTextAll = await computeHabitItemStreak(date, (rec) => noTextPeople.every(p => (rec.habit.noTextStatus || {})[p.name] === "yes"));
       }
+      for (const p of noTextPeople) {
+        results["notext:" + p.name] = await computeHabitItemStreak(date, (rec) => (rec.habit.noTextStatus || {})[p.name] === "yes");
+        results["notalk:" + p.name] = await computeHabitItemStreak(date, (rec) => (rec.habit.noTalkStatus || {})[p.name] === "yes");
+      }
       setHabitItemStreaks(results);
     }, 900);
     return () => clearTimeout(habitItemStreakTimer.current);
     // eslint-disable-next-line
-  }, [date, day.habit.custom.map(h => h.name).join("|"), ...HABIT_LIST.map(h => day.habit[h.key]), noTextPeople.map(p => p.name).join("|"), JSON.stringify(day.habit.noTextStatus)]);
+  }, [date, day.habit.custom.map(h => h.name).join("|"), ...HABIT_LIST.map(h => day.habit[h.key]), noTextPeople.map(p => p.name).join("|"), JSON.stringify(day.habit.noTextStatus), JSON.stringify(day.habit.noTalkStatus)]);
 
   const refreshMonthExpense = useCallback(async (forDate) => {
     setMonthLoading(true);
@@ -5668,6 +5720,9 @@ function DailyLifeManagement() {
   };
   const setNoTextStatus = (name, status) => updateDay(prev => ({
     ...prev, habit: { ...prev.habit, noTextStatus: { ...prev.habit.noTextStatus, [name]: (prev.habit.noTextStatus || {})[name] === status ? null : status } },
+  }));
+  const setNoTalkStatus = (name, status) => updateDay(prev => ({
+    ...prev, habit: { ...prev.habit, noTalkStatus: { ...prev.habit.noTalkStatus, [name]: (prev.habit.noTalkStatus || {})[name] === status ? null : status } },
   }));
   const saveCustomTasks = async (list) => {
     setCustomTasks(list);
@@ -5871,13 +5926,17 @@ function DailyLifeManagement() {
     clearTimeout(setAccountExpense._t);
     setAccountExpense._t = setTimeout(() => refreshMonthExpense(date), 500);
   };
-  const quickAddExpense = (key, amount) => {
+  const quickAddExpense = (key, amount, item) => {
     const amt = parseFloat(amount) || 0;
     if (!amt) return;
     updateDay(prev => {
       const current = parseFloat(prev.accounts[key]) || 0;
       return { ...prev, accounts: { ...prev.accounts, [key]: current + amt } };
     });
+    if (item && item.trim() && FAMILY_PURCHASE_SYNC_KEYS.includes(key)) {
+      const forWhom = ACCOUNT_CATEGORIES.find(c => c.key === key)?.label || key;
+      addFamilyPurchase(forWhom, item.trim());
+    }
     setTimeout(() => refreshMonthExpense(date), 300);
   };
   const setOfficeMeal = (value) => {
@@ -5996,6 +6055,46 @@ function DailyLifeManagement() {
   };
 
   const toggle = (id) => setExpanded(prev => (prev === id ? null : id));
+
+  const [reviewActive, setReviewActive] = useState(false);
+  const [reviewStep, setReviewStep] = useState(0);
+  const reviewList = [
+    ...cardOrder.filter(id => !hiddenCards.includes(id)),
+    ...customTasks.map(t => "custom_" + t.id),
+  ];
+  const reviewGoTo = (idx) => {
+    const id = reviewList[idx];
+    if (!id) return;
+    setExpanded(id);
+    requestAnimationFrame(() => {
+      const el = document.getElementById("card-" + id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+  const startReview = () => {
+    if (reviewList.length === 0) return;
+    setReviewActive(true);
+    setReviewStep(0);
+    reviewGoTo(0);
+  };
+  const reviewNext = () => {
+    const next = reviewStep + 1;
+    if (next >= reviewList.length) { setReviewActive(false); return; }
+    setReviewStep(next);
+    reviewGoTo(next);
+  };
+  const reviewPrev = () => {
+    const prev = reviewStep - 1;
+    if (prev < 0) return;
+    setReviewStep(prev);
+    reviewGoTo(prev);
+  };
+  const closeReview = () => setReviewActive(false);
+  const reviewCurrentId = reviewList[reviewStep];
+  const reviewCurrentMeta = reviewCurrentId && reviewCurrentId.startsWith("custom_")
+    ? (() => { const t = customTasks.find(t => "custom_" + t.id === reviewCurrentId); return t ? { label: t.name, iconName: t.icon || "star", accent: "#7A5C4A" } : null; })()
+    : REVIEW_TASK_META[reviewCurrentId];
+
   const unfinished = goalsUnfinished(day);
 
   const prayersDone = PRAYER_ORDER.filter(p => day.prayers[p]?.status).length;
@@ -6078,13 +6177,18 @@ function DailyLifeManagement() {
   const zikirPoints = pointsZikir(day);
   const quranPoints = pointsQuran(day);
   const surahRevisionPlan = computeSurahRevisionPlan(date, surahStatus);
-  const quranTodayReadingDone = surahRevisionPlan.items.length > 0 && surahRevisionPlan.items.every(s => !!day.quran.revisionDone[s.number]);
+  // ভোর ৫টা - বিকাল ৫টা: ইয়াসিন | বিকাল ৫টা - ভোর ৫টা: মুলক, ওয়াকিয়া
+  const todayAmoliSurahKeys = (nowClock.getHours() >= 5 && nowClock.getHours() < 17) ? ["Yasin"] : ["Mulk", "Waqiah"];
+  const todayAmoliItems = AMOLI_SURAHS.filter(s => todayAmoliSurahKeys.includes(s.key)).concat(WEEKLY_AMOLI_SURAHS.filter(s => nowClock.getDay() === s.weekday));
+  const quranTodayReadingDone = (surahRevisionPlan.items.length > 0 || todayAmoliItems.length > 0) && surahRevisionPlan.items.every(s => !!day.quran.revisionDone[s.number]) && todayAmoliItems.every(s => !!day.quran.amoli[s.key]);
   const toggleTodayReadingAllDone = () => {
     const makeDone = !quranTodayReadingDone;
     updateDay(prev => {
       const rd = { ...prev.quran.revisionDone };
       surahRevisionPlan.items.forEach(s => { rd[s.number] = makeDone; });
-      return { ...prev, quran: { ...prev.quran, revisionDone: rd } };
+      const am = { ...prev.quran.amoli };
+      todayAmoliItems.forEach(s => { am[s.key] = makeDone; });
+      return { ...prev, quran: { ...prev.quran, revisionDone: rd, amoli: am } };
     });
   };
   // আগের দিনগুলোর রিভিশন রুটিনের সূরা যেগুলো "শেষ হয়েছে" মার্ক করা হয়নি, সেগুলো আজও বাকি হিসেবে দেখানো হবে
@@ -6135,6 +6239,7 @@ function DailyLifeManagement() {
   });
   noTextPeople.forEach(p => {
     if (!(day.habit.noTextStatus || {})[p.name]) pendingChecklist.push({ key: "notext_" + p.id, label: "নো টেক্সট: " + p.name, sectionId: "habit" });
+    if (!(day.habit.noTalkStatus || {})[p.name]) pendingChecklist.push({ key: "notalk_" + p.id, label: "নো টক: " + p.name, sectionId: "habit" });
   });
   [["accomplished", "আজ কী অর্জন করেছি"], ["events", "গুরুত্বপূর্ণ ঘটনা"], ["thoughts", "ব্যক্তিগত ভাবনা"]].forEach(([f, lbl]) => {
     if (!day.diary[f]) pendingChecklist.push({ key: "diary_" + f, label: lbl, sectionId: "diary" });
@@ -6145,7 +6250,7 @@ function DailyLifeManagement() {
   }
 
   return (
-    <div className={"dtt-root" + (darkMode ? " dark" : "")}>
+    <div className={"dtt-root" + (darkMode ? " dark" : "")} style={reviewActive ? { paddingBottom: 84 } : undefined}>
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
         <defs>
           <linearGradient id="exGrad" x1="0" y1="0" x2="0" y2="1">
@@ -6155,6 +6260,18 @@ function DailyLifeManagement() {
         </defs>
       </svg>
       <div className="dtt-inner">
+        {reviewActive && reviewCurrentMeta ? (
+          <div className="review-topbar">
+            <div className="review-topbar-icon" style={{ background: reviewCurrentMeta.accent }}>
+              <Icon name={reviewCurrentMeta.iconName} size={17} color="#FBF6EA" />
+            </div>
+            <div className="review-topbar-info">
+              <div className="review-topbar-step">{"রিভিউ • " + (reviewStep + 1) + " / " + reviewList.length}</div>
+              <div className="review-topbar-title">{reviewCurrentMeta.label}</div>
+            </div>
+            <button className="review-topbar-close" onClick={closeReview} title="রিভিউ বন্ধ করুন"><Icon name="close" size={17} /></button>
+          </div>
+        ) : (
         <div className="dtt-header">
           <div>
             <div className="dtt-title">দৈনিক জীবন ব্যবস্থাপনা</div>
@@ -6166,6 +6283,13 @@ function DailyLifeManagement() {
               <div className="lc-date">{nowClock.toLocaleDateString("bn-BD", { weekday: "long", day: "numeric", month: "long" })}</div>
             </div>
             <button
+              onClick={startReview}
+              title="স্টেপ বাই স্টেপ রিভিউ — নামাজ থেকে হিসাব পর্যন্ত সব টাস্ক একে একে দেখুন"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "50%", border: "1.5px solid #E7DDC7", background: "#FBF6EA", cursor: "pointer", flexShrink: 0 }}
+            >
+              <Icon name="slideshow" size={17} color="#8A7F68" />
+            </button>
+            <button
               onClick={() => setShowMoodPicker(true)}
               title="আজকের মন কেমন?"
               style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "50%", border: "1.5px solid #E7DDC7", background: "#FBF6EA", fontSize: 17, cursor: "pointer", flexShrink: 0 }}
@@ -6174,13 +6298,17 @@ function DailyLifeManagement() {
             </button>
           </div>
         </div>
+        )}
 
+        {!reviewActive && (
         <div className="date-nav">
           <button onClick={() => setDate(d => shiftDate(d, -1))}><Icon name="chevron_right" size={16} /></button>
           <div className="label">{prettyDate(date)}</div>
           <button onClick={() => setDate(d => shiftDate(d, 1))} disabled={date >= todayStr()} style={date >= todayStr() ? { opacity: 0.3, cursor: "default" } : {}}><Icon name="chevron_left" size={16} /></button>
           {date !== todayStr() && <button className="today-btn" onClick={() => setDate(todayStr())}>আজ</button>}
         </div>
+        )}
+        {!reviewActive && (
         <div className="icon-toolbar">
           <button onClick={() => setShowCalendar(true)} title="ক্যালেন্ডার"><Icon name="calendar_month" size={11} /></button>
           <button onClick={() => setShowTodo(true)} title="টু ডু"><Icon name="checklist" size={11} /></button>
@@ -6192,7 +6320,11 @@ function DailyLifeManagement() {
           <button onClick={() => setShowWeeklyReview(true)} title="সাপ্তাহিক রিভিউ"><Icon name="rate_review" size={11} /></button>
           <button onClick={() => setShowSettings(true)} title="সেটিংস"><Icon name="settings" size={11} /></button>
         </div>
+        )}
+        {!reviewActive && (
         <div style={{ textAlign: "center", fontSize: 11.5, color: "#8A7F68", marginTop: -6, marginBottom: 6 }}>{hijriDateLabel(new Date(date + "T00:00:00"), hijriOffsetDays)}</div>
+        )}
+        {!reviewActive && (
         <div className="subblock hadith-box" style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
           <Icon name="auto_stories" size={16} color="#C08A3E" style={{ marginTop: 2, flexShrink: 0 }} />
           <div>
@@ -6200,11 +6332,15 @@ function DailyLifeManagement() {
             <div style={{ fontSize: 10.5, color: "#8A7F68", marginTop: 3 }}>— {hadithOfDay(date).ref}</div>
           </div>
         </div>
+        )}
 
+        {!reviewActive && (
         <button className="pdf-btn" onClick={() => setShowReport(true)}>
           <Icon name="description" size={17} /> এই দিনের রিপোর্ট দেখুন / PDF করুন
         </button>
+        )}
 
+        {!reviewActive && (
         <div className="summary-grid">
           {cardOrder.filter(id => !hiddenCards.includes(id)).map(id => ({
             prayer: { id: "prayer", iconName: "wb_sunny", label: "নামাজ", value: prayersDone + "/৫", accent: "#123A34" },
@@ -6238,8 +6374,9 @@ function DailyLifeManagement() {
             </button>
           ))}
         </div>
+        )}
 
-        <Card id="prayer" hidden={hiddenCards.includes("prayer")} iconName="wb_sunny" title="নামাজ" subtitle="৫ ওয়াক্ত ফরজ ও নফল" accent="#123A34" badge={prayersDone + "/৫" + (naflCount ? " + নফল" : "")} points={prayerPoints} streak={taskStreaks.prayer} ringPercent={(prayersDone / 5) * 100} notDone={day.taskNotDone.prayer} onToggleNotDone={() => toggleTaskNotDone("prayer")} expanded={expanded === "prayer"} onToggle={toggle}>
+        <Card id="prayer" hidden={hiddenCards.includes("prayer") || (reviewActive && reviewCurrentId !== "prayer")} iconName="wb_sunny" title="নামাজ" subtitle="৫ ওয়াক্ত ফরজ ও নফল" accent="#123A34" badge={prayersDone + "/৫" + (naflCount ? " + নফল" : "")} points={prayerPoints} streak={taskStreaks.prayer} ringPercent={(prayersDone / 5) * 100} notDone={day.taskNotDone.prayer} onToggleNotDone={() => toggleTaskNotDone("prayer")} expanded={expanded === "prayer"} onToggle={toggle}>
           {!prayerSubOpen ? (
             <div className="subblock" style={{ padding: 12 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
@@ -6327,7 +6464,7 @@ function DailyLifeManagement() {
           )}
         </Card>
 
-        <Card id="zikir" hidden={hiddenCards.includes("zikir")} iconName="self_improvement" title="যিকির ও দুয়া" subtitle="দৈনিক যিকির-আযকার ও মাসনূন দোয়া" accent="#8A4A5C" badge={zikirBadge} points={zikirPoints} streak={taskStreaks.zikir} notDone={day.taskNotDone.zikir} onToggleNotDone={() => toggleTaskNotDone("zikir")} expanded={expanded === "zikir"} onToggle={toggle}>
+        <Card id="zikir" hidden={hiddenCards.includes("zikir") || (reviewActive && reviewCurrentId !== "zikir")} iconName="self_improvement" title="যিকির ও দুয়া" subtitle="দৈনিক যিকির-আযকার ও মাসনূন দোয়া" accent="#8A4A5C" badge={zikirBadge} points={zikirPoints} streak={taskStreaks.zikir} notDone={day.taskNotDone.zikir} onToggleNotDone={() => toggleTaskNotDone("zikir")} expanded={expanded === "zikir"} onToggle={toggle}>
           {!zikirSubOpen ? (
             <div className="subblock" style={{ padding: 12 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
@@ -6446,12 +6583,12 @@ function DailyLifeManagement() {
           )}
         </Card>
 
-        <Card id="quran" hidden={hiddenCards.includes("quran")} iconName="menu_book" title="কুরআন" subtitle="তিলাওয়াত, রিভিশন ও আমলি সূরা" accent="#8A6A2F" badge={quranBadge} points={quranPoints} streak={taskStreaks.quran} notDone={day.taskNotDone.quran} onToggleNotDone={() => toggleTaskNotDone("quran")} expanded={expanded === "quran"} onToggle={toggle}>
+        <Card id="quran" hidden={hiddenCards.includes("quran") || (reviewActive && reviewCurrentId !== "quran")} iconName="menu_book" title="কুরআন" subtitle="তিলাওয়াত, রিভিশন ও আমলি সূরা" accent="#8A6A2F" badge={quranBadge} points={quranPoints} streak={taskStreaks.quran} notDone={day.taskNotDone.quran} onToggleNotDone={() => toggleTaskNotDone("quran")} expanded={expanded === "quran"} onToggle={toggle}>
           <div
             onClick={() => { setQuranSubOpen("revision"); setRevisionSubOpen("routine"); }}
-            style={{ cursor: "pointer", width: "100%", background: surahRevisionPlan.items.length === 0 ? "#8A6A2F" : (quranTodayReadingDone ? "#2F6B5E" : "#A14545"), color: "#FBF6EA", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}
+            style={{ cursor: "pointer", width: "100%", background: (surahRevisionPlan.items.length === 0 && todayAmoliItems.length === 0) ? "#8A6A2F" : (quranTodayReadingDone ? "#2F6B5E" : "#A14545"), color: "#FBF6EA", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: surahRevisionPlan.items.length > 0 ? 10 : 0, flexWrap: "wrap", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: (surahRevisionPlan.items.length > 0 || todayAmoliItems.length > 0) ? 10 : 0, flexWrap: "wrap", gap: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Icon name="auto_stories" size={20} />
                 <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 16 }}>আজকের পড়া</span>
@@ -6460,7 +6597,7 @@ function DailyLifeManagement() {
                 <span style={{ fontSize: 11.5, fontWeight: 700, background: "rgba(255,255,255,0.18)", padding: "3px 10px", borderRadius: 999 }}>
                   {surahRevisionPlan.dayType === "B" ? "🔴 Bad" : "🟤 Normal"} · {surahRevisionPlan.target} পৃষ্ঠা
                 </span>
-                {surahRevisionPlan.items.length > 0 && (
+                {(surahRevisionPlan.items.length > 0 || todayAmoliItems.length > 0) && (
                   <div
                     onClick={(e) => { e.stopPropagation(); toggleTodayReadingAllDone(); }}
                     title={quranTodayReadingDone ? "আনটিক করুন" : "সম্পন্ন হিসেবে টিক দিন"}
@@ -6476,12 +6613,22 @@ function DailyLifeManagement() {
                 )}
               </div>
             </div>
-            {surahRevisionPlan.items.length > 0 ? (
+            {(surahRevisionPlan.items.length > 0 || todayAmoliItems.length > 0) ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {surahRevisionPlan.items.map(s => (
                   <div key={s.number} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12.5 }}>
                     <span style={{ fontWeight: 600 }}>{s.number}. {s.label}{day.quran.revisionDone[s.number] ? " ✓" : ""}</span>
                     <span style={{ opacity: 0.85, fontWeight: 600 }}>{s.pagesToday} পৃষ্ঠা</span>
+                  </div>
+                ))}
+                {todayAmoliItems.map(s => (
+                  <div
+                    key={s.key}
+                    onClick={(e) => { e.stopPropagation(); toggleAmoli(s.key); }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12.5, cursor: "pointer" }}
+                  >
+                    <span style={{ fontWeight: 600 }}>{s.label}{day.quran.amoli[s.key] ? " ✓" : ""}</span>
+                    <span style={{ opacity: 0.85, fontWeight: 600 }}>আমলি সূরা</span>
                   </div>
                 ))}
               </div>
@@ -6609,20 +6756,26 @@ function DailyLifeManagement() {
                             {surahRevisionPlan.items.map(s => {
                               const revDone = !!day.quran.revisionDone[s.number];
                               const partial = s.fromPage > 1 || s.toPage < s.pages;
+                              const completesToday = s.toPage === s.pages;
                               return (
                                 <div key={s.number} style={{ borderRadius: 10, background: SURAH_STATUS_META[surahRevisionPlan.dayType].bg, marginBottom: 6, padding: "9px 12px" }}>
                                   <div
                                     onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pagesToday)); }}
                                     style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 6 }}
                                   >
-                                    <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22" }}>{s.number}. {s.label}</span>
+                                    <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22", display: "flex", alignItems: "center", gap: 6 }}>
+                                      {s.number}. {s.label}
+                                      {partial && completesToday && (
+                                        <span style={{ fontSize: 10, fontWeight: 700, color: "#FBF6EA", background: "#2E7D4F", borderRadius: 999, padding: "2px 8px" }}>✅ আজ শেষ হচ্ছে</span>
+                                      )}
+                                    </span>
                                     <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>
                                       {partial ? (s.fromPage + "–" + s.toPage + " নং পৃষ্ঠা (মোট " + s.pages + ")") : (s.pages + " পৃষ্ঠা")}
                                     </span>
                                   </div>
                                   {partial && (
-                                    <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginBottom: 6 }}>
-                                      {s.fromPage > 1 ? "আগের থেকে চলছে — " : ""}আজ {s.pagesToday} পৃষ্ঠা{s.toPage < s.pages ? ", বাকিটা পরের বার" : ""}
+                                    <div style={{ fontSize: 10.5, color: completesToday ? "#2E7D4F" : "#B65C4A", fontWeight: 600, marginBottom: 6 }}>
+                                      {s.fromPage > 1 ? "আগের থেকে চলছে — " : ""}আজ {s.pagesToday} পৃষ্ঠা{completesToday ? " — এই সূরা সম্পূর্ণ হবে আজ" : ", বাকিটা পরের বার"}
                                     </div>
                                   )}
                                   <div style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={(e) => e.stopPropagation()}>
@@ -6714,7 +6867,7 @@ function DailyLifeManagement() {
           )}
         </Card>
 
-        <Card id="study" hidden={hiddenCards.includes("study")} iconName="school" title="পড়াশোনা" subtitle="স্টাডি ও লেকচার" accent="#5C7A6B" badge={studyBadge} points={studyPoints} streak={taskStreaks.study} notDone={day.taskNotDone.study} onToggleNotDone={() => toggleTaskNotDone("study")} expanded={expanded === "study"} onToggle={toggle}>
+        <Card id="study" hidden={hiddenCards.includes("study") || (reviewActive && reviewCurrentId !== "study")} iconName="school" title="পড়াশোনা" subtitle="স্টাডি ও লেকচার" accent="#5C7A6B" badge={studyBadge} points={studyPoints} streak={taskStreaks.study} notDone={day.taskNotDone.study} onToggleNotDone={() => toggleTaskNotDone("study")} expanded={expanded === "study"} onToggle={toggle}>
           <button
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: studyPromoter ? "#5C7A6B" : "#4A6FA5", color: "#FBF6EA", border: "none", borderRadius: 14, padding: "13px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 12 }}
             onClick={() => setShowPomodoro(true)}
@@ -6838,7 +6991,7 @@ function DailyLifeManagement() {
           )}
         </Card>
 
-        <Card id="exercise" hidden={hiddenCards.includes("exercise")} iconName="fitness_center" title="ব্যায়াম" subtitle="আজকের শারীরিক পরিশ্রম" accent="#B5651D" badge={exerciseBadge} points={exercisePoints} streak={taskStreaks.exercise} ringPercent={exerciseQuickDone ? 100 : (exerciseSetsDone / 6) * 100} notDone={day.taskNotDone.exercise} onToggleNotDone={() => toggleTaskNotDone("exercise")} expanded={expanded === "exercise"} onToggle={toggle}>
+        <Card id="exercise" hidden={hiddenCards.includes("exercise") || (reviewActive && reviewCurrentId !== "exercise")} iconName="fitness_center" title="ব্যায়াম" subtitle="আজকের শারীরিক পরিশ্রম" accent="#B5651D" badge={exerciseBadge} points={exercisePoints} streak={taskStreaks.exercise} ringPercent={exerciseQuickDone ? 100 : (exerciseSetsDone / 6) * 100} notDone={day.taskNotDone.exercise} onToggleNotDone={() => toggleTaskNotDone("exercise")} expanded={expanded === "exercise"} onToggle={toggle}>
           <button
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: workoutPromoter ? "#6B7A4F" : "#B5651D", color: "#FBF6EA", border: "none", borderRadius: 14, padding: "13px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 12 }}
             onClick={() => setShowWorkoutPromoter(true)}
@@ -6943,7 +7096,7 @@ function DailyLifeManagement() {
           )}
         </Card>
 
-        <Card id="habit" hidden={hiddenCards.includes("habit")} iconName="task_alt" title="অভ্যাস" subtitle="দৈনিক গুড হ্যাবিট ট্র্যাকার" accent="#6B7A4F" badge={habitBadge} points={habitPoints} streak={taskStreaks.habit} ringPercent={(habitDoneCount / habitTotal) * 100} notDone={day.taskNotDone.habit} onToggleNotDone={() => toggleTaskNotDone("habit")} expanded={expanded === "habit"} onToggle={toggle}>
+        <Card id="habit" hidden={hiddenCards.includes("habit") || (reviewActive && reviewCurrentId !== "habit")} iconName="task_alt" title="অভ্যাস" subtitle="দৈনিক গুড হ্যাবিট ট্র্যাকার" accent="#6B7A4F" badge={habitBadge} points={habitPoints} streak={taskStreaks.habit} ringPercent={(habitDoneCount / habitTotal) * 100} notDone={day.taskNotDone.habit} onToggleNotDone={() => toggleTaskNotDone("habit")} expanded={expanded === "habit"} onToggle={toggle}>
           {celebrateStreak && <Confetti days={celebrateStreak} />}
           {habitUntickCount(day) > 0 && (
             <div className="diary-timestamp" style={{ textAlign: "center", marginBottom: 10, color: "#A14545" }}>
@@ -7317,7 +7470,7 @@ function DailyLifeManagement() {
               {habitSubOpen === "noText" && (
                 <>
                   <div className="subblock-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    নো টেক্সট ফার্স্ট (ব্যক্তি অনুযায়ী)
+                    নো টেক্সট / নো টক ফার্স্ট (ব্যক্তি অনুযায়ী)
                     {noTextPeople.length > 0 && !!habitItemStreaks.noTextAll && (
                       <span style={{ fontSize: 11, fontWeight: 700, color: "#B5651D" }}>🔥 {habitItemStreaks.noTextAll} দিন ধরে সবাই মিলে চলছে</span>
                     )}
@@ -7325,11 +7478,24 @@ function DailyLifeManagement() {
                   {noTextPeople.length === 0 && <div className="empty-note">এখনো কেউ যোগ করা হয়নি</div>}
                   {noTextPeople.map(p => {
                     const status = (day.habit.noTextStatus || {})[p.name] || null;
+                    const talkStatus = (day.habit.noTalkStatus || {})[p.name] || null;
+                    const textStreak = habitItemStreaks["notext:" + p.name] || 0;
+                    const talkStreak = habitItemStreaks["notalk:" + p.name] || 0;
                     return (
-                      <div className="nafl-item" key={p.id}>
+                      <div className="nafl-item" key={p.id} style={{ flexWrap: "wrap", rowGap: 6 }}>
                         <span className="n-name">{p.name}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#8A7F68", marginRight: -2 }}>টেক্সট:</span>
                         <Chip active={status === "yes"} color="#6B7A4F" onClick={() => setNoTextStatus(p.name, "yes")}>হ্যাঁ (+০.৫)</Chip>
                         <Chip active={status === "no"} color="#A14545" onClick={() => setNoTextStatus(p.name, "no")}>না (-০.৫)</Chip>
+                        {textStreak > 0 && (
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#B5651D" }}>🔥{textStreak}</span>
+                        )}
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#8A7F68", marginLeft: 4, marginRight: -2 }}>কথা:</span>
+                        <Chip active={talkStatus === "yes"} color="#6B7A4F" onClick={() => setNoTalkStatus(p.name, "yes")}>হ্যাঁ (+০.৫)</Chip>
+                        <Chip active={talkStatus === "no"} color="#A14545" onClick={() => setNoTalkStatus(p.name, "no")}>না (-০.৫)</Chip>
+                        {talkStreak > 0 && (
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#B5651D" }}>🔥{talkStreak}</span>
+                        )}
                         <button className="icon-btn ghost" onClick={() => removeNoTextPerson(p.id)}><Icon name="delete" size={15} /></button>
                       </div>
                     );
@@ -7345,7 +7511,7 @@ function DailyLifeManagement() {
 
         </Card>
 
-        <Card id="texting" hidden={hiddenCards.includes("texting")} iconName="chat_bubble" title="সেলফ-ডিসিপ্লিন ও শান্তি" subtitle="আজ নিজের শান্তি নষ্ট করোনি তো?" accent="#7A5C8A"
+        <Card id="texting" hidden={hiddenCards.includes("texting") || (reviewActive && reviewCurrentId !== "texting")} iconName="chat_bubble" title="সেলফ-ডিসিপ্লিন ও শান্তি" subtitle="আজ নিজের শান্তি নষ্ট করোনি তো?" accent="#7A5C8A"
           badge={textedCount || avoidedCount ? textedCount + " পাঠানো · " + avoidedCount + " এড়ানো" : null} streak={taskStreaks.texting} expanded={expanded === "texting"} onToggle={toggle}>
 
           <button
@@ -7403,7 +7569,7 @@ function DailyLifeManagement() {
           <input className="modal-input" style={{ marginBottom: 0 }} value={day.texting.quickNote} onChange={e => setTextingQuickNote(e.target.value)} placeholder="আজ কার সাথে কথা বললাম (সংক্ষেপে)" />
         </Card>
 
-        <Card id="diary" hidden={hiddenCards.includes("diary")} iconName="edit_note" title="নোটস / ডায়েরি" subtitle="দৈনিক জার্নাল" accent="#4C6B8A" badge={diaryBadge} streak={taskStreaks.diary} expanded={expanded === "diary"} onToggle={toggle}>
+        <Card id="diary" hidden={hiddenCards.includes("diary") || (reviewActive && reviewCurrentId !== "diary")} iconName="edit_note" title="নোটস / ডায়েরি" subtitle="দৈনিক জার্নাল" accent="#4C6B8A" badge={diaryBadge} streak={taskStreaks.diary} expanded={expanded === "diary"} onToggle={toggle}>
           <div className="subblock" style={{ padding: 12, marginBottom: 4 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
               {[
@@ -7453,7 +7619,7 @@ function DailyLifeManagement() {
           ) : null}
         </Card>
 
-        <Card id="accounts" hidden={hiddenCards.includes("accounts")} iconName="account_balance_wallet" title="হিসাব" subtitle="মাসিক আয়-ব্যয় ও সঞ্চয়" accent="#2F6B5E" badge={accountsBadge} points={accountsPoints} streak={taskStreaks.accounts} expanded={expanded === "accounts"} onToggle={(id) => { toggle(id); if (expanded !== "accounts") refreshMonthExpense(date); }}>
+        <Card id="accounts" hidden={hiddenCards.includes("accounts") || (reviewActive && reviewCurrentId !== "accounts")} iconName="account_balance_wallet" title="হিসাব" subtitle="মাসিক আয়-ব্যয় ও সঞ্চয়" accent="#2F6B5E" badge={accountsBadge} points={accountsPoints} streak={taskStreaks.accounts} expanded={expanded === "accounts"} onToggle={(id) => { toggle(id); if (expanded !== "accounts") refreshMonthExpense(date); }}>
           <div className="section-label">{new Date(date + "T00:00:00").toLocaleDateString("bn-BD", { month: "long", year: "numeric" })} — হিসাব ওভারভিউ</div>
           <div className="hishab-grid">
             <button className={"hishab-tile" + (monthlyInfoExpanded ? " active" : "")} onClick={() => setMonthlyInfoExpanded(v => !v)}>
@@ -7504,12 +7670,34 @@ function DailyLifeManagement() {
             {friendsFamilyExpanded && (
               <div className="hishab-tile-body">
                 {FRIENDS_FAMILY_CATEGORIES.map(c => (
-                  <div className="field-row" key={c.key} style={{ marginBottom: 10, alignItems: "center" }}>
-                    <div className="field" style={{ flex: "0 0 auto" }}>
-                      <span style={{ fontWeight: 600, fontSize: 13.5 }}>{c.label}</span>
-                      <div style={{ fontSize: 10, color: "#8A7F68" }}>এই মাস: ৳{fmtMoney(monthExpense.totals?.[c.key] || 0)}</div>
+                  <div key={c.key} style={{ marginBottom: 10 }}>
+                    <div className="field-row" style={{ alignItems: "center", marginBottom: FAMILY_PURCHASE_SYNC_KEYS.includes(c.key) ? 6 : 0 }}>
+                      <div className="field" style={{ flex: "0 0 auto" }}>
+                        <span style={{ fontWeight: 600, fontSize: 13.5 }}>{c.label}</span>
+                        <div style={{ fontSize: 10, color: "#8A7F68" }}>এই মাস: ৳{fmtMoney(monthExpense.totals?.[c.key] || 0)}</div>
+                      </div>
+                      <input type="number" min="0" style={{ maxWidth: 110 }} className="modal-input" value={day.accounts[c.key]} onChange={e => setAccountExpense(c.key, e.target.value)} placeholder="৳" />
                     </div>
-                    <input type="number" min="0" style={{ maxWidth: 110 }} className="modal-input" value={day.accounts[c.key]} onChange={e => setAccountExpense(c.key, e.target.value)} placeholder="৳" />
+                    {FAMILY_PURCHASE_SYNC_KEYS.includes(c.key) && (
+                      <div className="add-row">
+                        <input
+                          type="text"
+                          style={{ flex: 1 }}
+                          value={familyItemDraft[c.key] || ""}
+                          onChange={e => setFamilyItemDraft(prev => ({ ...prev, [c.key]: e.target.value }))}
+                          placeholder="কী কিনেছেন? (লিখলে মাসিক প্ল্যানেও যোগ হবে)"
+                        />
+                        <button
+                          className="icon-btn"
+                          onClick={() => {
+                            const val = (familyItemDraft[c.key] || "").trim();
+                            if (!val) return;
+                            addFamilyPurchase(c.label, val);
+                            setFamilyItemDraft(prev => ({ ...prev, [c.key]: "" }));
+                          }}
+                        ><Icon name="add" size={18} /></button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -7710,7 +7898,7 @@ function DailyLifeManagement() {
           )}
         </Card>
 
-        <Card id="plan" hidden={hiddenCards.includes("plan")} iconName="flag" title="মাসিক প্ল্যান" subtitle="এই মাসের লক্ষ্য ও অগ্রগতি" accent="#4A6FA5" badge={planBadge} expanded={expanded === "plan"} onToggle={toggle}>
+        <Card id="plan" hidden={hiddenCards.includes("plan") || (reviewActive && reviewCurrentId !== "plan")} iconName="flag" title="মাসিক প্ল্যান" subtitle="এই মাসের লক্ষ্য ও অগ্রগতি" accent="#4A6FA5" badge={planBadge} expanded={expanded === "plan"} onToggle={toggle}>
           <div className="section-label">{new Date(date + "T00:00:00").toLocaleDateString("bn-BD", { month: "long", year: "numeric" })}</div>
 
           <div className="subblock">
@@ -7892,7 +8080,7 @@ function DailyLifeManagement() {
         {customTasks.map(task => {
           const taskData = (day.customData || {})[task.id] || {};
           return (
-            <Card key={task.id} id={"custom_" + task.id} iconName={task.icon || "star"} title={task.name} subtitle="কাস্টম টাস্ক" accent="#7A5C4A" points={pointsCustomTask(day, task)} expanded={expanded === "custom_" + task.id} onToggle={toggle}>
+            <Card key={task.id} id={"custom_" + task.id} hidden={reviewActive && reviewCurrentId !== "custom_" + task.id} iconName={task.icon || "star"} title={task.name} subtitle="কাস্টম টাস্ক" accent="#7A5C4A" points={pointsCustomTask(day, task)} expanded={expanded === "custom_" + task.id} onToggle={toggle}>
               {task.items.length === 0 && <div className="empty-note">এখনো কোনো আইটেম যোগ করা হয়নি — সেটিংস থেকে "কাস্টম টাস্ক এডিটর"-এ গিয়ে আইটেম যোগ করুন</div>}
               {task.items.map(item => (
                 <div className="nafl-item" key={item.id}>
@@ -7914,6 +8102,24 @@ function DailyLifeManagement() {
           );
         })}
       </div>
+
+      {reviewActive && reviewList.length > 0 && (
+        <div className="review-slide-nav">
+          <button className="review-slide-btn secondary" onClick={reviewPrev} disabled={reviewStep === 0}>
+            <Icon name="chevron_left" size={17} /> আগের
+          </button>
+          <div className="review-slide-dots">
+            {reviewList.map((id, i) => (
+              <div key={id} className={"review-slide-dot" + (i === reviewStep ? " active" : "")} />
+            ))}
+          </div>
+          {reviewStep === reviewList.length - 1 ? (
+            <button className="review-slide-btn" onClick={closeReview}>শেষ <Icon name="check" size={17} /></button>
+          ) : (
+            <button className="review-slide-btn" onClick={reviewNext}>পরের <Icon name="chevron_right" size={17} /></button>
+          )}
+        </div>
+      )}
 
       {showCalendar && <CalendarModal selectedDate={date} onSelect={(d) => setDate(d)} onClose={() => setShowCalendar(false)} />}
       {showSettings && <SettingsModal darkMode={darkMode} onToggleDark={toggleDarkMode} reminderSettings={reminderSettings} onReminderChange={setReminderSettings} appPin={appPin} onSetPin={setAppPin} prayerCoords={prayerCoords} onSetPrayerCoords={setPrayerCoords} bills={bills} onAddBill={addBill} onDeleteBill={deleteBill} cardOrder={cardOrder} hiddenCards={hiddenCards} onMoveCard={moveCardOrder} onToggleCardHidden={toggleCardHidden} onShowAllCards={resetHiddenCards} customTasks={customTasks} onAddCustomTask={addCustomTask} onDeleteCustomTask={deleteCustomTask} onAddCustomItem={addCustomTaskItem} onDeleteCustomItem={deleteCustomTaskItem} onClose={() => setShowSettings(false)} />}
