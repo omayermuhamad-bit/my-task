@@ -129,6 +129,9 @@
   .weightloss-source { font-size:10px; opacity:0.65; margin-top:6px; font-family:'IBM Plex Mono',monospace; }
   .plan-pick-btn { display:block; width:100%; text-align:right; background:#FBF6EA; border:1.5px solid #E7DDC7; border-radius:14px; padding:12px 14px; cursor:pointer; }
   .plan-pick-btn:hover { border-color:#C6BB9C; background:#F5EEDC; }
+  .open-external-app-btn { margin-top:14px; border-style:dashed; border-color:#D8A15C; background:#FFF8EA; }
+  .open-external-app-btn:hover { border-color:#B5651D; background:#FBEED8; }
+  .dtt-root.dark .open-external-app-btn { background:#2A2010; border-color:#5A431F; }
   .plan-pick-label { font-family:'Fraunces',serif; font-weight:700; font-size:14.5px; color:#2B2A22; margin-bottom:3px; }
   .plan-pick-desc { font-size:11.5px; color:#8A7F68; line-height:1.5; }
   .guided-stage { display:flex; flex-direction:column; align-items:center; text-align:center; padding:10px 6px 8px; }
@@ -1142,6 +1145,17 @@ const PLAN_SECTIONS = [
 ];
 
 /* ---------------- helpers ---------------- */
+function openHomeWorkoutApp() {
+  const pkg = "homeworkout.homeworkouts.noequipment";
+  const fallback = "https://play.google.com/store/apps/details?id=" + pkg;
+  const intentUrl = "intent://home#Intent;scheme=android-app;package=" + pkg +
+    ";S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
+  try {
+    window.location.href = intentUrl;
+  } catch (e) {
+    window.open(fallback, "_blank");
+  }
+}
 function sleepSessionMinutes(start, end) {
   if (!start || !end) return 0;
   const [sh, sm] = start.split(":").map(Number);
@@ -1871,6 +1885,13 @@ function WorkoutPromoterModal({ onClose, workoutPromoter, elapsedSeconds, onStar
               </button>
             ))}
           </div>
+          <button className="plan-pick-btn open-external-app-btn" onClick={openHomeWorkoutApp}>
+            <div className="plan-pick-label" style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+              <Icon name="open_in_new" size={16} color="#B5651D" />
+              Go to Home Workout - No Equipment
+            </div>
+            <div className="plan-pick-desc">অ্যাপে থাকা রেডিমেড ওয়ার্কআউট চাইলে সরাসরি Home Workout অ্যাপটি খুলুন</div>
+          </button>
         </div>
       </Modal>
     );
