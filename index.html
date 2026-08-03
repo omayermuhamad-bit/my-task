@@ -1148,13 +1148,26 @@ const PLAN_SECTIONS = [
 function openHomeWorkoutApp() {
   const pkg = "homeworkout.homeworkouts.noequipment";
   const fallback = "https://play.google.com/store/apps/details?id=" + pkg;
-  const intentUrl = "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=" +
-    pkg + ";S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
+  const intentUrl = "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=" + pkg + ";end";
+
+  let left = false;
+  const markLeft = () => { left = true; };
+  document.addEventListener("visibilitychange", markLeft, { once: true });
+  window.addEventListener("blur", markLeft, { once: true });
+
   try {
     window.location.href = intentUrl;
   } catch (e) {
-    window.open(fallback, "_blank");
+    left = false;
   }
+
+  setTimeout(() => {
+    document.removeEventListener("visibilitychange", markLeft);
+    window.removeEventListener("blur", markLeft);
+    if (!left) {
+      window.location.href = fallback;
+    }
+  }, 1200);
 }
 function sleepSessionMinutes(start, end) {
   if (!start || !end) return 0;
