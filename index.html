@@ -1148,8 +1148,8 @@ const PLAN_SECTIONS = [
 function openHomeWorkoutApp() {
   const pkg = "homeworkout.homeworkouts.noequipment";
   const fallback = "https://play.google.com/store/apps/details?id=" + pkg;
-  const intentUrl = "intent://home#Intent;scheme=android-app;package=" + pkg +
-    ";S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
+  const intentUrl = "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=" +
+    pkg + ";S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
   try {
     window.location.href = intentUrl;
   } catch (e) {
