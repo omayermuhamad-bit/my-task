@@ -3451,7 +3451,7 @@ function importBackup(file, onDone) {
   reader.onerror = () => onDone(false);
   reader.readAsText(file);
 }
-const SUMMARY_CARD_LABELS = { prayer: "নামাজ", zikir: "যিকির ও দুয়া", quran: "কুরআন", study: "পড়াশোনা", exercise: "ব্যায়াম", habit: "অভ্যাস", texting: "শান্তি", diary: "ডায়েরি", accounts: "হিসাব", plan: "মাসিক প্ল্যান" };
+const SUMMARY_CARD_LABELS = { todo: "টু-ডু", prayer: "নামাজ", zikir: "যিকির ও দুয়া", quran: "কুরআন", study: "পড়াশোনা", exercise: "ব্যায়াম", habit: "অভ্যাস", texting: "শান্তি", diary: "ডায়েরি", accounts: "হিসাব", plan: "মাসিক প্ল্যান" };
 function SettingsModal({ darkMode, onToggleDark, reminderSettings, onReminderChange, appPin, onSetPin, prayerCoords, onSetPrayerCoords, bills, onAddBill, onDeleteBill, cardOrder, hiddenCards, onMoveCard, onToggleCardHidden, onShowAllCards, customTasks, onAddCustomTask, onDeleteCustomTask, onAddCustomItem, onDeleteCustomItem, onClose }) {
   const [billDraft, setBillDraft] = useState({ name: "", amount: "", dayOfMonth: "" });
   const fileInputRef = useRef(null);
@@ -5036,7 +5036,7 @@ function DailyLifeManagement() {
     });
   };
 
-  const DEFAULT_CARD_ORDER = ["prayer", "zikir", "quran", "study", "exercise", "habit", "texting", "diary", "accounts", "plan"];
+  const DEFAULT_CARD_ORDER = ["todo", "prayer", "zikir", "quran", "study", "exercise", "habit", "texting", "diary", "accounts", "plan"];
   const [cardOrder, setCardOrderState] = useState(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_PREFIX + "cardOrder");
@@ -6092,42 +6092,6 @@ function DailyLifeManagement() {
 
   const [reviewActive, setReviewActive] = useState(false);
   const [reviewStep, setReviewStep] = useState(0);
-  const reviewList = [
-    ...cardOrder.filter(id => !hiddenCards.includes(id)),
-    ...customTasks.map(t => "custom_" + t.id),
-  ];
-  const reviewGoTo = (idx) => {
-    const id = reviewList[idx];
-    if (!id) return;
-    setExpanded(id);
-    requestAnimationFrame(() => {
-      const el = document.getElementById("card-" + id);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  };
-  const startReview = () => {
-    if (reviewList.length === 0) return;
-    setReviewActive(true);
-    setReviewStep(0);
-    reviewGoTo(0);
-  };
-  const reviewNext = () => {
-    const next = reviewStep + 1;
-    if (next >= reviewList.length) { setReviewActive(false); return; }
-    setReviewStep(next);
-    reviewGoTo(next);
-  };
-  const reviewPrev = () => {
-    const prev = reviewStep - 1;
-    if (prev < 0) return;
-    setReviewStep(prev);
-    reviewGoTo(prev);
-  };
-  const closeReview = () => setReviewActive(false);
-  const reviewCurrentId = reviewList[reviewStep];
-  const reviewCurrentMeta = reviewCurrentId && reviewCurrentId.startsWith("custom_")
-    ? (() => { const t = customTasks.find(t => "custom_" + t.id === reviewCurrentId); return t ? { label: t.name, iconName: t.icon || "star", accent: "#7A5C4A" } : null; })()
-    : REVIEW_TASK_META[reviewCurrentId];
 
   const unfinished = goalsUnfinished(day);
 
@@ -6205,6 +6169,64 @@ function DailyLifeManagement() {
   const planDoneCount = planUnitsDone;
   const planTotalGoals = 8;
   const planBadge = planUnitsDone > 0 ? planUnitsDone + "/৮" : null;
+
+  // যে কার্ডগুলো এখনো "করা হয়নি" সেগুলো — স্টেপ বাই স্টেপ রিভিউতে শুধু এগুলোই দেখানো হবে
+  const isCardDone = (id) => {
+    switch (id) {
+      case "prayer": return prayersDone >= 5;
+      case "zikir": return !!zikirBadge;
+      case "quran": return !!quranBadge;
+      case "study": return !!studyBadge;
+      case "exercise": return !!exerciseBadge;
+      case "habit": return !!habitBadge;
+      case "texting": return !!(textedCount || avoidedCount);
+      case "diary": return !!diaryBadge;
+      case "accounts": return !!accountsBadge;
+      case "plan": return !!planBadge;
+      default:
+        if (typeof id === "string" && id.startsWith("custom_")) {
+          const t = customTasks.find(t => "custom_" + t.id === id);
+          return t ? pointsCustomTask(day, t) > 0 : false;
+        }
+        return false;
+    }
+  };
+  const reviewList = [
+    ...cardOrder.filter(id => !hiddenCards.includes(id) && id !== "todo"),
+    ...customTasks.map(t => "custom_" + t.id),
+  ].filter(id => !isCardDone(id));
+  const reviewGoTo = (idx) => {
+    const id = reviewList[idx];
+    if (!id) return;
+    setExpanded(id);
+    requestAnimationFrame(() => {
+      const el = document.getElementById("card-" + id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+  const startReview = () => {
+    if (reviewList.length === 0) { window.alert("চমৎকার! আজকের সব কাজ শেষ — রিভিউ করার কিছু বাকি নেই।"); return; }
+    setReviewActive(true);
+    setReviewStep(0);
+    reviewGoTo(0);
+  };
+  const reviewNext = () => {
+    const next = reviewStep + 1;
+    if (next >= reviewList.length) { setReviewActive(false); return; }
+    setReviewStep(next);
+    reviewGoTo(next);
+  };
+  const reviewPrev = () => {
+    const prev = reviewStep - 1;
+    if (prev < 0) return;
+    setReviewStep(prev);
+    reviewGoTo(prev);
+  };
+  const closeReview = () => setReviewActive(false);
+  const reviewCurrentId = reviewList[reviewStep];
+  const reviewCurrentMeta = reviewCurrentId && reviewCurrentId.startsWith("custom_")
+    ? (() => { const t = customTasks.find(t => "custom_" + t.id === reviewCurrentId); return t ? { label: t.name, iconName: t.icon || "star", accent: "#7A5C4A" } : null; })()
+    : REVIEW_TASK_META[reviewCurrentId];
 
   // ---- custom point-based rating system (per user-defined rules) ----
   const prayerPoints = pointsPrayer(day);
@@ -6345,7 +6367,10 @@ function DailyLifeManagement() {
         {!reviewActive && (
         <div className="icon-toolbar">
           <button onClick={() => setShowCalendar(true)} title="ক্যালেন্ডার"><Icon name="calendar_month" size={11} /></button>
-          <button onClick={() => setShowTodo(true)} title="টু ডু"><Icon name="checklist" size={11} /></button>
+          <button onClick={() => setShowTodo(true)} title="টু ডু" style={{ position: "relative" }}>
+            <Icon name="checklist" size={11} />
+            {todos.some(t => !t.done) && <span style={{ position: "absolute", top: 2, right: 2, width: 6, height: 6, borderRadius: "50%", background: "#B5342E" }} />}
+          </button>
           <button onClick={() => setShowNote(true)} title="প্রাইভেসি নোট"><Icon name="sticky_note_2" size={11} /></button>
           <button onClick={() => setShowPointsGraph(true)} title="পয়েন্ট গ্রাফ"><Icon name="bar_chart" size={11} /></button>
           <button onClick={exportBackup} title="ব্যাকআপ ডাউনলোড"><Icon name="download" size={11} /></button>
@@ -6377,6 +6402,12 @@ function DailyLifeManagement() {
         {!reviewActive && (
         <div className="summary-grid">
           {cardOrder.filter(id => !hiddenCards.includes(id)).map(id => ({
+            todo: { id: "todo", iconName: "checklist", label: "টু-ডু", value: (() => {
+              const pendingCount = todos.filter(t => !t.done).length;
+              if (pendingCount === 0) return "সব শেষ ✓";
+              const overdueCount = todos.filter(t => !t.done && t.dueDate && t.dueDate < todayStr()).length;
+              return overdueCount > 0 ? (pendingCount + "টি বাকি (" + overdueCount + " মেয়াদোত্তীর্ণ)") : (pendingCount + "টি বাকি");
+            })(), accent: todos.some(t => !t.done && t.dueDate && t.dueDate < todayStr()) ? "#B5342E" : "#B5651D" },
             prayer: { id: "prayer", iconName: "wb_sunny", label: "নামাজ", value: prayersDone + "/৫", accent: "#123A34" },
             zikir: { id: "zikir", iconName: "self_improvement", label: "যিকির", value: zikirBadge || "বাকি", accent: "#8A4A5C" },
             quran: { id: "quran", iconName: "menu_book", label: "কুরআন", value: quranBadge ? "✓ হয়েছে" : "বাকি", accent: "#8A6A2F" },
@@ -6389,6 +6420,7 @@ function DailyLifeManagement() {
             plan: { id: "plan", iconName: "flag", label: "মাসিক প্ল্যান", value: planBadge || "—", accent: "#4A6FA5" },
           })[id]).filter(Boolean).map(item => (
             <button key={item.id} className="summary-card" onClick={() => {
+              if (item.id === "todo") { setShowTodo(true); return; }
               setExpanded(item.id);
               requestAnimationFrame(() => { const el = document.getElementById("card-" + item.id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); });
             }}>
