@@ -6580,7 +6580,7 @@ function DailyLifeManagement() {
               <span>টু-ডু লিস্ট</span>
               <span className="todo-preview-count">{todos.filter(t => !t.done).length} বাকি</span>
             </div>
-            {todos.filter(t => !t.done).slice(0, 4).map(t => {
+            {todos.filter(t => !t.done).map(t => {
               const overdue = t.dueDate && t.dueDate < todayStr();
               const dueTodayFlag = t.dueDate && t.dueDate === todayStr();
               return (
@@ -6595,9 +6595,6 @@ function DailyLifeManagement() {
                 </div>
               );
             })}
-            {todos.filter(t => !t.done).length > 4 && (
-              <div className="todo-preview-more">+{todos.filter(t => !t.done).length - 4} আরও</div>
-            )}
           </div>
         )}
 
