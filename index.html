@@ -231,6 +231,75 @@
   .yn-question { display:flex; flex-direction:column; gap:6px; }
   .yn-label { font-size:13px; font-weight:600; color:#4A4331; }
   .empty-note { font-size:12.5px; color:#A69B7F; padding:6px 2px 14px; }
+  .todo-item { display:flex; align-items:flex-start; gap:11px; padding:13px 14px; background:linear-gradient(180deg,#FFFEFA,#FFFCF4); border:1px solid #EFE6D2; border-left:3px solid #DCCFA8; border-radius:14px; margin-bottom:9px; box-shadow:0 1px 2px rgba(43,42,34,0.03), 0 3px 10px rgba(43,42,34,0.04); transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+  .todo-item:hover { transform:translateY(-1px); box-shadow:0 2px 4px rgba(43,42,34,0.05), 0 8px 18px rgba(43,42,34,0.07); border-left-color:#C08A3E; }
+  .todo-item.overdue { border-left-color:#A14545; }
+  .todo-item.due-today { border-left-color:#B5651D; }
+  .todo-item.done { background:#F8F4E8; border-left-color:#6B7A4F; box-shadow:none; }
+  .todo-item.done:hover { transform:none; box-shadow:none; }
+  .todo-check { width:25px; height:25px; border-radius:8px; border:2px solid #C6BB9C; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; margin-top:1px; background:#FFFDF7; transition:background .15s ease, border-color .15s ease, transform .12s ease; }
+  .todo-check:hover { border-color:#B5651D; }
+  .todo-check:active { transform:scale(0.9); }
+  .todo-check.checked { background:linear-gradient(135deg,#6B7A4F,#556340); border-color:#556340; }
+  .todo-body { flex:1; min-width:0; }
+  .todo-title { font-family:'Fraunces',serif; font-weight:600; font-size:14.5px; line-height:1.35; color:#2B2A22; }
+  .todo-item.done .todo-title { text-decoration:line-through; color:#A69B7F; font-weight:500; }
+  .todo-meta-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:5px; }
+  .todo-meta-text { font-size:10.5px; color:#A69B7F; font-family:'IBM Plex Mono'; }
+  .todo-badge { display:inline-flex; align-items:center; gap:3px; font-family:'IBM Plex Mono'; font-size:10px; font-weight:700; letter-spacing:0.02em; padding:3px 8px; border-radius:999px; background:#F1E9D6; color:#8A7F68; }
+  .todo-badge.due { background:#FBEEDB; color:#B5651D; }
+  .todo-badge.overdue { background:#F7E4E1; color:#A14545; }
+  .todo-badge.done { background:#E7EEDF; color:#6B7A4F; }
+  .todo-delete { width:30px; height:30px; border-radius:9px; border:none; background:transparent; color:#C6BB9C; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:background .15s ease, color .15s ease; }
+  .todo-delete:hover { background:#F7E4E1; color:#A14545; }
+  .todo-header-icon { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,#123A34,#1E5147); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 6px rgba(18,58,52,0.25); }
+  .todo-progress-wrap { display:flex; align-items:center; gap:10px; margin:2px 0 14px; }
+  .todo-progress-track { flex:1; height:7px; background:#EEE5CE; border-radius:99px; overflow:hidden; }
+  .todo-progress-fill { height:100%; background:linear-gradient(90deg,#6B7A4F,#8FA672); border-radius:99px; transition:width .5s cubic-bezier(.4,0,.2,1); }
+  .todo-progress-label { font-family:'IBM Plex Mono'; font-size:10.5px; font-weight:700; color:#8A7F68; white-space:nowrap; flex-shrink:0; }
+  .todo-add-row { display:flex; align-items:center; gap:8px; background:#FFFDF7; border:1.5px solid #E7DDC7; border-radius:14px; padding:4px 4px 4px 14px; margin-bottom:8px; transition:border-color .15s ease, box-shadow .15s ease; }
+  .todo-add-row:focus-within { border-color:#C08A3E; box-shadow:0 0 0 3px rgba(192,138,62,0.12); }
+  .todo-add-row input { flex:1; min-width:0; border:none; background:none; padding:9px 0; font-size:14px; outline:none; }
+  .todo-add-icon-btn { width:36px; height:36px; border-radius:10px; border:none; background:linear-gradient(135deg,#123A34,#0D2C27); color:#FBF6EA; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:transform .12s ease, filter .15s ease; }
+  .todo-add-icon-btn:hover { filter:brightness(1.1); }
+  .todo-add-icon-btn:active { transform:scale(0.92); }
+  .todo-due-row { display:flex; align-items:center; gap:8px; padding:0 2px 12px; }
+  .todo-due-row input[type="date"] { flex:1; border:1.2px solid #E1D6B8; background:#FFFDF7; border-radius:10px; padding:8px 10px; font-size:12.5px; color:#8A7F68; }
+  .todo-empty-state { display:flex; flex-direction:column; align-items:center; gap:6px; padding:22px 6px 20px; color:#A69B7F; }
+  .tt-banner { display:flex; align-items:center; gap:8px; background:linear-gradient(135deg,#123A34,#1E5147); color:#FBF6EA; border-radius:14px; padding:11px 14px; margin-bottom:12px; }
+  .tt-banner-icon { width:30px; height:30px; border-radius:9px; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .tt-banner-title { font-family:'Fraunces',serif; font-weight:700; font-size:13.5px; flex:1; }
+  .tt-banner-streak { font-family:'IBM Plex Mono'; font-size:11px; font-weight:700; color:#E0B868; white-space:nowrap; }
+  .tt-card { background:linear-gradient(180deg,#FFFEFA,#FFFCF4); border:1px solid #EFE6D2; border-radius:14px; padding:12px 13px; margin-bottom:9px; box-shadow:0 1px 2px rgba(43,42,34,0.03), 0 3px 10px rgba(43,42,34,0.04); }
+  .tt-card-top { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+  .tt-avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#C08A3E,#B5651D); color:#FBF6EA; font-family:'Fraunces',serif; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .tt-card-name { font-family:'Fraunces',serif; font-weight:700; font-size:14.5px; color:#2B2A22; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tt-card-delete { width:26px; height:26px; border-radius:8px; border:none; background:transparent; color:#C6BB9C; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:background .15s ease, color .15s ease; }
+  .tt-card-delete:hover { background:#F7E4E1; color:#A14545; }
+  .tt-metric-row { display:flex; align-items:center; gap:9px; padding:5px 0; }
+  .tt-metric-label { font-size:11px; font-weight:700; color:#8A7F68; width:34px; flex-shrink:0; }
+  .tt-seg { display:flex; border:1.5px solid #E1D6B8; border-radius:999px; overflow:hidden; flex-shrink:0; }
+  .tt-seg-btn { border:none; background:#FFFDF7; font-size:11.5px; font-weight:700; padding:6px 14px; cursor:pointer; color:#8A7F68; transition:background .15s ease, color .15s ease; }
+  .tt-seg-btn:first-child { border-right:1px solid #E1D6B8; }
+  .tt-seg-btn.active.yes { background:#F7E4E1; color:#A14545; }
+  .tt-seg-btn.active.no { background:#E7EEDF; color:#6B7A4F; }
+  .tt-streak-pill { margin-left:auto; font-family:'IBM Plex Mono'; font-size:10.5px; font-weight:700; color:#B5651D; }
+  .tt-add-row { display:flex; align-items:center; gap:8px; background:#FFFDF7; border:1.5px solid #E7DDC7; border-radius:14px; padding:4px 4px 4px 14px; margin-top:4px; transition:border-color .15s ease, box-shadow .15s ease; }
+  .tt-add-row:focus-within { border-color:#C08A3E; box-shadow:0 0 0 3px rgba(192,138,62,0.12); }
+  .tt-add-row input { flex:1; min-width:0; border:none; background:none; padding:9px 0; font-size:14px; outline:none; }
+  .tt-add-btn { width:36px; height:36px; border-radius:10px; border:none; background:linear-gradient(135deg,#123A34,#0D2C27); color:#FBF6EA; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:filter .15s ease, transform .12s ease; }
+  .tt-add-btn:hover { filter:brightness(1.1); }
+  .tt-add-btn:active { transform:scale(0.92); }
+  .todo-preview-wrap { background:linear-gradient(180deg,#FFFEFA,#FBF6EA); border:1px solid #E7DDC7; border-radius:16px; padding:14px 16px 12px; margin-bottom:18px; box-shadow:0 1px 2px rgba(43,42,34,0.04), 0 4px 14px rgba(43,42,34,0.05); }
+  .todo-preview-header { display:flex; align-items:center; gap:7px; font-family:'Fraunces',serif; font-weight:700; font-size:13.5px; color:#2B2A22; margin-bottom:10px; }
+  .todo-preview-count { margin-left:auto; font-family:'IBM Plex Mono'; font-size:10.5px; font-weight:700; color:#B5651D; background:#FBEEDB; border-radius:999px; padding:3px 9px; }
+  .todo-preview-item { display:flex; align-items:center; gap:9px; padding:7px 2px; border-bottom:1px solid #F0E8D4; }
+  .todo-preview-item:last-of-type { border-bottom:none; }
+  .todo-preview-dot { width:7px; height:7px; border-radius:50%; background:#DCCFA8; flex-shrink:0; }
+  .todo-preview-item.overdue .todo-preview-dot { background:#A14545; }
+  .todo-preview-item.due-today .todo-preview-dot { background:#B5651D; }
+  .todo-preview-text { flex:1; min-width:0; font-size:13px; font-weight:500; color:#2B2A22; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .todo-preview-more { font-family:'IBM Plex Mono'; font-size:10.5px; font-weight:700; color:#8A7F68; text-align:center; padding-top:6px; }
   .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
   .stat-box { background:#F5EEDC; border-radius:14px; padding:12px 14px; text-align:center; }
   .stat-num { font-family:'Fraunces',serif; font-weight:700; font-size:24px; color:#123A34; display:flex; align-items:center; justify-content:center; gap:4px; }
@@ -358,6 +427,46 @@
   .dtt-root.dark .n-date-input { background:#131A13; border-color:#3A4634; color:#E4DBC0; }
   .dtt-root.dark .icon-btn.ghost { background:#25302A; color:#8FA294; }
   .dtt-root.dark .empty-note { color:#6E8073; }
+  .dtt-root.dark .todo-item { background:linear-gradient(180deg,#1E281F,#1B241C); border-color:#2A362A; border-left-color:#3A4634; }
+  .dtt-root.dark .todo-item:hover { border-left-color:#C08A3E; }
+  .dtt-root.dark .todo-item.overdue { border-left-color:#A14545; }
+  .dtt-root.dark .todo-item.due-today { border-left-color:#B5651D; }
+  .dtt-root.dark .todo-item.done { background:#182019; }
+  .dtt-root.dark .todo-check { background:#1B241C; border-color:#3A4634; }
+  .dtt-root.dark .todo-title { color:#E7E0CC; }
+  .dtt-root.dark .todo-item.done .todo-title { color:#6E8073; }
+  .dtt-root.dark .todo-meta-text { color:#6E8073; }
+  .dtt-root.dark .todo-badge { background:#25302A; color:#8FA294; }
+  .dtt-root.dark .todo-badge.due { background:#3A2E1B; color:#E0B868; }
+  .dtt-root.dark .todo-badge.overdue { background:#3A1F1F; color:#D98787; }
+  .dtt-root.dark .todo-badge.done { background:#25302A; color:#8FBF7F; }
+  .dtt-root.dark .todo-delete:hover { background:#3A1F1F; color:#D98787; }
+  .dtt-root.dark .todo-progress-track { background:#25302A; }
+  .dtt-root.dark .todo-progress-label { color:#8FA294; }
+  .dtt-root.dark .todo-add-row { background:#1B241C; border-color:#3A4634; }
+  .dtt-root.dark .todo-add-row:focus-within { border-color:#C08A3E; }
+  .dtt-root.dark .todo-add-row input { color:#E7E0CC; }
+  .dtt-root.dark .todo-due-row input[type="date"] { background:#1B241C; border-color:#3A4634; color:#E4DBC0; }
+  .dtt-root.dark .todo-empty-state { color:#6E8073; }
+  .dtt-root.dark .tt-card { background:linear-gradient(180deg,#1E281F,#1B241C); border-color:#2A362A; }
+  .dtt-root.dark .tt-card-name { color:#E7E0CC; }
+  .dtt-root.dark .tt-card-delete:hover { background:#3A1F1F; color:#D98787; }
+  .dtt-root.dark .tt-metric-label { color:#8FA294; }
+  .dtt-root.dark .tt-seg { border-color:#3A4634; }
+  .dtt-root.dark .tt-seg-btn { background:#1B241C; color:#8FA294; }
+  .dtt-root.dark .tt-seg-btn:first-child { border-right-color:#3A4634; }
+  .dtt-root.dark .tt-seg-btn.active.yes { background:#3A1F1F; color:#D98787; }
+  .dtt-root.dark .tt-seg-btn.active.no { background:#25302A; color:#8FBF7F; }
+  .dtt-root.dark .tt-add-row { background:#1B241C; border-color:#3A4634; }
+  .dtt-root.dark .tt-add-row:focus-within { border-color:#C08A3E; }
+  .dtt-root.dark .tt-add-row input { color:#E7E0CC; }
+  .dtt-root.dark .todo-preview-wrap { background:linear-gradient(180deg,#1E281F,#1B241C); border-color:#2A362A; }
+  .dtt-root.dark .todo-preview-header { color:#E7E0CC; }
+  .dtt-root.dark .todo-preview-count { background:#3A2E1B; color:#E0B868; }
+  .dtt-root.dark .todo-preview-item { border-bottom-color:#25302A; }
+  .dtt-root.dark .todo-preview-dot { background:#3A4634; }
+  .dtt-root.dark .todo-preview-text { color:#E7E0CC; }
+  .dtt-root.dark .todo-preview-more { color:#8FA294; }
   .dtt-root.dark .stat-box { background:#25302A; }
   .dtt-root.dark .stat-num { color:#E7E0CC; }
   .dtt-root.dark .stat-label { color:#8FA294; }
@@ -1500,7 +1609,7 @@ function dayCompletionScore(day, contacts, noTextPeople) {
   ratios.push((parseFloat(day.exercise.quickSessionMinutes) > 0) ? 1 : Math.min(1, Object.values(day.exercise.checklist).filter(v => v).length / 6));
   const walkOk = (parseFloat(day.habit.walkingSteps) || 0) >= 8000;
   const waterOk = (day.habit.waterGlasses || 0) >= 8;
-  const noTextOk = (noTextPeople && noTextPeople.length > 0) ? noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") : false;
+  const noTextOk = (noTextPeople && noTextPeople.length > 0) ? noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "no") : false;
   const sleepAutoScore = computeSleepAuto(day);
   const fixedHabits = [sleepAutoScore.earlyRising, sleepAutoScore.earlySleeping, day.habit.meditation === "yes", walkOk, day.habit.lustControl === "yes", waterOk, noTextOk, day.habit.sadaqah, !!day.habit.noScreenCount, !!day.habit.ghorGochano];
   ratios.push(fixedHabits.filter(Boolean).length / fixedHabits.length);
@@ -1535,7 +1644,7 @@ function isTaskFullyDone(taskId, day, contacts, noTextPeople) {
     case "habit": {
       const walkOk = (parseFloat(day.habit.walkingSteps) || 0) >= 8000;
       const waterOk = (day.habit.waterGlasses || 0) >= 8;
-      const noTextOk = (noTextPeople && noTextPeople.length > 0) ? noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") : false;
+      const noTextOk = (noTextPeople && noTextPeople.length > 0) ? noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "no") : false;
       const sleepAutoTask = computeSleepAuto(day);
       const fixed = [sleepAutoTask.earlyRising, sleepAutoTask.earlySleeping, day.habit.meditation === "yes", walkOk, day.habit.lustControl === "yes", waterOk, noTextOk, day.habit.sadaqah].every(Boolean);
       return fixed && !!day.habit.noScreenCount && !!day.habit.ghorGochano;
@@ -2281,8 +2390,8 @@ function pointsHabit(rec) {
   const sleepAutoPts = computeSleepAuto(rec);
   if (sleepAutoPts.earlyRising) pts += 1.2;
   if (sleepAutoPts.earlySleeping) pts += 1.2;
-  Object.values(h.noTextStatus || {}).forEach(status => { if (status === "yes") pts += 1.2; else if (status === "no") pts -= 1.2; });
-  Object.values(h.noTalkStatus || {}).forEach(status => { if (status === "yes") pts += 1.2; else if (status === "no") pts -= 1.2; });
+  Object.values(h.noTextStatus || {}).forEach(status => { if (status === "no") pts += 1.2; else if (status === "yes") pts -= 1.2; });
+  Object.values(h.noTalkStatus || {}).forEach(status => { if (status === "no") pts += 1.2; else if (status === "yes") pts -= 1.2; });
   if (h.lustControl === "yes") pts += 2.4; else if (h.lustControl === "no") pts -= 2.4;
   pts += (parseInt(h.ghorGochano) || 0) * 1.2;
   pts -= (parseInt(h.ghorGochanoMiss) || 0) * 1.2;
@@ -3815,29 +3924,50 @@ function TodoModal({ todos, onAdd, onToggle, onDelete, onClose }) {
   const today = todayStr();
   return (
     <Modal onClose={onClose} width={420}>
-      <div className="modal-header"><Icon name="checklist" size={18} color="#4A6FA5" /><span>টু ডু লিস্ট</span><button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button></div>
-      <div className="add-row" style={{ marginBottom: 6 }}>
-        <input placeholder="নতুন কাজ লিখুন" value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
-        <button className="icon-btn" onClick={submit}><Icon name="add" size={18} /></button>
+      <div className="modal-header">
+        <div className="todo-header-icon"><Icon name="checklist" size={18} color="#FBF6EA" /></div>
+        <span>টু ডু লিস্ট</span>
+        <button className="modal-close" onClick={onClose}><Icon name="close" size={18} /></button>
       </div>
-      <div className="add-row" style={{ marginBottom: 12 }}>
-        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ flex: 1 }} />
+      {todos.length > 0 && (
+        <div className="todo-progress-wrap">
+          <div className="todo-progress-track"><div className="todo-progress-fill" style={{ width: (todos.length ? (done.length / todos.length) * 100 : 0) + "%" }}></div></div>
+          <div className="todo-progress-label">{done.length}/{todos.length} সম্পন্ন</div>
+        </div>
+      )}
+      <div className="todo-add-row">
+        <input placeholder="নতুন কাজ লিখুন" value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
+        <button className="todo-add-icon-btn" onClick={submit}><Icon name="add" size={18} /></button>
+      </div>
+      <div className="todo-due-row">
+        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
         {dueDate && <button className="icon-btn ghost" onClick={() => setDueDate("")} title="ডিউ ডেট বাদ দিন"><Icon name="close" size={15} /></button>}
       </div>
-      {todos.length === 0 && <div className="empty-note">এখনো কোনো কাজ যোগ করা হয়নি — উপরে লিখে যোগ করুন</div>}
+      {todos.length === 0 && (
+        <div className="todo-empty-state">
+          <Icon name="task_alt" size={30} color="#C6BB9C" />
+          <div className="empty-note" style={{ padding: 0 }}>এখনো কোনো কাজ যোগ করা হয়নি — উপরে লিখে যোগ করুন</div>
+        </div>
+      )}
       {pending.map(t => {
         const overdue = t.dueDate && t.dueDate < today;
+        const dueTodayFlag = t.dueDate && t.dueDate === today;
         return (
-          <div className="nafl-item" key={t.id} style={{ alignItems: "flex-start" }}>
-            <div className="amoli-check" onClick={() => onToggle(t.id)} style={{ marginTop: 2 }}></div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="n-name">{t.text}</div>
-              <div style={{ fontSize: 10.5, color: "#A69B7F", fontFamily: "'IBM Plex Mono'", marginTop: 2 }}>
-                {t.createdAt && <>যোগ করা হয়েছে: {fmtTodoTime(t.createdAt)}</>}
-                {t.dueDate && <span style={{ color: overdue ? "#A14545" : "#B5651D", fontWeight: 700 }}> · {overdue ? "মেয়াদ শেষ" : "ডিউ"}: {fmtDueDate(t.dueDate)}</span>}
+          <div className={"todo-item habit-anim" + (overdue ? " overdue" : dueTodayFlag ? " due-today" : "")} key={t.id}>
+            <div className="todo-check" onClick={() => onToggle(t.id)}></div>
+            <div className="todo-body">
+              <div className="todo-title">{t.text}</div>
+              <div className="todo-meta-row">
+                {t.createdAt && <span className="todo-meta-text">{fmtTodoTime(t.createdAt)}</span>}
+                {t.dueDate && (
+                  <span className={"todo-badge" + (overdue ? " overdue" : " due")}>
+                    <Icon name={overdue ? "error" : "event"} size={12} />
+                    {overdue ? "মেয়াদ শেষ" : "ডিউ"}: {fmtDueDate(t.dueDate)}
+                  </span>
+                )}
               </div>
             </div>
-            <button className="icon-btn ghost" onClick={() => onDelete(t.id)}><Icon name="delete" size={15} /></button>
+            <button className="todo-delete" onClick={() => onDelete(t.id)}><Icon name="delete" size={16} /></button>
           </div>
         );
       })}
@@ -3845,16 +3975,16 @@ function TodoModal({ todos, onAdd, onToggle, onDelete, onClose }) {
         <>
           <div className="section-label" style={{ color: "#6B7A4F" }}>সম্পন্ন ✓</div>
           {done.map(t => (
-            <div className="nafl-item" key={t.id} style={{ alignItems: "flex-start" }}>
-              <div className="amoli-check" style={{ background: "#4A6FA5", borderColor: "#4A6FA5", marginTop: 2 }} onClick={() => onToggle(t.id)}><Icon name="check" size={16} color="#FBF6EA" /></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="n-name" style={{ textDecoration: "line-through", color: "#8A7F68" }}>{t.text}</div>
-                <div style={{ fontSize: 10.5, color: "#A69B7F", fontFamily: "'IBM Plex Mono'", marginTop: 2 }}>
-                  {t.createdAt && <>যোগ: {fmtTodoTime(t.createdAt)}</>}
-                  {t.completedAt && <> · সম্পন্ন: {fmtTodoTime(t.completedAt)}</>}
+            <div className="todo-item done habit-anim" key={t.id}>
+              <div className="todo-check checked" onClick={() => onToggle(t.id)}><Icon name="check" size={15} color="#FBF6EA" /></div>
+              <div className="todo-body">
+                <div className="todo-title">{t.text}</div>
+                <div className="todo-meta-row">
+                  {t.createdAt && <span className="todo-meta-text">যোগ: {fmtTodoTime(t.createdAt)}</span>}
+                  {t.completedAt && <span className="todo-badge done"><Icon name="check_circle" size={12} />{fmtTodoTime(t.completedAt)}</span>}
                 </div>
               </div>
-              <button className="icon-btn ghost" onClick={() => onDelete(t.id)}><Icon name="delete" size={15} /></button>
+              <button className="todo-delete" onClick={() => onDelete(t.id)}><Icon name="delete" size={16} /></button>
             </div>
           ))}
           <div className="empty-note" style={{ padding: "6px 0 0" }}>সম্পন্ন কাজগুলো {TODO_AUTO_DELETE_DAYS} দিন পর নিজে থেকেই মুছে যাবে।</div>
@@ -5524,6 +5654,7 @@ function DailyLifeManagement() {
   const [habitItemStreaks, setHabitItemStreaks] = useState({});
   const [todos, setTodos] = useState([]);
   const [showTodo, setShowTodo] = useState(false);
+  const [showTodoPreview, setShowTodoPreview] = useState(false);
   const [showNote, setShowNote] = useState(false);
   const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [showPointsGraph, setShowPointsGraph] = useState(false);
@@ -5656,11 +5787,11 @@ function DailyLifeManagement() {
         results["custom:" + name] = await computeHabitItemStreak(date, (rec) => rec.habit.custom.some(c => c.name === name && c.done));
       }
       if (noTextPeople.length > 0) {
-        results.noTextAll = await computeHabitItemStreak(date, (rec) => noTextPeople.every(p => (rec.habit.noTextStatus || {})[p.name] === "yes"));
+        results.noTextAll = await computeHabitItemStreak(date, (rec) => noTextPeople.every(p => (rec.habit.noTextStatus || {})[p.name] === "no"));
       }
       for (const p of noTextPeople) {
-        results["notext:" + p.name] = await computeHabitItemStreak(date, (rec) => (rec.habit.noTextStatus || {})[p.name] === "yes");
-        results["notalk:" + p.name] = await computeHabitItemStreak(date, (rec) => (rec.habit.noTalkStatus || {})[p.name] === "yes");
+        results["notext:" + p.name] = await computeHabitItemStreak(date, (rec) => (rec.habit.noTextStatus || {})[p.name] === "no");
+        results["notalk:" + p.name] = await computeHabitItemStreak(date, (rec) => (rec.habit.noTalkStatus || {})[p.name] === "no");
       }
       setHabitItemStreaks(results);
     }, 900);
@@ -6106,7 +6237,7 @@ function DailyLifeManagement() {
   const zikirBadge = zikirDoneCount ? zikirDoneCount + "/২+" : null;
   const walkingDone = (parseFloat(day.habit.walkingSteps) || 0) >= 8000;
   const waterDone = (day.habit.waterGlasses || 0) >= 8;
-  const noTextYesCount = Object.values(day.habit.noTextStatus || {}).filter(s => s === "yes").length;
+  const noTextYesCount = Object.values(day.habit.noTextStatus || {}).filter(s => s === "no").length;
   const sleepAutoDone = computeSleepAuto(day);
   const habitFixedDone = [sleepAutoDone.earlyRising, sleepAutoDone.earlySleeping, day.habit.meditation === "yes", walkingDone, day.habit.lustControl === "yes", waterDone, day.habit.sadaqah].filter(Boolean).length + (day.habit.noScreenCount ? 1 : 0) + (day.habit.ghorGochano ? 1 : 0) + noTextYesCount;
   const simpleHabitItems = [
@@ -6420,7 +6551,7 @@ function DailyLifeManagement() {
             plan: { id: "plan", iconName: "flag", label: "মাসিক প্ল্যান", value: planBadge || "—", accent: "#4A6FA5" },
           })[id]).filter(Boolean).map(item => (
             <button key={item.id} className="summary-card" onClick={() => {
-              if (item.id === "todo") { setShowTodo(true); return; }
+              if (item.id === "todo") { setShowTodoPreview(v => !v); return; }
               setExpanded(item.id);
               requestAnimationFrame(() => { const el = document.getElementById("card-" + item.id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); });
             }}>
@@ -6440,6 +6571,34 @@ function DailyLifeManagement() {
             </button>
           ))}
         </div>
+        )}
+
+        {!reviewActive && showTodoPreview && todos.some(t => !t.done) && (
+          <div className="todo-preview-wrap">
+            <div className="todo-preview-header">
+              <Icon name="checklist" size={14} color="#B5651D" />
+              <span>টু-ডু লিস্ট</span>
+              <span className="todo-preview-count">{todos.filter(t => !t.done).length} বাকি</span>
+            </div>
+            {todos.filter(t => !t.done).slice(0, 4).map(t => {
+              const overdue = t.dueDate && t.dueDate < todayStr();
+              const dueTodayFlag = t.dueDate && t.dueDate === todayStr();
+              return (
+                <div key={t.id} className={"todo-preview-item" + (overdue ? " overdue" : dueTodayFlag ? " due-today" : "")}>
+                  <span className="todo-preview-dot"></span>
+                  <span className="todo-preview-text">{t.text}</span>
+                  {t.dueDate && (
+                    <span className={"todo-badge" + (overdue ? " overdue" : " due")}>
+                      {overdue ? "মেয়াদ শেষ" : "ডিউ"}: {fmtDueDate(t.dueDate)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            {todos.filter(t => !t.done).length > 4 && (
+              <div className="todo-preview-more">+{todos.filter(t => !t.done).length - 4} আরও</div>
+            )}
+          </div>
         )}
 
         <Card id="prayer" hidden={hiddenCards.includes("prayer") || (reviewActive && reviewCurrentId !== "prayer")} iconName="wb_sunny" title="নামাজ" subtitle="৫ ওয়াক্ত ফরজ ও নফল" accent="#123A34" badge={prayersDone + "/৫" + (naflCount ? " + নফল" : "")} points={prayerPoints} streak={taskStreaks.prayer} ringPercent={(prayersDone / 5) * 100} notDone={day.taskNotDone.prayer} onToggleNotDone={() => toggleTaskNotDone("prayer")} expanded={expanded === "prayer"} onToggle={toggle}>
@@ -7182,7 +7341,7 @@ function DailyLifeManagement() {
                   { key: "ghorGochano", icon: "cleaning_services", label: "ঘর গোছানো", shortLabel: "ঘর গোছানো", done: (day.habit.ghorGochano || 0) > 0 },
                   { key: "sleep", icon: "bedtime", label: "ঘুম ট্র্যাকার", shortLabel: "ঘুম", done: day.habit.sleepSessions.length > 0 },
                   { key: "weight", icon: "monitor_weight", label: "ওজন ট্র্যাকার", shortLabel: "ওজন", done: !!day.habit.weight },
-                  { key: "noText", icon: "block", label: "নো টেক্সট ফার্স্ট", shortLabel: "নো টেক্সট", done: noTextPeople.length > 0 && noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "yes") },
+                  { key: "noText", icon: "block", label: "Talk and Text", shortLabel: "Talk and Text", done: noTextPeople.length > 0 && noTextPeople.every(p => (day.habit.noTextStatus || {})[p.name] === "no") },
                 ].map(item => (
                   <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
                     <button
@@ -7274,7 +7433,7 @@ function DailyLifeManagement() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setHabitSubOpen(null)}>
                 <Icon name="arrow_back" size={18} color="#6B7A4F" />
                 <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#6B7A4F" }}>
-                  {{ meditation: "মেডিটেশন ১০ মিনিট", lustControl: "নিজের নিয়ন্ত্রণ (Lust Control)", walking: "হাঁটা", water: "পানি ট্র্যাকার", noScreen: "নো-স্ক্রিন টাইম", ghorGochano: "ঘর গোছানো", sleep: "ঘুম ট্র্যাকার", weight: "ওজন ট্র্যাকার", noText: "নো টেক্সট ফার্স্ট" }[habitSubOpen]}
+                  {{ meditation: "মেডিটেশন ১০ মিনিট", lustControl: "নিজের নিয়ন্ত্রণ (Lust Control)", walking: "হাঁটা", water: "পানি ট্র্যাকার", noScreen: "নো-স্ক্রিন টাইম", ghorGochano: "ঘর গোছানো", sleep: "ঘুম ট্র্যাকার", weight: "ওজন ট্র্যাকার", noText: "Talk and Text" }[habitSubOpen]}
                 </span>
               </div>
 
@@ -7535,10 +7694,11 @@ function DailyLifeManagement() {
               )}
               {habitSubOpen === "noText" && (
                 <>
-                  <div className="subblock-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    নো টেক্সট / নো টক ফার্স্ট (ব্যক্তি অনুযায়ী)
+                  <div className="tt-banner">
+                    <div className="tt-banner-icon"><Icon name="block" size={16} color="#FBF6EA" /></div>
+                    <div className="tt-banner-title">Talk and Text</div>
                     {noTextPeople.length > 0 && !!habitItemStreaks.noTextAll && (
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "#B5651D" }}>🔥 {habitItemStreaks.noTextAll} দিন ধরে সবাই মিলে চলছে</span>
+                      <span className="tt-banner-streak">🔥 {habitItemStreaks.noTextAll} দিন</span>
                     )}
                   </div>
                   {noTextPeople.length === 0 && <div className="empty-note">এখনো কেউ যোগ করা হয়নি</div>}
@@ -7548,27 +7708,34 @@ function DailyLifeManagement() {
                     const textStreak = habitItemStreaks["notext:" + p.name] || 0;
                     const talkStreak = habitItemStreaks["notalk:" + p.name] || 0;
                     return (
-                      <div className="nafl-item" key={p.id} style={{ flexWrap: "wrap", rowGap: 6 }}>
-                        <span className="n-name">{p.name}</span>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#8A7F68", marginRight: -2 }}>টেক্সট:</span>
-                        <Chip active={status === "yes"} color="#6B7A4F" onClick={() => setNoTextStatus(p.name, "yes")}>হ্যাঁ (+০.৫)</Chip>
-                        <Chip active={status === "no"} color="#A14545" onClick={() => setNoTextStatus(p.name, "no")}>না (-০.৫)</Chip>
-                        {textStreak > 0 && (
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#B5651D" }}>🔥{textStreak}</span>
-                        )}
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#8A7F68", marginLeft: 4, marginRight: -2 }}>কথা:</span>
-                        <Chip active={talkStatus === "yes"} color="#6B7A4F" onClick={() => setNoTalkStatus(p.name, "yes")}>হ্যাঁ (+০.৫)</Chip>
-                        <Chip active={talkStatus === "no"} color="#A14545" onClick={() => setNoTalkStatus(p.name, "no")}>না (-০.৫)</Chip>
-                        {talkStreak > 0 && (
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#B5651D" }}>🔥{talkStreak}</span>
-                        )}
-                        <button className="icon-btn ghost" onClick={() => removeNoTextPerson(p.id)}><Icon name="delete" size={15} /></button>
+                      <div className="tt-card habit-anim" key={p.id}>
+                        <div className="tt-card-top">
+                          <div className="tt-avatar">{p.name.trim().charAt(0)}</div>
+                          <div className="tt-card-name">{p.name}</div>
+                          <button className="tt-card-delete" onClick={() => removeNoTextPerson(p.id)}><Icon name="delete" size={15} /></button>
+                        </div>
+                        <div className="tt-metric-row">
+                          <span className="tt-metric-label">Text</span>
+                          <div className="tt-seg">
+                            <button className={"tt-seg-btn yes" + (status === "yes" ? " active" : "")} onClick={() => setNoTextStatus(p.name, "yes")}>Yes</button>
+                            <button className={"tt-seg-btn no" + (status === "no" ? " active" : "")} onClick={() => setNoTextStatus(p.name, "no")}>No</button>
+                          </div>
+                          {textStreak > 0 && <span className="tt-streak-pill">🔥{textStreak}</span>}
+                        </div>
+                        <div className="tt-metric-row">
+                          <span className="tt-metric-label">Talk</span>
+                          <div className="tt-seg">
+                            <button className={"tt-seg-btn yes" + (talkStatus === "yes" ? " active" : "")} onClick={() => setNoTalkStatus(p.name, "yes")}>Yes</button>
+                            <button className={"tt-seg-btn no" + (talkStatus === "no" ? " active" : "")} onClick={() => setNoTalkStatus(p.name, "no")}>No</button>
+                          </div>
+                          {talkStreak > 0 && <span className="tt-streak-pill">🔥{talkStreak}</span>}
+                        </div>
                       </div>
                     );
                   })}
-                  <div className="add-row">
+                  <div className="tt-add-row">
                     <input placeholder="নাম লিখুন" value={noTextPersonName} onChange={e => setNoTextPersonName(e.target.value)} onKeyDown={e => e.key === "Enter" && (addNoTextPerson(noTextPersonName), setNoTextPersonName(""))} />
-                    <button className="icon-btn" onClick={() => { addNoTextPerson(noTextPersonName); setNoTextPersonName(""); }}><Icon name="add" size={18} /></button>
+                    <button className="tt-add-btn" onClick={() => { addNoTextPerson(noTextPersonName); setNoTextPersonName(""); }}><Icon name="add" size={18} /></button>
                   </div>
                 </>
               )}
