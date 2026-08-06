@@ -1,6 +1,6 @@
 // Bump this version string every time you want to force old caches to clear.
 // (You don't actually need to bump it manually — this file already auto-updates.)
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = "daily-task-" + CACHE_VERSION;
 
 // Only static, rarely-changing assets go in the cache. The HTML itself is
@@ -12,6 +12,9 @@ const STATIC_ASSETS = [
   "icon-192-maskable.png",
   "icon-512-maskable.png",
 ];
+
+// The URL to open/focus when a notification is clicked.
+const APP_SHELL_URL = "./";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -67,4 +70,61 @@ self.addEventListener("fetch", (event) => {
       return cached || fetchPromise;
     })
   );
+});
+
+// ---- Backend থেকে আসা push message দেখানোর হ্যান্ডলার ----
+self.addEventListener("push", (event) => {
+  let data = { title: "দৈনিক আমল", body: "", tag: undefined };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch (e) {
+    if (event.data) data.body = event.data.text();
+  }
+  const options = {
+    body: data.body,
+    icon: "icon-192.png",
+    badge: "icon-192.png",
+    tag: data.tag,
+    renotify: !!data.tag,
+  };
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+// ---- নোটিফিকেশনে ক্লিক করলে অ্যাপ খোলা/ফোকাস করার হ্যান্ডলার ----
+self.addEventListener("notificationclick", (event) => {
+  const notification = event.notification;
+  notification.close();
+
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      // অ্যাপ আগে থেকে কোনো ট্যাবে খোলা থাকলে সেটাকেই ফোকাস করে দাও
+      for (const client of allClients) {
+        try {
+          const clientUrl = new URL(client.url);
+          const scopeUrl = new URL(self.registration.scope);
+          if (clientUrl.origin === scopeUrl.origin) {
+            await client.focus();
+            if (client.navigate) {
+              try { await client.navigate(APP_SHELL_URL); } catch (e) {}
+            }
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // কোনো ট্যাব খোলা না থাকলে নতুন উইন্ডো/ট্যাবে অ্যাপ খোলো
+      if (self.clients.openWindow) {
+        await self.clients.openWindow(APP_SHELL_URL);
+      }
+    })()
+  );
+});
+
+self.addEventListener("notificationclose", (event) => {
+  // no-op
 });
