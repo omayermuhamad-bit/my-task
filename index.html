@@ -6265,10 +6265,6 @@ function DailyLifeManagement() {
     21
   );
   const carriedStudySubjects = Object.keys(pendingStudySubjectsMap).filter(s => !todaySubjects.includes(s));
-  const allStudySubjects = [
-    ...todaySubjects.map(s => ({ subject: s, carried: false })),
-    ...carriedStudySubjects.map(s => ({ subject: s, carried: true, since: pendingStudySubjectsMap[s] })),
-  ];
   const subjectHoursLogged = Object.values(day.study.subjects || {}).some(v => parseFloat(v) > 0);
   const studyBadge = (day.study.studied.topics || day.study.studied.hours || day.study.lectures.count || day.study.lectures.hours || subjectHoursLogged || (parseFloat(day.study.promoterMinutes) > 0)) ? "লগ হয়েছে" : null;
   const exerciseSetsDone = Object.values(day.exercise.checklist).filter(v => v).length;
@@ -6869,19 +6865,25 @@ function DailyLifeManagement() {
                   { key: "revision", icon: "history_edu", shortLabel: "রিভিশন", fullLabel: "কুরআন রিভিশন (মুরাজাআ)", action: () => setQuranSubOpen("revision") },
                   { key: "amoli", icon: "auto_awesome", shortLabel: "আমলি সূরা", fullLabel: "আমলি সূরা", action: () => setQuranSubOpen("amoli") },
                   { key: "routine", icon: "event_note", shortLabel: "আজকের রুটিন", fullLabel: "রিভিশন রুটিন (আজকের প্ল্যান)", action: () => { setQuranSubOpen("revision"); setRevisionSubOpen("routine"); } },
+                  { key: "pending", icon: "history_toggle_off", shortLabel: "বাকি/ডিলে", fullLabel: "বাকি/ডিলে হওয়া রিভিশন", action: () => { setQuranSubOpen("revision"); setRevisionSubOpen("pending"); }, badgeCount: carriedRevisionSurahs.length },
                 ].map(item => (
                   <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
                     <button
                       onClick={item.action}
                       title={item.fullLabel}
                       style={{
-                        width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                        position: "relative", width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
                         background: darkMode ? "#1F2A22" : "#FBF6EA",
                       }}
                     >
                       <Icon name={item.icon} size={22} color="#8A6A2F" />
+                      {!!item.badgeCount && (
+                        <span style={{ position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 999, background: "#A14545", color: "#FBF6EA", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                          {item.badgeCount}
+                        </span>
+                      )}
                     </button>
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
                   </div>
@@ -6909,13 +6911,21 @@ function DailyLifeManagement() {
                       { key: "fix", label: "আগের সূরা ঠিক করুন" },
                       { key: "memorize", label: "নতুন সূরা মুখস্ত করুন" },
                       { key: "routine", label: "রিভিশন রুটিন (আজকের প্ল্যান)" },
+                      { key: "pending", label: "বাকি/ডিলে হওয়া রিভিশন", badgeCount: carriedRevisionSurahs.length },
                     ].map((item, i, arr) => (
                       <div
                         key={item.key}
                         onClick={() => setRevisionSubOpen(item.key)}
                         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 14px", cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid #E7DDC7" : "none" }}
                       >
-                        <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5 }}>{item.label}</span>
+                        <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 14.5, display: "flex", alignItems: "center", gap: 8 }}>
+                          {item.label}
+                          {!!item.badgeCount && (
+                            <span style={{ minWidth: 18, height: 18, borderRadius: 999, background: "#A14545", color: "#FBF6EA", fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                              {item.badgeCount}
+                            </span>
+                          )}
+                        </span>
                         <Icon name="chevron_left" size={18} color="#8A7F68" />
                       </div>
                     ))}
@@ -6925,7 +6935,7 @@ function DailyLifeManagement() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setRevisionSubOpen(null)}>
                       <Icon name="arrow_back" size={18} color="#8A6A2F" />
                       <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#8A6A2F" }}>
-                        {revisionSubOpen === "fix" ? "আগের সূরা ঠিক করুন" : revisionSubOpen === "memorize" ? "নতুন সূরা মুখস্ত করুন" : "রিভিশন রুটিন"}
+                        {revisionSubOpen === "fix" ? "আগের সূরা ঠিক করুন" : revisionSubOpen === "memorize" ? "নতুন সূরা মুখস্ত করুন" : revisionSubOpen === "pending" ? "বাকি/ডিলে হওয়া রিভিশন" : "রিভিশন রুটিন"}
                       </span>
                     </div>
                     {(revisionSubOpen === "fix" || revisionSubOpen === "memorize") && (
@@ -7028,42 +7038,46 @@ function DailyLifeManagement() {
                             {surahRevisionPlan.items.reduce((sum, s) => sum + s.pagesToday, 0)} পৃষ্ঠা
                           </span>
                         </div>
-                        {carriedRevisionSurahs.length > 0 && (
-                          <div style={{ marginTop: 16 }}>
-                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#B65C4A", marginBottom: 6 }}>
-                              🔺 আগের দিনের বাকি রিভিশন (শেষ হয়নি)
-                            </div>
-                            {carriedRevisionSurahs.map(s => {
-                              const revDone = !!day.quran.revisionDone[s.number];
-                              return (
-                                <div key={s.number} style={{ borderRadius: 10, background: "#F3E3DE", marginBottom: 6, padding: "9px 12px" }}>
-                                  <div
-                                    onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
-                                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 4 }}
-                                  >
-                                    <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22" }}>{s.number}. {s.label}</span>
-                                    <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>{s.pages} পৃষ্ঠা, {s.para} নং পারা</span>
-                                  </div>
-                                  <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginBottom: 6 }}>
-                                    বাকি আছে ({fmtDueDate(pendingRevisionSurahsMap[s.number])} থেকে)
-                                  </div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                    <span style={{ fontSize: 11, color: "#5C543F", fontWeight: 600 }}>শেষ হয়েছে?</span>
-                                    <button
-                                      onClick={() => setQuranRevisionDone(s.number, true)}
-                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #5C7A6B", cursor: "pointer", background: revDone ? "#5C7A6B" : "transparent", color: revDone ? "#FBF6EA" : "#5C7A6B" }}
-                                    >হ্যাঁ</button>
-                                    <button
-                                      onClick={() => setQuranRevisionDone(s.number, false)}
-                                      style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #A14545", cursor: "pointer", background: !revDone ? "#A14545" : "transparent", color: !revDone ? "#FBF6EA" : "#A14545" }}
-                                    >না</button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
+                    )}
+                    {revisionSubOpen === "pending" && (
+                      carriedRevisionSurahs.length === 0 ? (
+                        <div className="empty-note">কোনো রিভিশন বাকি/ডিলে নেই — সব ঠিক আছে!</div>
+                      ) : (
+                        <div>
+                          <div style={{ fontSize: 12, color: "#8A7F68", fontWeight: 600, marginBottom: 10 }}>
+                            যেসব সূরা রুটিনের দিনে "শেষ" মার্ক করা হয়নি (বা "না" চাপা হয়েছে), সেগুলো এখানে বাকি/ডিলে হিসেবে থাকবে। "হ্যাঁ" চেপে শেষ করলে এখান থেকে সরে যাবে।
+                          </div>
+                          {carriedRevisionSurahs.map(s => {
+                            const revDone = !!day.quran.revisionDone[s.number];
+                            return (
+                              <div key={s.number} style={{ borderRadius: 10, background: "#F3E3DE", marginBottom: 6, padding: "9px 12px" }}>
+                                <div
+                                  onClick={() => { setRevisionSubOpen("fix"); setQuranRevision("fix", "surah", s.label); if (!day.quran.revision.fix.pages) setQuranRevision("fix", "pages", String(s.pages)); }}
+                                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 4 }}
+                                >
+                                  <span style={{ fontSize: 13.5, fontWeight: 600, color: "#2B2A22" }}>{s.number}. {s.label}</span>
+                                  <span style={{ fontSize: 11, color: "#8A7F68", fontWeight: 600 }}>{s.pages} পৃষ্ঠা, {s.para} নং পারা</span>
+                                </div>
+                                <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginBottom: 6 }}>
+                                  বাকি আছে ({fmtDueDate(pendingRevisionSurahsMap[s.number])} থেকে)
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <span style={{ fontSize: 11, color: "#5C543F", fontWeight: 600 }}>শেষ হয়েছে?</span>
+                                  <button
+                                    onClick={() => setQuranRevisionDone(s.number, true)}
+                                    style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #5C7A6B", cursor: "pointer", background: revDone ? "#5C7A6B" : "transparent", color: revDone ? "#FBF6EA" : "#5C7A6B" }}
+                                  >হ্যাঁ</button>
+                                  <button
+                                    onClick={() => setQuranRevisionDone(s.number, false)}
+                                    style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, border: "1.5px solid #A14545", cursor: "pointer", background: !revDone ? "#A14545" : "transparent", color: !revDone ? "#FBF6EA" : "#A14545" }}
+                                  >না</button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )
                     )}
                   </div>
                 )
@@ -7110,19 +7124,25 @@ function DailyLifeManagement() {
                   { key: "studied", icon: "edit_note", shortLabel: "পড়াশোনা", fullLabel: "পড়াশোনা করেছি (ফ্রি টেক্সট)" },
                   { key: "lectures", icon: "headphones", shortLabel: "লেকচার", fullLabel: "লেকচার শুনেছি" },
                   { key: "routine", icon: "calendar_view_week", shortLabel: "রুটিন", fullLabel: "সাপ্তাহিক রুটিন" },
+                  { key: "pending", icon: "history_toggle_off", shortLabel: "বাকি/ডিলে", fullLabel: "বাকি/ডিলে হওয়া সাবজেক্ট", badgeCount: carriedStudySubjects.length },
                 ].map(item => (
                   <div key={item.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 58 }}>
                     <button
                       onClick={() => setStudySubOpen(item.key)}
                       title={item.fullLabel}
                       style={{
-                        width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
+                        position: "relative", width: 52, height: 52, borderRadius: 14, flexShrink: 0, cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         border: "1.5px solid " + (darkMode ? "#31402F" : "#E7DDC7"),
                         background: darkMode ? "#1F2A22" : "#FBF6EA",
                       }}
                     >
                       <Icon name={item.icon} size={22} color="#5C7A6B" />
+                      {!!item.badgeCount && (
+                        <span style={{ position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 999, background: "#A14545", color: "#FBF6EA", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                          {item.badgeCount}
+                        </span>
+                      )}
                     </button>
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: darkMode ? "#B9AF8E" : "#8A7F68", textAlign: "center", lineHeight: 1.15 }}>{item.shortLabel}</span>
                   </div>
@@ -7134,16 +7154,16 @@ function DailyLifeManagement() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer" }} onClick={() => setStudySubOpen(null)}>
                 <Icon name="arrow_back" size={18} color="#5C7A6B" />
                 <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15.5, color: "#5C7A6B" }}>
-                  {studySubOpen === "subjects" ? "আজকের সাবজেক্ট" : studySubOpen === "studied" ? "পড়াশোনা করেছি (ফ্রি টেক্সট)" : studySubOpen === "lectures" ? "লেকচার শুনেছি" : "সাপ্তাহিক রুটিন"}
+                  {studySubOpen === "subjects" ? "আজকের সাবজেক্ট" : studySubOpen === "studied" ? "পড়াশোনা করেছি (ফ্রি টেক্সট)" : studySubOpen === "lectures" ? "লেকচার শুনেছি" : studySubOpen === "pending" ? "বাকি/ডিলে হওয়া সাবজেক্ট" : "সাপ্তাহিক রুটিন"}
                 </span>
               </div>
               {studySubOpen === "subjects" && (
-                allStudySubjects.length === 0 ? (
+                todaySubjects.length === 0 ? (
                   <div className="empty-note">আজ ছুটির দিন, রুটিনে কোনো সাবজেক্ট নেই।</div>
                 ) : (
-                  allStudySubjects.map(({ subject: sub, carried, since }) => {
+                  todaySubjects.map(sub => {
                     const done = !!day.study.subjectsDone[sub];
-                    const lectureLabel = formatLectureRange(sub, carried ? since : date);
+                    const lectureLabel = formatLectureRange(sub, date);
                     return (
                       <div key={sub} style={{ marginBottom: 10, padding: "8px 0", borderBottom: "1px solid " + (darkMode ? "#31402F" : "#F0E9D6") }}>
                         <div className="field-row" style={{ alignItems: "center", marginBottom: 6 }}>
@@ -7152,11 +7172,6 @@ function DailyLifeManagement() {
                             {lectureLabel && (
                               <div style={{ fontSize: 10.5, color: "#5C7A6B", fontWeight: 700, marginTop: 2, fontFamily: "'IBM Plex Mono'" }}>
                                 {lectureLabel}
-                              </div>
-                            )}
-                            {carried && (
-                              <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginTop: 2 }}>
-                                বাকি আছে ({fmtDueDate(since)} থেকে)
                               </div>
                             )}
                           </div>
@@ -7178,6 +7193,53 @@ function DailyLifeManagement() {
                       </div>
                     );
                   })
+                )
+              )}
+              {studySubOpen === "pending" && (
+                carriedStudySubjects.length === 0 ? (
+                  <div className="empty-note">কোনো সাবজেক্ট বাকি/ডিলে নেই — সব ঠিক আছে!</div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12, color: "#8A7F68", fontWeight: 600, marginBottom: 10 }}>
+                      যেসব সাবজেক্ট রুটিনের দিনে "সম্পন্ন" মার্ক করা হয়নি (বা "না" চাপা হয়েছে), সেগুলো এখানে বাকি/ডিলে হিসেবে থাকবে। "হ্যাঁ" চেপে সম্পন্ন করলে এখান থেকে সরে যাবে।
+                    </div>
+                    {carriedStudySubjects.map(sub => {
+                      const since = pendingStudySubjectsMap[sub];
+                      const done = !!day.study.subjectsDone[sub];
+                      const lectureLabel = formatLectureRange(sub, since);
+                      return (
+                        <div key={sub} style={{ marginBottom: 10, padding: "9px 12px", borderRadius: 10, background: "#F3E3DE" }}>
+                          <div className="field-row" style={{ alignItems: "center", marginBottom: 6 }}>
+                            <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600 }}>
+                              {sub}
+                              {lectureLabel && (
+                                <div style={{ fontSize: 10.5, color: "#5C7A6B", fontWeight: 700, marginTop: 2, fontFamily: "'IBM Plex Mono'" }}>
+                                  {lectureLabel}
+                                </div>
+                              )}
+                              <div style={{ fontSize: 10.5, color: "#B65C4A", fontWeight: 600, marginTop: 2 }}>
+                                বাকি আছে ({fmtDueDate(since)} থেকে)
+                              </div>
+                            </div>
+                            <div className="field" style={{ maxWidth: 90 }}>
+                              <input type="number" min="0" step="0.5" value={day.study.subjects[sub] || ""} onChange={e => setStudySubjectHours(sub, e.target.value)} placeholder="ঘণ্টা" />
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 11.5, color: "#5C543F", fontWeight: 600 }}>সম্পন্ন হয়েছে?</span>
+                            <button
+                              onClick={() => setStudySubjectDone(sub, true)}
+                              style={{ fontSize: 11.5, fontWeight: 700, padding: "4px 12px", borderRadius: 999, border: "1.5px solid #5C7A6B", cursor: "pointer", background: done ? "#5C7A6B" : "transparent", color: done ? "#FBF6EA" : "#5C7A6B" }}
+                            >হ্যাঁ</button>
+                            <button
+                              onClick={() => setStudySubjectDone(sub, false)}
+                              style={{ fontSize: 11.5, fontWeight: 700, padding: "4px 12px", borderRadius: 999, border: "1.5px solid #A14545", cursor: "pointer", background: !done ? "#A14545" : "transparent", color: !done ? "#FBF6EA" : "#A14545" }}
+                            >না</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
                 )
               )}
               {studySubOpen === "routine" && DAY_SUBJECTS.map((d, idx) => (
