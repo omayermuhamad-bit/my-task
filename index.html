@@ -5989,6 +5989,71 @@ function DailyLifeManagement() {
     };
   }, [date]);
 
+  // রাত ১২টার পর ১৫ মিনিট+ স্ক্রিন অফ থাকলে সেটাকে ঘুম ধরে অটো sleep session হিসেবে যোগ করে
+  const [sleepAutoMsg, setSleepAutoMsg] = useState("");
+  const SLEEP_AUTO_HIDDEN_KEY = STORAGE_PREFIX + "sleepAutoHiddenAt";
+  useEffect(() => {
+    const SLEEP_MIN_MS = 15 * 60 * 1000;
+
+    const processPendingSleepGap = () => {
+      let hiddenAt = null;
+      try { hiddenAt = window.localStorage.getItem(SLEEP_AUTO_HIDDEN_KEY); } catch (e) {}
+      if (!hiddenAt) return;
+      try { window.localStorage.removeItem(SLEEP_AUTO_HIDDEN_KEY); } catch (e) {}
+      hiddenAt = parseInt(hiddenAt, 10);
+      if (!hiddenAt) return;
+      const now = Date.now();
+      const elapsed = now - hiddenAt;
+      if (elapsed < SLEEP_MIN_MS) return;
+      const hiddenAtDate = new Date(hiddenAt);
+      const hour = hiddenAtDate.getHours();
+      // শুধু রাত ১২টা (০০:০০) থেকে দুপুর ১২টার মধ্যে স্ক্রিন অফ হলে সেটাকে ঘুমের শুরু ধরা হচ্ছে
+      const inWindow = hour >= 0 && hour < 12;
+      const hiddenAtDay = todayStr(hiddenAtDate);
+      if (!inWindow || hiddenAtDay !== date) return;
+
+      const pad2 = n => String(n).padStart(2, "0");
+      const startHM = pad2(hiddenAtDate.getHours()) + ":" + pad2(hiddenAtDate.getMinutes());
+      const nowDate = new Date(now);
+      const endHM = pad2(nowDate.getHours()) + ":" + pad2(nowDate.getMinutes());
+
+      updateDay(prev => {
+        const sessions = Array.isArray(prev.habit.sleepSessions) ? prev.habit.sleepSessions : [];
+        if (sessions.some(s => s.start === startHM && s.end === endHM)) return prev;
+        const newSession = {
+          id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+          start: startHM, end: endHM,
+          label: sessions.length === 0 ? "রাতের ঘুম" : "ভাতঘুম",
+        };
+        return { ...prev, habit: { ...prev.habit, sleepSessions: [newSession, ...sessions] } };
+      });
+      setSleepAutoMsg("ঘুম অটো যোগ হয়েছে: " + startHM + " – " + endHM);
+      setTimeout(() => setSleepAutoMsg(""), 6000);
+    };
+
+    const markHidden = () => {
+      try {
+        if (!window.localStorage.getItem(SLEEP_AUTO_HIDDEN_KEY)) {
+          window.localStorage.setItem(SLEEP_AUTO_HIDDEN_KEY, String(Date.now()));
+        }
+      } catch (e) {}
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) { markHidden(); } else { processPendingSleepGap(); }
+    };
+
+    processPendingSleepGap();
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pagehide", markHidden);
+    window.addEventListener("blur", markHidden);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pagehide", markHidden);
+      window.removeEventListener("blur", markHidden);
+    };
+  }, [date]);
+
 
   useEffect(() => {
     if (!pedometerActive) return;
@@ -7706,6 +7771,13 @@ function DailyLifeManagement() {
                   <button className="btn-ghost" style={{ width: "100%", justifyContent: "center", marginTop: 6 }} onClick={addSleepSession}>
                     <Icon name="add" size={15} /> {day.habit.sleepSessions.length === 0 ? "ঘুম যোগ করুন" : "আরেকটা ঘুম যোগ করুন"}
                   </button>
+
+                  <div className="diary-timestamp" style={{ textAlign: "center", marginTop: 6, color: "#8A7F68" }}>
+                    রাত ১২টার পর অ্যাপ/ফোন স্ক্রিন ১৫ মিনিট বা তার বেশি সময় অফ থাকলে (স্ক্রিন অফ হওয়ার মুহূর্ত থেকে অন হওয়া পর্যন্ত) এখানে অটো একটা ঘুম সেশন যোগ হবে
+                  </div>
+                  {sleepAutoMsg && (
+                    <div className="goal-ok" style={{ textAlign: "center", marginTop: 6 }}>{sleepAutoMsg}</div>
+                  )}
 
                   {(() => {
                     const totalMin = day.habit.sleepSessions.reduce((s, sess) => s + sleepSessionMinutes(sess.start, sess.end), 0);
